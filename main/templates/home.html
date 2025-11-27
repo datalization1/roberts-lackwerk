@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<section class="rl-hero">
+  <div class="rl-hero__inner">
+    <div class="rl-hero__content">
+      <span class="rl-badge">Professionelle Karosseriereparatur &amp; Transporter-Vermietung</span>
+      <h1 class="rl-hero__title">Fachkundige Lackiererei für unfallbeschädigte Fahrzeuge &amp; zuverlässige Umzugs-Transporter in der Schweiz</h1>
+      <p class="rl-hero__subtitle">Wir kümmern uns um die vollständige Instandsetzung Ihres Fahrzeugs und stellen Ihnen bei Bedarf sofort einen passenden Transporter zur Verfügung – effizient, gesetzeskonform und zuverlässig.</p>
+      <div class="rl-hero__actions">
+        <a href="{% url 'schaden_melden' %}" class="btn btn-primary">Schaden melden</a>
+        <a href="{% url 'mietfahrzeuge' %}" class="btn btn-secondary">Transporter mieten</a>
+      </div>
+      <div class="rl-hero__meta">
+        <p>Unfallreparaturen · Versicherungsabwicklung · Lackierungen · Umzugs-Transporter</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="rl-section">
+  <header class="rl-section--center">
+    <h2 class="rl-section__title">Unsere Dienstleistungen</h2>
+    <p class="rl-section__subtitle">Umfassende Autoreparatur- und Vermietungslösungen nach Ihren Bedürfnissen.</p>
+  </header>
+  <div class="rl-services-grid">
+    <article class="rl-service-card">
+      <div class="rl-card__icon"><span>🛠️</span></div>
+      <h3 class="rl-card__title">Karosseriereparatur</h3>
+      <p class="rl-card__text">Professionelle Instandsetzung von Unfallschäden an der Karosserie.</p>
+      <ul class="rl-service-list">
+        <li>Unfallschadenbehebung</li>
+        <li>Dellenentfernung</li>
+        <li>Schweissarbeiten</li>
+        <li>Rahmenrichtarbeiten</li>
+      </ul>
+    </article>
+    <article class="rl-service-card">
+      <div class="rl-card__icon"><span>🎨</span></div>
+      <h3 class="rl-card__title">Autolackierung</h3>
+      <p class="rl-card__text">Fachgerechte Lackierarbeiten mit modernster Technik.</p>
+      <ul class="rl-service-list">
+        <li>Komplettlackierungen</li>
+        <li>Spot- &amp; Teillackierung</li>
+        <li>Farbtonanpassung</li>
+        <li>Lackversiegelung</li>
+      </ul>
+    </article>
+    <article class="rl-service-card">
+      <div class="rl-card__icon"><span>📄</span></div>
+      <h3 class="rl-card__title">Unterstützung bei Versicherungsmeldungen</h3>
+      <p class="rl-card__text">Direkte Zusammenarbeit mit allen grossen Versicherungen.</p>
+      <ul class="rl-service-list">
+        <li>Direktabrechnung</li>
+        <li>Schadengutachten</li>
+        <li>Schadenmeldungen</li>
+        <li>Gesetzeskonforme Dokumentation</li>
+      </ul>
+    </article>
+    <article class="rl-service-card">
+      <div class="rl-card__icon"><span>🚚</span></div>
+      <h3 class="rl-card__title">Transporter-Vermietung</h3>
+      <p class="rl-card__text">Zuverlässige Umzugs-Transporter für jeden Bedarf.</p>
+      <ul class="rl-service-list">
+        <li>Verschiedene Grössen</li>
+        <li>Flexible Mietzeiten</li>
+        <li>Gut gewartete Flotte</li>
+        <li>Faire Preise</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section class="rl-section rl-section--center">
+  <h2 class="rl-section__title">Warum uns wählen</h2>
+  <div class="rl-why-grid">
+    <div class="rl-why-item">
+      <div class="rl-why-icon">👨‍🔧</div>
+      <div>
+        <h3>Experten­techniker</h3>
+        <p>Zertifizierte Fachleute mit langjähriger Erfahrung in Karosseriereparaturen und Lackierungen.</p>
+      </div>
+    </div>
+    <div class="rl-why-item">
+      <div class="rl-why-icon">⚡</div>
+      <div>
+        <h3>Schnelle Bearbeitung</h3>
+        <p>Effiziente Abläufe, damit Ihr Fahrzeug so schnell wie möglich wieder auf der Strasse ist.</p>
+      </div>
+    </div>
+    <div class="rl-why-item">
+      <div class="rl-why-icon">📜</div>
+      <div>
+        <h3>Schweizer Gesetz konform</h3>
+        <p>Alle Prozesse und Dokumente entsprechen den aktuellen Schweizer Vorschriften.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="rl-cta">
+  <div class="rl-cta__inner">
+    <h2 class="rl-cta__title">Bereit loszulegen?</h2>
+    <p class="rl-cta__text">Reichen Sie noch heute eine Schadenmeldung ein oder buchen Sie einen Transporter für Ihren Umzug.</p>
+    <div class="rl-cta__actions">
+      <a href="{% url 'schaden_melden' %}" class="btn btn-primary">Schadenmeldung einreichen</a>
+      <a href="{% url 'mietfahrzeuge' %}" class="btn btn-secondary">Transporter buchen</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

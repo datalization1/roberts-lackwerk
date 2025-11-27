@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="rl-wizard-page">
+
+  <!-- Zurück-Link -->
+  <a href="{% url 'home' %}" class="rl-wizard-back">
+    ← Zurück zur Startseite
+  </a>
+
+  <!-- Kopfbereich -->
+  <header class="rl-wizard-header">
+    <h1 class="rl-wizard-title">Schadenmeldung</h1>
+    <p class="rl-wizard-subtitle">
+      Bitte geben Sie detaillierte Informationen über den Schaden an Ihrem Fahrzeug an.
+    </p>
+
+    <div class="rl-wizard-progress-row">
+      <div class="rl-wizard-progress-label">
+        Schritt {{ step|default:"1" }} von 5
+      </div>
+      <div class="rl-wizard-progress-percent">
+        {{ progress_percent|default:"20" }}% Abgeschlossen
+      </div>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-bar" data-progress="{{ progress_percent|default:'20' }}"></div>
+    </div>
+  </header>
+
+  <!-- Karte: Fahrzeugdaten -->
+  <section class="rl-wizard-card">
+    <div class="rl-wizard-card__header">
+      <h2 class="rl-wizard-card__title">Fahrzeugdaten</h2>
+      <p class="rl-wizard-card__subtitle">
+        Geben Sie Informationen zu Ihrem Fahrzeug ein.
+      </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="rl-wizard-fields">
+
+        <!-- Kontrollschild -->
+        <div class="rl-wizard-field-group">
+          <label class="rl-wizard-label" for="{{ form.no_plate.id_for_label }}">
+            Kontrollschild *
+          </label>
+          {{ form.no_plate }}
+        </div>
+
+        <!-- Marke / Modell nebeneinander -->
+        <div class="rl-wizard-field-group rl-wizard-field-inline">
+          <div>
+            <label class="rl-wizard-label" for="{{ form.manufacturer.id_for_label }}">
+              Fahrzeugmarke *
+            </label>
+            {{ form.manufacturer }}
+          </div>
+          <div>
+            <label class="rl-wizard-label" for="{{ form.model.id_for_label }}">
+              Fahrzeugmodell *
+            </label>
+            {{ form.model }}
+          </div>
+        </div>
+
+        <!-- Stammnummer (FIN) -->
+        <div class="rl-wizard-field-group">
+          <label class="rl-wizard-label" for="{{ form.vin.id_for_label }}">
+            Stammnummer (FIN) *
+          </label>
+          {{ form.vin }}
+          <p class="rl-wizard-help">
+            Die Stammnummer ist die 17-stellige Herstellernummer, die es ermöglicht,
+            spezifische Details über Ihr Fahrzeug zu identifizieren.
+          </p>
+        </div>
+
+        <!-- Formularfehler -->
+        {% if form.non_field_errors %}
+          <div class="form-error">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Buttons -->
+      <div class="rl-wizard-actions">
+        <button type="button"
+                class="rl-wizard-btn rl-wizard-btn--ghost"
+                onclick="history.back()">
+          ← Zurück
+        </button>
+
+        <div class="rl-wizard-actions-right">
+          <button type="submit"
+                  class="rl-wizard-btn rl-wizard-btn--primary">
+            Weiter
+            <span class="rl-wizard-btn-icon">➜</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

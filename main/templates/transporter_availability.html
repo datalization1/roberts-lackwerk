@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if request.GET.date and request.GET.slot %}
+  <div class="alert alert-info d-flex justify-content-between align-items-center">
+    <div>
+      Vorwahl: <strong>{{ request.GET.date }}</strong>, Slot <strong>{{ request.GET.slot }}</strong>
+    </div>
+    <a class="btn btn-primary btn-sm"
+       href="{% url 'booking_create' %}?transporter={{ transporter.id }}&date={{ request.GET.date }}&time_slot={{ request.GET.slot }}">
+      Dieses Zeitfenster reservieren
+    </a>
+  </div>
+{% endif %}
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <h2 class="card-title">{{ transporter.name }}</h2>
+        <img src="{{ transporter.image.url }}" alt="{{ transporter.name }}" class="img-fluid mb-3">
+        <p>{{ transporter.description }}</p>
+    </div>
+</div>
+
+<h3>Verfügbarkeit (nächste 7 Tage)</h3>
+<table class="table table-bordered table-striped mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Datum</th>
+            <th>Vormittag (08:00 - 12:00)</th>
+            <th>Nachmittag (13:00 - 17:00)</th>
+            <th>Ganztag (08:00 - 17:00)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for day in availability %}
+        <tr>
+            <td>{{ day.date|date:"d.m.Y" }}</td>
+            <td>{{ day.morning }}</td>
+            <td>{{ day.afternoon }}</td>
+            <td>{{ day.fullday }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'mietfahrzeuge' %}" class="btn btn-secondary mt-3">Zurück</a>
+{% endblock %}

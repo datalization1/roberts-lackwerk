@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="rl-wizard-page">
+
+  <!-- Zurück-Link -->
+  <a href="{% url 'home' %}" class="rl-wizard-back">← Zurück zur Startseite</a>
+
+  <!-- Kopfbereich + Fortschritt -->
+  {% with current=wizard.steps.step1 total=wizard.steps.count %}
+    {% widthratio current total 100 as progress %}
+    <header class="rl-wizard-header">
+      <h1 class="rl-wizard-title">Schadenmeldung</h1>
+
+      {% if wizard.steps.current == "car" %}
+        <p class="rl-wizard-subtitle">Bitte geben Sie die Fahrzeugdaten ein, damit wir den Schaden eindeutig zuordnen können.</p>
+      {% elif wizard.steps.current == "personal" %}
+        <p class="rl-wizard-subtitle">Tragen Sie Ihre Kontaktdaten ein, damit wir Sie bei Rückfragen erreichen können.</p>
+      {% elif wizard.steps.current == "insurance" %}
+        <p class="rl-wizard-subtitle">Ergänzen Sie die Angaben zu Ihrer Versicherung und allfälligen Dokumenten.</p>
+      {% elif wizard.steps.current == "accident" %}
+        <p class="rl-wizard-subtitle">Beschreiben Sie den Schaden und laden Sie bei Bedarf Fotos hoch.</p>
+      {% elif wizard.steps.current == "review" %}
+        <p class="rl-wizard-subtitle">Bitte prüfen Sie alle Angaben und bestätigen Sie die Schadenmeldung.</p>
+      {% endif %}
+
+      <div class="rl-wizard-progress-row">
+        <div class="rl-wizard-progress-label">
+          Schritt {{ wizard.steps.step1 }} von {{ wizard.steps.count }}
+        </div>
+        <div class="rl-wizard-progress-percent">
+          {{ progress }}% abgeschlossen
+        </div>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-bar" data-progress="{{ progress }}"></div>
+      </div>
+    </header>
+  {% endwith %}
+
+  <!-- Karten-Formular -->
+  <section class="rl-wizard-card">
+    <header class="rl-wizard-card__header">
+      <h2 class="rl-card__title">
+        {% if wizard.steps.current == "car" %}
+          Fahrzeugdaten
+        {% elif wizard.steps.current == "personal" %}
+          Personendaten
+        {% elif wizard.steps.current == "insurance" %}
+          Versicherungsdaten
+        {% elif wizard.steps.current == "accident" %}
+          Schadendetails &amp; Fotos
+        {% elif wizard.steps.current == "review" %}
+          Zusammenfassung
+        {% endif %}
+      </h2>
+    </header>
+    {% if form.errors %}
+    <div style="padding:1rem; background:#500; color:#fff; border-radius:8px; margin-bottom:1rem;">
+        <h4>Formularfehler:</h4>
+        <pre>{{ form.errors.as_json }}</pre>
+    </div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ wizard.management_form }}
+      {{ form.non_field_errors }}
+      {% if form.errors %}
+        <div style="color: #ff6b6b; background: #300; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+            <strong>Formularfehler:</strong>
+            <pre>{{ form.errors }}</pre>
+        </div>
+      {% endif %}
+      <div class="rl-wizard-fields">
+
+        {# ---------- STEP 1: Fahrzeug (car) ---------- #}
+        {% if wizard.steps.current == "car" %}
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.plate.id_for_label }}">Kontrollschild</label>
+            {{ form.plate }} {{ form.plate.errors }}
+          </div>
+          <div class="rl-wizard-field-group rl-wizard-field-inline">
+            <div>
+              <label class="rl-wizard-label" for="{{ form.car_brand.id_for_label }}">Fahrzeugmarke</label>
+              {{ form.car_brand }} {{ form.car_brand.errors }}
+            </div>
+            <div>
+              <label class="rl-wizard-label" for="{{ form.car_model.id_for_label }}">Fahrzeugmodell</label>
+              {{ form.car_model }} {{ form.car_model.errors }}
+            </div>
+          </div>
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.vin.id_for_label }}">Stammnummer (FIN)</label>
+            {{ form.vin }} {{ form.vin.errors }}
+            <p class="rl-wizard-help">Die Stammnummer ist die 17-stellige Herstellernummer Ihres Fahrzeugs.</p>
+          </div>
+        {% endif %}
+
+        {# ---------- STEP 2: Person (personal) ---------- #}
+        {% if wizard.steps.current == "personal" %}
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.full_name.id_for_label }}">Name</label>
+            {{ form.full_name }} {{ form.full_name.errors }}
+          </div>
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.address.id_for_label }}">Adresse</label>
+            {{ form.address }} {{ form.address.errors }}
+          </div>
+          <div class="rl-wizard-field-group rl-wizard-field-inline">
+            <div>
+              <label class="rl-wizard-label" for="{{ form.phone.id_for_label }}">Telefon</label>
+              {{ form.phone }} {{ form.phone.errors }}
+            </div>
+            <div>
+              <label class="rl-wizard-label" for="{{ form.email.id_for_label }}">E-Mail</label>
+              {{ form.email }} {{ form.email.errors }}
+            </div>
+          </div>
+        {% endif %}
+
+        {# ---------- STEP 3: Versicherung (insurance) ---------- #}
+        {% if wizard.steps.current == "insurance" %}
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.insurer.id_for_label }}">Versicherung</label>
+            {{ form.insurer }} {{ form.insurer.errors }}
+          </div>
+          <div class="rl-wizard-field-group rl-wizard-field-inline">
+            <div>
+              <label class="rl-wizard-label" for="{{ form.policy_number.id_for_label }}">Policennummer</label>
+              {{ form.policy_number }} {{ form.policy_number.errors }}
+            </div>
+            <div>
+              <label class="rl-wizard-label" for="{{ form.accident_number.id_for_label }}">Schadennummer</label>
+              {{ form.accident_number }} {{ form.accident_number.errors }}
+            </div>
+          </div>
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.insurer_contact.id_for_label }}">Kontakt bei der Versicherung</label>
+            {{ form.insurer_contact }} {{ form.insurer_contact.errors }}
+          </div>
+        {% endif %}
+
+        {# ---------- STEP 4: Schaden (accident) ---------- #}
+        {% if wizard.steps.current == "accident" %}
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label">Beschädigte Teile</label>
+            <ul class="rl-checkbox-grid">
+                {% for checkbox in form.damaged_parts %}
+                    <li>
+                        {{ checkbox.tag }}
+                        <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {{ form.damaged_parts.errors }}
+          </div>
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.message.id_for_label }}">Schadenbeschreibung</label>
+            {{ form.message }} {{ form.message.errors }}
+          </div>
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.photos.id_for_label }}">Schadenfotos *</label>
+            <p class="rl-wizard-help">Laden Sie klare Fotos der beschädigten Bereiche hoch (maximal 10 Bilder).</p>
+
+            <div class="rl-upload-dropzone">
+              <div class="rl-upload-icon">⬆</div>
+              <div class="rl-upload-text">
+                <div class="rl-upload-title">Klicken Sie, um Bilder hochzuladen</div>
+                <div class="rl-upload-sub">PNG, JPG bis zu 10MB pro Bild</div>
+              </div>
+            </div>
+
+            <div class="rl-upload-input">
+              {{ form.photos }}
+            </div>
+
+            <div class="rl-upload-filelist"></div>
+
+            {{ form.photos.errors }}
+          </div>
+        {% endif %}
+
+        {# ---------- STEP 5: Review (review) ---------- #}
+        {% if wizard.steps.current == "review" %}
+          <div class="rl-wizard-field-group">
+            <p class="rl-wizard-subtitle" style="margin-bottom:1rem;">
+              Bitte prüfen Sie Ihre Angaben. Wenn alles korrekt ist, senden Sie die Meldung ab.
+            </p>
+          </div>
+
+          <div class="rl-summary-grid">
+            <!-- Fahrzeugdaten -->
+            <section class="rl-summary-section">
+              <h3 class="rl-summary-title">Fahrzeugdaten</h3>
+              <dl class="rl-summary-list">
+                <div><dt>Kontrollschild</dt><dd>{{ summary.car.plate|default:"–" }}</dd></div>
+                <div><dt>Marke</dt><dd>{{ summary.car.car_brand|default:"–" }}</dd></div>
+                <div><dt>Modell</dt><dd>{{ summary.car.car_model|default:"–" }}</dd></div>
+                <div><dt>Stammnummer (FIN)</dt><dd>{{ summary.car.vin|default:"–" }}</dd></div>
+              </dl>
+            </section>
+
+            <!-- Personendaten -->
+            <section class="rl-summary-section">
+              <h3 class="rl-summary-title">Personendaten</h3>
+              <dl class="rl-summary-list">
+                <div><dt>Name</dt><dd>{{ summary.personal.full_name|default:"–" }}</dd></div>
+                <div><dt>Adresse</dt><dd>{{ summary.personal.address|default:"–" }}</dd></div>
+                <div><dt>Telefon</dt><dd>{{ summary.personal.phone|default:"–" }}</dd></div>
+                <div><dt>E-Mail</dt><dd>{{ summary.personal.email|default:"–" }}</dd></div>
+              </dl>
+            </section>
+
+            <!-- Versicherung -->
+            <section class="rl-summary-section">
+              <h3 class="rl-summary-title">Versicherung</h3>
+              <dl class="rl-summary-list">
+                <div><dt>Versicherung</dt><dd>{{ summary.insurance.insurer|default:"–" }}</dd></div>
+                <div><dt>Police-Nr.</dt><dd>{{ summary.insurance.policy_number|default:"–" }}</dd></div>
+                <div><dt>Schaden-Nr.</dt><dd>{{ summary.insurance.accident_number|default:"–" }}</dd></div>
+                <div><dt>Kontakt</dt><dd>{{ summary.insurance.insurer_contact|default:"–" }}</dd></div>
+              </dl>
+            </section>
+
+            <!-- Schaden -->
+            <section class="rl-summary-section rl-summary-section--full">
+              <h3 class="rl-summary-title">Schaden</h3>
+              <dl class="rl-summary-list">
+                <div>
+                  <dt>Beschädigte Teile</dt>
+                  <dd>
+                    {% if summary.accident.damaged_parts %}
+                      {{ summary.accident.damaged_parts|join:", " }}
+                    {% else %}
+                      –
+                    {% endif %}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Beschreibung</dt>
+                  <dd>{{ summary.accident.message|default:"–" }}</dd>
+                </div>
+                <div>
+                  <dt>Foto</dt>
+                  <dd>
+                    {% if uploaded_photo %}
+                      {{ uploaded_photo.name }} ({{ uploaded_photo.size|filesizeformat }})
+                    {% else %}
+                      Kein Foto hochgeladen.
+                    {% endif %}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+
+          <div class="rl-wizard-field-group" style="margin-top:1.5rem;">
+            {{ form.confirm }} {{ form.confirm.errors }}
+            <label class="rl-wizard-label" for="{{ form.confirm.id_for_label }}">
+              Ich bestätige, dass die Angaben korrekt sind.
+            </label>
+          </div>
+        {% endif %}
+
+      <!-- Navigation / Buttons -->
+      <div class="rl-wizard-actions">
+        {% if wizard.steps.prev %}
+          <button type="submit"
+                  name="wizard_goto_step"
+                  value="{{ wizard.steps.prev }}"
+                  class="rl-wizard-btn rl-wizard-btn--ghost">
+            ← Zurück
+          </button>
+        {% else %}
+          <button type="button"
+                  class="rl-wizard-btn rl-wizard-btn--ghost"
+                  disabled>
+            ← Zurück
+          </button>
+        {% endif %}
+
+        <div class="rl-wizard-actions-right">
+          {% if wizard.steps.current == "review" %}
+            <button type="submit" class="rl-wizard-btn rl-wizard-btn--primary">
+              Schadenmeldung absenden
+              <span class="rl-wizard-btn-icon">➜</span>
+            </button>
+          {% else %}
+            <button type="submit" class="rl-wizard-btn rl-wizard-btn--primary">
+              Weiter
+              <span class="rl-wizard-btn-icon">➜</span>
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </section>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const input = document.getElementById('{{ form.photos.id_for_label }}');
+  const drop  = document.querySelector('.rl-upload-dropzone');
+  const list  = document.querySelector('.rl-upload-filelist');
+  if(!input || !drop) return;
+
+  drop.addEventListener('click', function(){
+    input.click();
+  });
+
+  input.addEventListener('change', function(){
+    if(!list) return;
+    list.innerHTML = '';
+    if(!this.files || !this.files.length){
+      list.textContent = 'Keine Dateien ausgewählt.';
+      return;
+    }
+    Array.from(this.files).forEach(function(f){
+      const row = document.createElement('div');
+      row.className = 'rl-upload-file';
+      row.textContent = f.name;
+      list.appendChild(row);
+    });
+  });
+});
+</script>
+{% endblock %}

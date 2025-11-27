@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-dark text-white text-center p-5 mb-5"
+     style="background: url('{% static "main/hero_services.jpg" %}') center/cover no-repeat; border-radius: 10px;">
+    <div class="bg-dark bg-opacity-50 p-5 rounded">
+        <h1 class="display-4 fw-bold">Unsere Dienstleistungen</h1>
+        <p class="lead">Lackierungen, Reparaturen und mehr – alles aus einer Hand</p>
+    </div>
+</div>
+
+<!-- Services Section -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Autolackierungen</h5>
+                <p class="card-text">Komplette Lackierungen und Spot-Repair in Herstellerqualität – damit Ihr Fahrzeug wieder wie neu aussieht.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Karosseriereparaturen</h5>
+                <p class="card-text">Von kleinen Dellen bis zu größeren Unfallschäden – wir stellen die ursprüngliche Form Ihres Fahrzeugs wieder her.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Spot-Repair</h5>
+                <p class="card-text">Schnelle und kostengünstige Beseitigung kleiner Kratzer und Lackschäden, ohne das gesamte Bauteil zu lackieren.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Fahrzeugaufbereitung</h5>
+                <p class="card-text">Professionelle Innen- und Außenreinigung, Politur und Schutzbeschichtungen für ein perfektes Finish.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+asgiref==3.9.1
+Django==4.2.23
+django-formtools==2.5.1
+pillow==11.3.0
+sqlparse==0.5.3
+tree-cli==0.1.1
+typing_extensions==4.15.0

@@ -1,0 +1,43 @@
+/* ---------- Design Tokens ---------- */
+:root{
+  /* Farben – hier deine Figma-Farben einsetzen */
+  --rlk-bg: #0f0f10;
+  --rlk-fg: #111;              /* Standard Textfarbe dunkel */
+  --rlk-text: #1a1a1a;
+  --rlk-muted: #6b7280;        /* Sekundärtext */
+  --rlk-primary: #111111;      /* Primär-Buttons / Akzente */
+  --rlk-primary-contrast: #ffffff;
+  --rlk-accent: #0ea5e9;       /* falls im Figma vorhanden */
+
+  /* Typo */
+  --rlk-font-sans: system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+  --rlk-h1: 48px;
+  --rlk-h2: 32px;
+  --rlk-body: 16px;
+
+  /* Layout */
+  --rlk-container: 1120px;
+  --rlk-radius: 12px;
+  --rlk-shadow: 0 8px 30px rgba(0,0,0,.08);
+  --rlk-space-1: 8px;
+  --rlk-space-2: 12px;
+  --rlk-space-3: 16px;
+  --rlk-space-4: 24px;
+  --rlk-space-6: 32px;
+  --rlk-space-8: 48px;
+  --rlk-space-12: 64px;
+}
+
+/* --------- Utilities --------- */
+.rlk-container{ max-width: var(--rlk-container); margin: 0 auto; padding: 0 var(--rlk-space-3); }
+.rlk-h1{ font-size: var(--rlk-h1); font-weight: 800; letter-spacing: -0.02em; }
+.rlk-lead{ font-size: 18px; color: var(--rlk-muted); }
+.rlk-btn{
+  display:inline-block; padding:10px 16px; border-radius: var(--rlk-radius);
+  border:1px solid #111; text-decoration:none;
+}
+.rlk-btn--primary{
+  background: var(--rlk-primary); color: var(--rlk-primary-contrast); border-color: var(--rlk-primary);
+}
+body{ font-family: var(--rlk-font-sans); color: var(--rlk-text); }
+section{ padding: var(--rlk-space-12) 0; }

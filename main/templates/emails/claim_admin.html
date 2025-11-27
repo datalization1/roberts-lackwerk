@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Neue Schadenmeldung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{margin:0;padding:0;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#222;}
+    .wrap{max-width:720px;margin:0 auto;padding:24px;}
+    h1{font-size:18px;margin:0 0 12px;}
+    .muted{color:#667085;font-size:12px;margin-bottom:16px;}
+    table{width:100%;border-collapse:collapse;font-size:14px;}
+    th,td{padding:10px 12px;vertical-align:top;border-bottom:1px solid #eee;}
+    th{width:30%;text-align:left;background:#fafafa;color:#475467;}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2f7;font-size:12px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Neue Schadenmeldung #{{ report.pk }}</h1>
+    <p class="muted">Eingang: {{ report.created_at|date:"d.m.Y H:i" }}</p>
+
+    <h2 style="font-size:16px;margin:18px 0 8px;">Kunde</h2>
+    <table role="presentation">
+      <tr><th>Name</th><td>{{ report.first_name }} {{ report.last_name }}</td></tr>
+      {% if report.company_name %}<tr><th>Firma</th><td>{{ report.company_name }}</td></tr>{% endif %}
+      <tr><th>E-Mail</th><td>{{ report.email }}</td></tr>
+      <tr><th>Telefon</th><td>{{ report.phone|default:"–" }}</td></tr>
+    </table>
+
+    <h2 style="font-size:16px;margin:18px 0 8px;">Versicherung</h2>
+    <table role="presentation">
+      <tr>
+        <th>Kontrollschild</th>
+        <td>{% if report.no_plate %}<span class="pill">Nicht bekannt</span>{% else %}{{ report.plate|default:"–" }}{% endif %}</td>
+      </tr>
+      <tr>
+        <th>Versicherer</th>
+        <td>
+          {% if report.insurer == "OTHER" %}Andere: {{ report.other_insurer|default:"–" }}
+          {% elif report.insurer == "NO_INSURANCE" %}<span class="pill">Ohne Versicherung</span>
+          {% else %}{{ report.insurer|default:"–" }}{% endif %}
+        </td>
+      </tr>
+      <tr><th>Policennummer</th><td>{{ report.policy_number|default:"–" }}</td></tr>
+    </table>
+
+    <h2 style="font-size:16px;margin:18px 0 8px;">Schaden</h2>
+    <table role="presentation">
+      <tr><th>Teil</th><td>{{ report.get_car_part_display }}</td></tr>
+      <tr><th>Beschreibung</th><td>{{ report.message|default:"–" }}</td></tr>
+      <tr>
+        <th>Fotos</th>
+        <td>
+          {% if report.photos.all %}
+            <ul style="padding-left:18px;margin:8px 0;">
+              {% for p in report.photos.all %}
+                <li>{{ p.image.url }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            –
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

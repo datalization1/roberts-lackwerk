@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verfügbare Fahrzeuge finden{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Verfügbare Fahrzeuge finden</h1>
+    <a href="{% url 'transporter_list' %}" class="btn btn-outline-secondary">Alle Fahrzeuge</a>
+  </div>
+
+  <form method="get" class="card card-body mb-4" style="max-width: 640px;">
+    <div class="row g-3">
+      <div class="col-sm-6">
+        <label class="form-label">Datum</label>
+        {{ form.date }}
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">Zeitfenster</label>
+        {{ form.time_slot }}
+      </div>
+      <div class="col-12">
+        <button class="btn btn-dark" type="submit">Verfügbarkeit prüfen</button>
+      </div>
+    </div>
+  </form>
+
+  {% if chosen_date and chosen_slot %}
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h2 class="h5 mb-0">Ergebnis: {{ transporters|length }} Fahrzeuge verfügbar</h2>
+      <span class="text-muted">
+        für <strong>{{ chosen_date }}</strong>, Slot <strong>{{ chosen_slot }}</strong>
+      </span>
+    </div>
+
+    {% if transporters %}
+      <div class="list-group">
+        {% for t in transporters %}
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="me-3">
+              <div class="fw-semibold">{{ t.name }}</div>
+              {% if t.plate %}<div class="text-muted small">Kennzeichen: {{ t.plate }}</div>{% endif %}
+            </div>
+            <div class="d-flex gap-2">
+              <!-- zum Fahrzeug-Kalender (Detailansicht) -->
+              <a class="btn btn-outline-secondary btn-sm"
+                 href="{% url 'transporter_availability' t.id %}?date={{ chosen_date }}&slot={{ chosen_slot }}">
+                Verfügbarkeit anzeigen
+              </a>
+              <!-- direkter Buchungs-CTA (falls du eine Create-View hast) -->
+              {% if chosen_date and chosen_slot %}
+                <a class="btn btn-primary btn-sm"
+                   href="{% url 'booking_create' %}?transporter={{ t.id }}&date={{ chosen_date }}&time_slot={{ chosen_slot }}">
+                  Jetzt reservieren
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-warning mt-3 mb-0">
+        Keine Fahrzeuge frei für dieses Zeitfenster.
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

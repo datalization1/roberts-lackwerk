@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Bestätigung Ihrer Schadenmeldung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{margin:0;padding:0;background:#f6f7f9;font-family:Arial,Helvetica,sans-serif;color:#222;}
+    .wrap{max-width:640px;margin:0 auto;padding:24px;}
+    .card{background:#fff;border-radius:10px;padding:24px;border:1px solid #e9edf2;}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    .brand img{height:36px;}
+    h1{font-size:18px;margin:0 0 8px;}
+    h2{font-size:16px;margin:24px 0 8px;}
+    .muted{color:#667085;font-size:13px;}
+    .table{width:100%;border-collapse:collapse;font-size:14px;}
+    .table th,.table td{padding:10px 12px;vertical-align:top;border-bottom:1px solid #eef2f7;}
+    .table th{width:38%;text-align:left;color:#475467;background:#fafbfc;}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2f7;font-size:12px;}
+    .btn{display:inline-block;padding:10px 14px;background:#0b5ed7;color:#fff;text-decoration:none;border-radius:8px;margin-top:14px;}
+    .footer{margin-top:18px;font-size:12px;color:#98a2b3;text-align:center;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="brand">
+        <!-- Optional: eigenes Logo -->
+        <!-- <img src="https://example.com/logo.png" alt="Robert's Lackwerk"> -->
+        <h1>Bestätigung Ihrer Schadenmeldung</h1>
+      </div>
+
+      <p>Hallo {{ report.first_name }} {{ report.last_name }},</p>
+      {% if report.company_name %}<p class="muted">Firma: {{ report.company_name }}</p>{% endif %}
+      <p>vielen Dank für Ihre Meldung. Nachfolgend finden Sie eine Zusammenfassung. Wir melden uns zeitnah.</p>
+
+      <h2>Ihre Angaben</h2>
+      <table class="table" role="presentation">
+        <tr>
+          <th>Vorname / Nachname</th>
+          <td>{{ report.first_name }} {{ report.last_name }}</td>
+        </tr>
+        {% if report.company_name %}
+        <tr>
+          <th>Firma</th>
+          <td>{{ report.company_name }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+          <th>E-Mail</th>
+          <td>{{ report.email }}</td>
+        </tr>
+        <tr>
+          <th>Telefon</th>
+          <td>{{ report.phone|default:"–" }}</td>
+        </tr>
+      </table>
+
+      <h2>Versicherung</h2>
+      <table class="table" role="presentation">
+        <tr>
+          <th>Kontrollschild</th>
+          <td>{% if report.no_plate %}<span class="pill">Nicht bekannt</span>{% else %}{{ report.plate|default:"–" }}{% endif %}</td>
+        </tr>
+        <tr>
+          <th>Versicherer</th>
+          <td>
+            {% if report.insurer == "OTHER" %}Andere: {{ report.other_insurer|default:"–" }}
+            {% elif report.insurer == "NO_INSURANCE" %}<span class="pill">Ohne Versicherung</span>
+            {% else %}{{ report.insurer|default:"–" }}{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>Policennummer</th>
+          <td>{{ report.policy_number|default:"–" }}</td>
+        </tr>
+      </table>
+
+      <h2>Schaden</h2>
+      <table class="table" role="presentation">
+        <tr>
+          <th>Beschädigtes Teil</th>
+          <td>
+            {# zeigt das Label aus den Model-Choices #}
+            {{ report.get_car_part_display }}
+          </td>
+        </tr>
+        <tr>
+          <th>Beschreibung</th>
+          <td>{{ report.message|default:"–" }}</td>
+        </tr>
+        <tr>
+          <th>Fotos</th>
+          <td>
+            {% if report.photos.all %}
+              <ul style="padding-left:18px;margin:8px 0;">
+                {% for p in report.photos.all %}
+                  <li>{{ p.image.name|cut:"damage_photos/" }}</li>
+                {% endfor %}
+              </ul>
+              <p class="muted">Hinweis: Aus Sicherheitsgründen werden Bilder nicht inline eingebettet.</p>
+            {% else %}
+              –
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+
+      <p>Bei Fragen erreichen Sie uns jederzeit per Antwort auf diese E-Mail.</p>
+      <a class="btn" href="https://roberts-lackwerk.ch/">Website öffnen</a>
+
+      <div class="footer">
+        © {{ now|date:"Y" }} Robert’s Lackwerk – Diese E-Mail wurde automatisch erzeugt.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
