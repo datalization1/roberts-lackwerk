@@ -34,7 +34,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "roberts-lackwerk.ch",
     "www.roberts-lackwerk.ch",
-    "roberts-lackwerk-611b83e56e00.herokuapp.com",
+    "roberts-lackwerk-bf57599aa7c8.herokuapp.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -133,6 +133,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
