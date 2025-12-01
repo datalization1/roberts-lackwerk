@@ -16,36 +16,43 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Umgebung (development / production)
+DJANGO_ENV = os.environ.get("DJANGO_ENV", "development")
+DEBUG = DJANGO_ENV != "production"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!import os
+# SECURITY WARNING: don't run with debug turned on in production!
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Lokale Entwicklung: wenn nichts gesetzt ist, ist DEBUG=True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+
+# Secret Key: lokal Fallback, auf Heroku per Config Var DJANGO_SECRET_KEY
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
-    "DGJ4pVqX!%s4n9v#j3@8mQ$k2&uH7rZg^Wb0Fc*LpOEhT1yXw"  # lokaler Fallback
+    "DGJ4pVqX!%s4n9v#j3@8mQ$k2&uH7rZg^Wb0Fc*LpOEhT1yXw"
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# ALLOWED_HOSTS: lokal nur localhost, auf Heroku über ENV
+if DEBUG:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+else:
+    ALLOWED_HOSTS = os.environ.get(
+        "DJANGO_ALLOWED_HOSTS",
+        "roberts-lackwerk-bf57599aa7c8.herokuapp.com",
+        # "roberts-lackwerk.ch, www.roberts-lackwerk.ch", 
+    ).split(",")
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "roberts-lackwerk.ch",
-    "www.roberts-lackwerk.ch",
-    "roberts-lackwerk-bf57599aa7c8.herokuapp.com",
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://roberts-lackwerk.ch",
-    "https://www.roberts-lackwerk.ch",
-    "https://roberts-lackwerk-611b83e56e00.herokuapp.com",
-]
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-SECURE_SSL_REDIRECT = True
+# Security: lokal kein HTTPS-Zwang, auf Heroku schon
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
 

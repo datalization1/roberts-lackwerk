@@ -301,3 +301,10 @@
 .rl-footer-legal__link:hover{color:#fff;text-decoration:underline;}
 @media(max-width:1024px){.rl-footer-inner{grid-template-columns:2fr 1.4fr 1.4fr;row-gap:1.75rem;column-gap:2rem;}.rl-footer-col--hours{grid-column:1/-1;max-width:340px;}}
 @media(max-width:640px){.rl-footer-inner{grid-template-columns:1fr;gap:1.5rem;}.rl-footer-bottom{flex-direction:column;align-items:flex-start;gap:.25rem;}}
+.rl-service-icon svg{width:28px;height:28px;stroke-width:1.8;stroke:rgba(224,39,39,.7);}
+.rl-why-icon svg{width:32px;height:32px;stroke-width:1.8;stroke:rgba(224,39,39,.7);}
+.rl-service-card{display:flex;flex-direction:column;gap:1.25rem;}
+.rl-service-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.25rem;}
+.rl-service-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;border:1px solid var(--accent-red);background:rgba(255,255,255,0.02);}
+.rl-service-icon i{width:18px;height:18px;stroke-width:2;}
+.rl-service-title{font-size:1.3rem;line-height:1.2;word-break:break-word;margin:0;}
