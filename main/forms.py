@@ -136,7 +136,13 @@ class ReviewForm(forms.Form):
 class BookingForm(forms.ModelForm):
     class Meta:
         model = Booking
-        fields = ["transporter", "date", "time_slot", "customer_name", "customer_email", "customer_phone"]
+        fields = [
+            "customer_name",
+            "customer_address",
+            "customer_phone",
+            "customer_email",
+            "driver_license_number",
+        ]
 
     def clean(self):
         cleaned = super().clean()

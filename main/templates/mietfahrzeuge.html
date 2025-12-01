@@ -6,18 +6,24 @@
 
   <a href="{% url 'home' %}" class="rl-wizard-back">← Zurück zur Startseite</a>
 
+  <!-- Header -->
   <header class="rl-wizard-header">
-    <h1 class="rl-wizard-title">LKW-Vermietung Buchung</h1>
-    <p class="rl-wizard-subtitle">Buchen Sie einen Umzugs-LKW für Ihre Umzugsbedürfnisse.</p>
-
-    <div class="rl-wizard-progress-row">
-      <div class="rl-wizard-progress-label">Schritt 1 von 4</div>
-      <div class="rl-wizard-progress-percent">25% abgeschlossen</div>
-    </div>
-    <div class="progress-track">
-      <div class="progress-bar" data-progress="25"></div>
-    </div>
+    <h1 class="rl-wizard-title">Buchung Transporter</h1>
+    <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse.</p>
   </header>
+
+  <!-- Progress Card -->
+  <section class="rl-wizard-card rl-wizard-card--progress">
+    <div class="rl-wizard-progress">
+      <div class="rl-wizard-progress__top">
+        <span>Schritt 1 von 5</span>
+        <span>20% Abgeschlossen</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" style="width:20%;"></div>
+      </div>
+    </div>
+  </section>
 
   <section class="rl-wizard-card">
     <header class="rl-wizard-card__header">
@@ -25,35 +31,131 @@
       <p class="rl-wizard-card__subtitle">Wählen Sie Ihren LKW und den Mietzeitraum.</p>
     </header>
 
-    <form method="post">
-      {% csrf_token %}
+      <form method="post">
+        {% csrf_token %}
 
-      <div class="rl-wizard-fields">
+        <div class="rl-wizard-fields">
 
-        <!-- Modell auswählen -->
-        <div class="rl-wizard-field-group">
+          <!-- Abholdatum -->
+          <div class="rl-wizard-field-group rl-field-group--date">
+            <label class="rl-field-label" for="pickup_date">Abholdatum <span class="rl-field-required">*</span></label>
+
+            <div class="rl-input-wrapper">
+              <input id="pickup_date"
+                name="pickup_date"
+                type="date"
+                class="rl-input rl-input--date"
+                value="{{ step1.date|default:'' }}">
+
+              <span class="rl-input-hint"
+                    {% if step1.date %}style="display:none"{% endif %}>
+                Wählen Sie zuerst das Datum, um verfügbare Fahrzeuge zu sehen.
+              </span>
+            </div>
+          </div>
+
+          <!-- Zeitblock -->
+          <div class="rl-wizard-field-group">
+            <label class="rl-field-label">Zeitblock auswählen <span class="rl-field-required">*</span></label>
+            <div class="rl-timeblock-grid">
+              <label class="rl-timeblock-card">
+                <input type="radio" name="timeblock" value="morning" class="rl-timeblock-card__input"
+                      {% if step1.timeblock %}{% if step1.timeblock == "morning" %}checked{% endif %}{% else %}checked{% endif %}>
+                <div class="rl-timeblock-card__inner">
+                  <div class="rl-timeblock-card__icon">☀️</div>
+                  <div class="rl-timeblock-card__text">
+                    <div class="rl-timeblock-card__title">Vormittag</div>
+                    <div class="rl-timeblock-card__subtitle">08:00 – 12:00</div>
+                  </div>
+                </div>
+              </label>
+
+              <label class="rl-timeblock-card">
+                <input type="radio" name="timeblock" value="afternoon" class="rl-timeblock-card__input"
+                      {% if step1.timeblock == "afternoon" %}checked{% endif %}>
+                <div class="rl-timeblock-card__inner">
+                  <div class="rl-timeblock-card__icon">🌤</div>
+                  <div class="rl-timeblock-card__text">
+                    <div class="rl-timeblock-card__title">Nachmittag</div>
+                    <div class="rl-timeblock-card__subtitle">13:00 – 18:00</div>
+                  </div>
+                </div>
+              </label>
+
+              <label class="rl-timeblock-card">
+                <input type="radio" name="timeblock" value="fullday" class="rl-timeblock-card__input"
+                      {% if step1.timeblock == "fullday" %}checked{% endif %}>
+                <div class="rl-timeblock-card__inner">
+                  <div class="rl-timeblock-card__icon">🕒</div>
+                  <div class="rl-timeblock-card__text">
+                    <div class="rl-timeblock-card__title">Ganztag</div>
+                    <div class="rl-timeblock-card__subtitle">08:00 – 18:00</div>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <p class="rl-help-text">Bei Ganztags-Mieten können Sie den Transporter mehrere Tage behalten.</p>
+          </div>
+
+          <!-- Rückgabedatum -->
+          <div id="return_date_group" class="rl-wizard-field-group{% if step1.timeblock != 'fullday' %} is-hidden{% endif %}">
+            <label class="rl-field-label" for="return_date">Rückgabedatum</label>
+            <input id="return_date"
+              name="return_date"
+              type="date"
+              class="rl-input rl-input--date"
+              value="{{ step1.return_date|default:'' }}">
+            <p class="rl-help-text">Nur bei Ganztags-Mieten erforderlich.</p>
+          </div>
+
+          <!-- Verfügbarkeits-Banner + Modelle -->
+          <div class="rl-rental-status {% if all_available %}rl-rental-status--ok{% elif any_unavailable %}rl-rental-status--warn{% endif %}">
+            <div class="rl-rental-status__text">
+              {% if not has_filter %}
+                <strong>Bitte Abholdatum & Zeitblock wählen.</strong>
+                <span> Danach zeigen wir die Verfügbarkeit der Fahrzeuge an.</span>
+              {% else %}
+                <strong>{{ available_count }} von {{ total_count }} Fahrzeugen verfügbar</strong>
+                <span>für den gewählten Zeitraum.</span>
+              {% endif %}
+            </div>
+          </div>
+
           <label class="rl-field-label">Modell auswählen <span class="rl-field-required">*</span></label>
+
           {% if transporters %}
             <div class="rl-rental-grid">
               {% for t in transporters %}
-                <label class="rl-rental-card">
-                  <input type="radio"
-                         name="transporter_id"
-                         value="{{ t.id }}"
-                         class="rl-rental-card__input"
-                         {% if forloop.first %}checked{% endif %}>
+                <label class="rl-rental-card {% if t.is_unavailable %}rl-rental-card--unavailable{% endif %}">
+                  <input type="radio" name="transporter_id" value="{{ t.id }}" class="rl-rental-card__input"
+                        {% if t.is_unavailable %}
+                          disabled
+                        {% else %}
+                          {% if step1.transporter_id %}
+                            {% if step1.transporter_id == t.id %}checked{% endif %}
+                          {% elif forloop.first %}
+                            checked
+                          {% endif %}
+                        {% endif %}>
                   <div class="rl-rental-card__inner">
-                    <div class="rl-rental-card__image"
-                         {% if t.image %}style="background-image:url('{{ t.image.url }}');"{% endif %}></div>
+                    {% if t.is_unavailable %}
+                      <span class="rl-rental-card__badge rl-rental-card__badge--unavailable">Ausgebucht</span>
+                    {% else %}
+                      <span class="rl-rental-card__badge rl-rental-card__badge--available">Verfügbar</span>
+                    {% endif %}
+                    <div class="rl-rental-card__image" {% if t.image %}style="background-image:url('{{ t.image.url }}');"{% endif %}></div>
                     <div class="rl-rental-card__body">
-                        <h3 class="card-title">{{ transporter.name }}</h3>
-                        <p class="card-sub">Farbe: {{ transporter.farbe|default:"–" }}</p>
-                        <p class="card-price">CHF {{ transporter.preis_chf|floatformat:0 }}</p>
-                        <img src="{{ transporter.image.url }}" alt="{{ transporter.name }}">
+                      <h3 class="rl-rental-card__title">{{ t.name }}</h3>
+                      {% if t.farbe %}<p class="rl-rental-card__meta">Farbe: {{ t.farbe }}</p>{% endif %}
+                      {% if t.preis_chf %}<p class="rl-rental-card__price">CHF {{ t.preis_chf|floatformat:0 }}</p>{% endif %}
+                      {% if t.is_unavailable and t.next_available_date %}
+                        <p class="rl-rental-card__note">Nächste Verfügbarkeit:<br>{{ t.next_available_date|date:"j.n.Y" }}</p>
                       {% endif %}
                     </div>
                   </div>
                 </label>
+              {% empty %}
+                <p class="rl-text-muted">Aktuell sind keine Transporter verfügbar.</p>
               {% endfor %}
             </div>
           {% else %}
@@ -61,59 +163,52 @@
           {% endif %}
         </div>
 
-        <!-- Abholdatum -->
-        <div class="rl-wizard-field-group">
-          <label class="rl-field-label" for="pickup_date">Abholdatum <span class="rl-field-required">*</span></label>
-          <input id="pickup_date" name="pickup_date" type="date" class="rl-input">
-        </div>
-
-        <!-- Zeitblock -->
-        <div class="rl-wizard-field-group">
-          <label class="rl-field-label">Zeitblock auswählen <span class="rl-field-required">*</span></label>
-          <div class="rl-timeblock-grid">
-            <label class="rl-timeblock-card">
-              <input type="radio" name="timeblock" value="morning" class="rl-timeblock-card__input" checked>
-              <div class="rl-timeblock-card__inner">
-                <div class="rl-timeblock-card__icon">☀️</div>
-                <div class="rl-timeblock-card__text">
-                  <div class="rl-timeblock-card__title">Vormittag</div>
-                  <div class="rl-timeblock-card__subtitle">08:00 – 12:00</div>
-                </div>
-              </div>
-            </label>
-
-            <label class="rl-timeblock-card">
-              <input type="radio" name="timeblock" value="afternoon" class="rl-timeblock-card__input">
-              <div class="rl-timeblock-card__inner">
-                <div class="rl-timeblock-card__icon">🌤</div>
-                <div class="rl-timeblock-card__text">
-                  <div class="rl-timeblock-card__title">Nachmittag</div>
-                  <div class="rl-timeblock-card__subtitle">13:00 – 18:00</div>
-                </div>
-              </div>
-            </label>
-
-            <label class="rl-timeblock-card">
-              <input type="radio" name="timeblock" value="fullday" class="rl-timeblock-card__input">
-              <div class="rl-timeblock-card__inner">
-                <div class="rl-timeblock-card__icon">🕒</div>
-                <div class="rl-timeblock-card__text">
-                  <div class="rl-timeblock-card__title">Ganztag</div>
-                  <div class="rl-timeblock-card__subtitle">08:00 – 18:00</div>
-                </div>
-              </div>
-            </label>
+        <footer class="rl-wizard-footer">
+          <button type="button" class="rl-btn-secondary" disabled>← Zurück</button>
+          <div class="rl-wizard-actions-right">
+            <button type="submit" class="rl-btn-primary">Weiter →</button>
           </div>
-          <p class="rl-help-text">Bei Halbtags-Mieten ist die Rückgabe am selben Tag erforderlich.</p>
-        </div>
+        </footer>
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const input = document.getElementById('pickup_date');
+          const hint = document.querySelector('.rl-input-hint');
 
-      </div>
+          function toggleHint() {
+            if (!input || !hint) return;
+            if (input.value) {
+              hint.style.display = "none";
+            } else {
+              hint.style.display = "block";
+            }
+          }
 
-      <div class="rl-wizard-actions">
-        <button type="button" class="btn btn-secondary rl-btn-secondary" disabled>← Zurück</button>
-        <button type="submit" class="btn btn-primary rl-btn-primary">Weiter →</button>
-      </div>
+          input.addEventListener('change', toggleHint);
+          toggleHint();
+        });
+        </script>
+      </form>
+      </footer>
     </form>
   </section>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const radios = document.querySelectorAll('input[name="timeblock"]');
+  const returnGroup = document.getElementById('return_date_group');
+  if (!returnGroup || !radios.length) return;
+
+  function updateReturnVisibility(){
+    const selected = document.querySelector('input[name="timeblock"]:checked');
+    if (selected && selected.value === 'fullday'){
+      returnGroup.classList.remove('is-hidden');
+    }else{
+      returnGroup.classList.add('is-hidden');
+    }
+  }
+
+  radios.forEach(r => r.addEventListener('change', updateReturnVisibility));
+  updateReturnVisibility();
+});
+</script>
 {% endblock %}

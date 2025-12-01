@@ -1,10 +1,92 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="card shadow">
-    <div class="card-body">
-        <h2 class="card-title mb-3">Über uns</h2>
-        <p class="card-text">Robert's Lackwerk ist ein familiengeführter Fachbetrieb mit langjähriger Erfahrung in der Autolackierung und Unfallinstandsetzung.</p>
-        <p class="card-text">Unsere Mission: Qualität, Präzision und Kundenzufriedenheit – damit Ihr Fahrzeug aussieht wie neu.</p>
+<section class="rl-page">
+  <section class="rl-section rl-section--narrow">
+
+    <header class="rl-page-header">
+      <p class="rl-eyebrow">Über uns</p>
+      <h1 class="rl-page-title">Robert’s Lackwerk – Lack, Karosserie & Fahrzeugpflege</h1>
+      <p class="rl-page-subtitle">
+        Wir verbinden klassisches Carrosserie-Handwerk mit moderner Technik – für Reparaturen, Lackierungen und Umzugs-Transporter, auf die Sie sich verlassen können.
+      </p>
+    </header>
+
+    <div class="rl-grid rl-grid--about">
+      <!-- linke Spalte: Text-Blöcke -->
+      <div class="rl-about-main">
+        <section class="rl-about-block">
+          <h2 class="rl-about-heading">Wer wir sind</h2>
+          <p>
+            Robert’s Lackwerk ist eine inhabergeführte Werkstatt, die sich auf Karosserie-, Lackier- und Aufbereitungsarbeiten spezialisiert hat.
+            Unser Team besteht aus erfahrenen Carrosserielackierer:innen und Spengler:innen, die ihr Handwerk von Grund auf gelernt haben und Wert auf saubere, zuverlässige Arbeit legen.
+          </p>
+        </section>
+
+        <section class="rl-about-block">
+          <h2 class="rl-about-heading">Unsere Arbeitsweise</h2>
+          <p>
+            Jeder Schaden ist anders – deshalb nehmen wir uns Zeit für eine persönliche Beratung. Wir begutachten den Schaden gemeinsam mit Ihnen, erstellen eine transparente Offerte und
+            stimmen Reparatur und Lackaufbau exakt auf Ihr Fahrzeug ab.
+          </p>
+          <p>
+            Farbtonbestimmung, hochwertige Materialien und eine saubere Vorbereitung sind für uns selbstverständlich. So bleibt Ihr Fahrzeug nicht nur schön, sondern langfristig geschützt.
+          </p>
+        </section>
+
+        <section class="rl-about-block">
+          <h2 class="rl-about-heading">Was wir anbieten</h2>
+          <ul class="rl-about-list">
+            <li>Unfall- und Karosserieinstandsetzung</li>
+            <li>Spot-Repair &amp; Smart Repair für kleinere Schäden</li>
+            <li>Komplett- und Teillackierungen</li>
+            <li>Felgen- und Kunststoffteile-Lackierungen</li>
+            <li>Aufbereitung &amp; Politur für Mattstellen und Kratzer</li>
+            <li>Unterstützung bei Versicherungsabwicklungen</li>
+            <li>Vermietung von Umzugs-Transportern</li>
+          </ul>
+        </section>
+
+        <section class="rl-about-block">
+          <h2 class="rl-about-heading">Warum Robert’s Lackwerk?</h2>
+          <ul class="rl-about-list rl-about-list--columns">
+            <li><strong>Persönlicher Kontakt</strong><br>Direkter Austausch mit der Werkstatt statt Hotline.</li>
+            <li><strong>Transparente Preise</strong><br>Wir erklären, welche Arbeiten wirklich nötig sind.</li>
+            <li><strong>Saubere Arbeit</strong><br>Wir behandeln jedes Fahrzeug, als wäre es unser eigenes.</li>
+            <li><strong>Flexibel</strong><br>Mietfahrzeug, Hol- &amp; Bringservice oder Termine nach Absprache.</li>
+          </ul>
+        </section>
+
+        <section class="rl-about-block">
+          <h2 class="rl-about-heading">Unser Versprechen</h2>
+          <p>
+            Wir möchten, dass Sie Ihr Fahrzeug mit einem guten Gefühl abholen: optisch wie neu, fachgerecht repariert und ohne Überraschungen auf der Rechnung.
+            Wenn Sie Fragen zu einem Schaden, einer Lackierung oder zur Vermietung haben – melden Sie sich unverbindlich. Wir nehmen uns gerne Zeit für Sie.
+          </p>
+        </section>
+      </div>
+
+      <!-- rechte Spalte: „Werkstatt / Inhaber“-Card -->
+      <aside class="rl-about-aside">
+        <div class="rl-card rl-card--about">
+          <h3 class="rl-card-title">Ihre Werkstatt</h3>
+          <p class="rl-card-text">
+            Robert’s Lackwerk steht für ehrliches Handwerk, direkte Kommunikation und sichtbare Qualität. Wir planen Reparaturen so, dass Ihr Fahrzeug
+            möglichst wenig Zeit in der Werkstatt verbringt – ohne Kompromisse bei Sicherheit und Optik.
+          </p>
+          <ul class="rl-card-list">
+            <li>Modern ausgestattete Lackierkabine</li>
+            <li>Langjährige Erfahrung im Unfallbereich</li>
+            <li>Enge Zusammenarbeit mit Versicherungen und Partnerbetrieben</li>
+          </ul>
+          <p class="rl-card-foot">
+            <span class="rl-badge rl-badge--soft">Regionale Werkstatt</span>
+            <span class="rl-badge rl-badge--soft">Fokus auf Qualität</span>
+          </p>
+        </div>
+      </aside>
     </div>
-</div>
+
+  </section>
+</section>
 {% endblock %}

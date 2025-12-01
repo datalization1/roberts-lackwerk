@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="rl-wizard">
+
+  <!-- Header -->
+  <header class="rl-wizard-header">
+    <a href="{% url 'home' %}" class="rl-back-link">← Zurück zur Startseite</a>
+    <h1 class="rl-wizard-title">Buchung Transporter</h1>
+    <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse</p>
+  </header>
+
+  <!-- Progress Card (separat, NICHT im Header) -->
+  <section class="rl-wizard-card rl-wizard-card--progress">
+    <div class="rl-wizard-progress">
+      <div class="rl-wizard-progress__top">
+        <span>Schritt 3 von 5</span>
+        <span>60% Abgeschlossen</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" style="width:60%;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Karte: Zusätzliche Optionen -->
+  <section class="rl-wizard-card">
+    <header class="rl-wizard-card__header">
+      <h2 class="rl-card__title">Zusätzliche Optionen</h2>
+      <p class="rl-card__subtitle">Fügen Sie optionale Ausrüstung und Services hinzu</p>
+    </header>
+
+    <form method="post" class="rl-wizard-body">
+      {% csrf_token %}
+
+      <!-- Additional Equipment & Services -->
+      <div class="rl-options-section">
+        <div class="rl-options-header">
+          <label class="form-label">Additional Equipment &amp; Services</label>
+          <p class="form-help">Select any additional items you need for your move</p>
+        </div>
+
+        <div class="rl-options-grid">
+          <!-- Additional Insurance -->
+            <label class="rl-option-card">
+              <input type="checkbox"
+                    name="additional_insurance"
+                    class="rl-option-card__input"
+                    {% if booking.additional_insurance %}checked{% endif %}>
+              <div class="rl-option-card__inner">
+              <div class="rl-option-card__icon"><span class="rl-option-card__glyph">🛡️</span></div>
+              <div class="rl-option-card__body">
+                <div class="rl-option-card__title">Zusätzliche Versicherung</div>
+                <div class="rl-option-card__text">Zusätzlicher Versicherungsschutz für Ihre Sicherheit</div>
+                <div class="rl-option-card__price">CHF 25/Tag</div>
+              </div>
+            </div>
+          </label>
+
+          <!-- Moving Blankets (10 pcs) -->
+            <label class="rl-option-card">
+              <input type="checkbox"
+                    name="moving_blankets"
+                    class="rl-option-card__input"
+                    {% if booking.moving_blankets %}checked{% endif %}>
+              <div class="rl-option-card__inner">
+              <div class="rl-option-card__icon"><span class="rl-option-card__glyph">📦</span></div>
+              <div class="rl-option-card__body">
+                <div class="rl-option-card__title">Umzugsdecken</div>
+                <div class="rl-option-card__text">Schützen Sie Ihre Möbel während des Transports</div>
+                <div class="rl-option-card__price">CHF 15</div>
+              </div>
+            </div>
+          </label>
+
+          <!-- Hand Truck / Dolly -->
+            <label class="rl-option-card">
+              <input type="checkbox"
+                    name="hand_truck"
+                    class="rl-option-card__input"
+                    {% if booking.hand_truck %}checked{% endif %}>
+              <div class="rl-option-card__inner">
+              <div class="rl-option-card__icon"><span class="rl-option-card__glyph">🛞</span></div>
+              <div class="rl-option-card__body">
+                <div class="rl-option-card__title">Handwagen / Transportwagen</div>
+                <div class="rl-option-card__text">Erleichtern Sie das Bewegen schwerer Gegenstände</div>
+                <div class="rl-option-card__price">CHF 10</div>
+              </div>
+            </div>
+          </label>
+
+          <!-- Tie-Down Straps (4 pcs) -->
+            <label class="rl-option-card">
+              <input type="checkbox"
+                    name="tie_down_straps"
+                    class="rl-option-card__input"
+                    {% if booking.tie_down_straps %}checked{% endif %}>
+              <div class="rl-option-card__inner">
+              <div class="rl-option-card__icon"><span class="rl-option-card__glyph">⛓️</span></div>
+              <div class="rl-option-card__body">
+                <div class="rl-option-card__title">Zurrgurte (4 Stück)</div>
+                <div class="rl-option-card__text">Sichern Sie Ihre Gegenstände während des Transports</div>
+                <div class="rl-option-card__price">CHF 8</div>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Additional Notes -->
+      <div class="rl-options-notes">
+        <label for="id_additional_notes" class="form-label">Additional Notes</label>
+        <textarea id="id_additional_notes"
+          name="additional_notes"
+          class="form-textarea"
+          rows="4"
+          placeholder="Any special requests or information we should know...">{{ booking.additional_notes|default:'' }}</textarea>
+        <p class="form-help">Optional - Let us know if you have any special requirements</p>
+      </div>
+
+      <!-- Footer Buttons -->
+      <footer class="rl-wizard-footer">
+        <a href="{% url 'booking_create' transporter.id %}" class="btn rl-btn-secondary">← Zurück</a>
+        <button type="submit" class="btn rl-btn-primary">Weiter →</button>
+      </footer>
+    </form>
+  </section>
+</section>
+{% endblock %}

@@ -1,10 +1,12 @@
 from datetime import timedelta, date
+from decimal import Decimal
 import os
 import logging
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.mail import send_mail
+from django.utils.dateparse import parse_date
 from django.core.files.storage import FileSystemStorage
 from formtools.wizard.views import SessionWizardView
 from django.db.models import Exists, OuterRef
@@ -12,13 +14,13 @@ from .models import Transporter, Booking, DamageReport, DamagePhoto
 from .forms import (
     BookingForm,
     AvailabilitySearchForm,
-    # Figma-Flow (5 Schritte)
     CarDetailsForm,
     PersonalDetailsForm,
     InsuranceDetailsForm,
     AccidentDetailsForm,
     ReviewForm,
 )
+
 
 # temporärer Speicher (anlegen oder Pfad anpassen)
 file_storage = FileSystemStorage(
@@ -38,6 +40,11 @@ def dienstleistungen(request):
 def ueber_uns(request):
     return render(request, "ueber_uns.html")
 
+def impressum(request):
+    return render(request, "impressum.html")
+
+def datenschutz(request):
+    return render(request, "datenschutz.html")
 
 # ---------- Schaden melden: Wizard ----------
 
@@ -178,16 +185,102 @@ class ClaimWizard(SessionWizardView):
             pass
         return redirect(reverse("schaden_success", kwargs={"pk": report.pk}))
 
-
 def schaden_success(request, pk):
     report = get_object_or_404(DamageReport, pk=pk)
     return render(request, "schaden_success.html", {"report": report})
 
 # ---------- Transporter / Mietfahrzeuge ----------
-
 def mietfahrzeuge(request):
     transporters = Transporter.objects.all()
-    return render(request, "mietfahrzeuge.html", {"transporters": transporters})
+
+    # Step-1-Daten aus Session
+    step1_data = request.session.get("rental_step1", {}).copy()
+
+    # Falls leer, aber bereits Booking vorhanden → aus Booking befüllen (wie vorher besprochen)
+    if not step1_data:
+        current_booking_id = request.session.get("current_booking_id")
+        if current_booking_id:
+            try:
+                booking = Booking.objects.get(pk=current_booking_id)
+                step1_data = {
+                    "transporter_id": booking.transporter_id,
+                    "date": booking.date.isoformat() if booking.date else "",
+                    "time_slot": booking.time_slot,
+                    "timeblock": None,  # kannst du bei Bedarf aus time_slot zurückmappen
+                }
+                request.session["rental_step1"] = step1_data
+            except Booking.DoesNotExist:
+                pass
+
+    if request.method == "POST":
+        transporter_id = request.POST.get("transporter_id")
+        pickup_date = request.POST.get("pickup_date")
+        timeblock = request.POST.get("timeblock")
+        return_date = request.POST.get("return_date")  # 🔹 neu
+
+        if transporter_id and pickup_date and timeblock:
+            slot_map = {
+                "morning": "MORNING",
+                "afternoon": "AFTERNOON",
+                "fullday": "FULLDAY",
+            }
+            time_slot_code = slot_map.get(timeblock, "MORNING")
+
+            step1_data = {
+                "transporter_id": int(transporter_id),
+                "date": pickup_date,
+                "time_slot": time_slot_code,
+                "timeblock": timeblock,
+                "return_date": return_date,
+            }
+            request.session["rental_step1"] = step1_data
+
+            return redirect("booking_create", transporter_id=transporter_id)
+
+        # wenn etwas fehlt → einfach durchfallen und Formular mit step1_data neu rendern
+
+    # 🔹 Verfügbarkeit pro Transporter prüfen (nur wenn Datum + Slot gewählt)
+    selected_date_str = step1_data.get("date")
+    selected_slot_code = step1_data.get("time_slot")  # MORNING/AFTERNOON/FULLDAY
+    selected_date = parse_date(selected_date_str) if selected_date_str else None
+
+    total_count = transporters.count()
+    available_count = 0
+
+    if selected_date and selected_slot_code:
+        for t in transporters:
+            booked = Booking.objects.filter(
+                transporter=t,
+                date=selected_date,
+                time_slot=selected_slot_code,
+            ).exists()
+            t.is_unavailable = booked
+
+            # Sehr einfache "nächste Verfügbarkeit": nächster Tag
+            t.next_available_date = selected_date + timedelta(days=1) if booked else None
+
+            if not booked:
+                available_count += 1
+    else:
+        for t in transporters:
+            t.is_unavailable = False
+            t.next_available_date = None
+        available_count = total_count
+
+    has_filter = bool(selected_date and selected_slot_code)
+    all_available = has_filter and available_count == total_count
+    any_unavailable = has_filter and available_count < total_count
+
+    context = {
+        "transporters": transporters,
+        "step1": step1_data,
+        "has_filter": has_filter,
+        "all_available": all_available,
+        "any_unavailable": any_unavailable,
+        "available_count": available_count,
+        "total_count": total_count,
+    }
+    return render(request, "mietfahrzeuge.html", context)
 
 def transporter_list(request):
     # Falls separat verlinkt – identisch zu 'mietfahrzeuge'
@@ -195,15 +288,52 @@ def transporter_list(request):
     return render(request, "mietfahrzeuge.html", {"transporters": transporters})
 
 def book_transporter(request, transporter_id):
-    transporter = get_object_or_404(Transporter, pk=transporter_id)
+    transporter = get_object_or_404(Transporter, id=transporter_id)
+
+    # 1) Versuch, eine existierende Buchung zu laden (zurück von Schritt 3 etc.)
+    booking_instance = None
+    current_booking_id = request.session.get("current_booking_id")
+    if current_booking_id:
+        try:
+            booking_instance = Booking.objects.get(pk=current_booking_id)
+        except Booking.DoesNotExist:
+            booking_instance = None
+
+    # 2) Step-1-Daten aus Session (für den allerersten Durchlauf)
+    step1_data = request.session.get("rental_step1", {})
+    date_raw = step1_data.get("date")
+    step1_date = parse_date(date_raw) if isinstance(date_raw, str) else date_raw
+    step1_time_slot = step1_data.get("time_slot")
 
     if request.method == "POST":
-        form = BookingForm(request.POST)
+        # Form enthält NUR Kundendaten
+        form = BookingForm(request.POST, instance=booking_instance)
+
         if form.is_valid():
-            booking = form.save()
-            return redirect("booking_success", booking_id=booking.id)
+            booking = form.save(commit=False)
+            booking.transporter = transporter
+
+            # Datum & Slot:
+            if booking_instance is None:
+                # erster Durchlauf: aus Schritt 1 setzen
+                booking.date = step1_date
+                booking.time_slot = step1_time_slot
+            else:
+                # Zurück von Schritt 3: bestehende Werte beibehalten
+                # (booking_instance enthält bereits gültiges date/time_slot)
+                booking.date = booking_instance.date
+                booking.time_slot = booking_instance.time_slot
+
+            booking.save()
+            request.session["current_booking_id"] = booking.id
+
+            return redirect("booking_options")
     else:
-        form = BookingForm(initial={"transporter": transporter})
+        # GET → Formular befüllen
+        if booking_instance:
+            form = BookingForm(instance=booking_instance)
+        else:
+            form = BookingForm()
 
     return render(request, "booking_form.html", {"form": form, "transporter": transporter})
 
@@ -289,6 +419,114 @@ def available_transporters(request):
         "chosen_date": chosen_date,
         "chosen_slot": chosen_slot,
     })
+
+def booking_options(request):
+    booking_id = request.session.get("current_booking_id")
+    if not booking_id:
+        # Wenn keine aktive Buchung vorhanden ist, zurück zu Schritt 1
+        return redirect("mietfahrzeuge")
+
+    booking = get_object_or_404(Booking, pk=booking_id)
+    transporter = booking.transporter
+
+    if request.method == "POST":
+        # Checkboxen werden NUR dann True, wenn sie im POST vorhanden sind
+        booking.additional_insurance = "additional_insurance" in request.POST
+        booking.moving_blankets      = "moving_blankets" in request.POST
+        booking.hand_truck           = "hand_truck" in request.POST
+        booking.tie_down_straps      = "tie_down_straps" in request.POST
+        booking.additional_notes     = (request.POST.get("additional_notes") or "").strip()
+        booking.save()
+
+        # 🔴 WICHTIG: current_booking_id NICHT löschen – wir brauchen es für Schritt 4, 5 und fürs Zurückgehen
+        return redirect("booking_review")   # Schritt 4
+
+    # GET → einfach Booking an Template geben; dort lesen wir die Booleans wieder aus
+    context = {
+        "booking": booking,
+        "transporter": transporter,
+    }
+    return render(request, "booking_options.html", context)
+
+def booking_review(request):
+    booking_id = request.session.get("current_booking_id")
+    if not booking_id:
+        return redirect("mietfahrzeuge")
+
+    booking = get_object_or_404(Booking, pk=booking_id)
+
+    # ❗ Basispreis direkt aus dem Transporter-Modell
+    daily_price = booking.transporter.preis_chf  # DecimalField
+    rental_days = 1  # ggf. später über Dauer berechnen
+    base_price = daily_price * rental_days if daily_price else None
+
+    extras = []
+    if booking.additional_insurance:
+        extras.append(("Zusatzversicherung", 25))
+    if booking.moving_blankets:
+        extras.append(("Umzugsdecken (10 Stk.)", 15))
+    if booking.hand_truck:
+        extras.append(("Sackkarre / Dolly", 10))
+    if booking.tie_down_straps:
+        extras.append(("Spannsets (4 Stk.)", 8))
+
+    extras_total = sum(price for _, price in extras) if extras else 0
+
+    # ❗ Gesamt = Fahrzeug + Extras
+    total_price = (base_price or 0) + extras_total if (base_price is not None or extras_total) else None
+
+    context = {
+        "booking": booking,
+        "base_price": base_price,
+        "rental_days": rental_days,
+        "extras": extras,
+        "extras_total": extras_total,
+        "total_price": total_price,
+    }
+
+    if request.method == "POST":
+        return redirect("booking_payment")
+
+    return render(request, "booking_review.html", context)
+
+def booking_payment(request):
+    booking_id = request.session.get("current_booking_id")
+    if not booking_id:
+        return redirect("mietfahrzeuge")
+
+    booking = get_object_or_404(Booking, pk=booking_id)
+
+    daily_price = booking.transporter.preis_chf
+    rental_days = 1
+    base_price = daily_price * rental_days if daily_price else None
+
+    extras_total = Decimal("0.00")
+    if booking.additional_insurance:
+        extras_total += Decimal("25")
+    if booking.moving_blankets:
+        extras_total += Decimal("15")
+    if booking.hand_truck:
+        extras_total += Decimal("10")
+    if booking.tie_down_straps:
+        extras_total += Decimal("8")
+
+    total_price = (base_price or Decimal("0.00")) + extras_total if (base_price is not None or extras_total) else None
+
+    if request.method == "POST":
+        method = request.POST.get("payment_method", "CARD")
+        booking.payment_method = "CARD" if method == "CARD" else "CASH"
+        booking.save()
+
+        if "current_booking_id" in request.session:
+            del request.session["current_booking_id"]
+
+        return redirect("booking_success", booking_id=booking.id)
+
+    context = {
+        "booking": booking,
+        "total_price": total_price,
+    }
+    return render(request, "booking_payment.html", context)
 
 class ClaimWizard(SessionWizardView):
     form_list = FORMS

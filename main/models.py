@@ -173,19 +173,37 @@ class Transporter(models.Model):
 
 
 class Booking(models.Model):
-    transporter = models.ForeignKey(Transporter, on_delete=models.CASCADE, related_name="bookings")
-    date        = models.DateField()
-    time_slot   = models.CharField(max_length=10, choices=TIME_SLOTS)
+    TIME_SLOTS = [
+        ("MORNING", "Vormittag"),
+        ("AFTERNOON", "Nachmittag"),
+        ("FULLDAY", "Ganzer Tag"),
+    ]
 
-    customer_name  = models.CharField(max_length=100)
-    customer_email = models.EmailField()
-    customer_phone = models.CharField(max_length=50, blank=True, null=True)
+    transporter  = models.ForeignKey(Transporter, on_delete=models.CASCADE)
+    date         = models.DateField()
+    time_slot    = models.CharField(max_length=10, choices=TIME_SLOTS)
+
+    customer_name   = models.CharField(max_length=100)
+    customer_email  = models.EmailField()
+    customer_phone  = models.CharField(max_length=50)
+
+    # 🔹 NEU
+    customer_address        = models.CharField("Adresse", max_length=255)
+    driver_license_number   = models.CharField("Führerscheinnummer", max_length=100)
+
+    # Zusatzoptionen usw. (was du bereits hast)
+    additional_insurance = models.BooleanField(default=False)
+    moving_blankets      = models.BooleanField(default=False)
+    hand_truck           = models.BooleanField(default=False)
+    tie_down_straps      = models.BooleanField(default=False)
+    additional_notes     = models.TextField(blank=True, null=True)
+
+    PAYMENT_METHOD_CHOICES = [
+        ("CARD", "Kreditkarte (Stripe)"),
+        ("CASH", "Barzahlung"),
+    ]
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES, default="CASH")
 
     class Meta:
         unique_together = ("transporter", "date", "time_slot")
-        indexes = [
-            models.Index(fields=["transporter", "date"]),
-        ]
-
-    def __str__(self):
-        return f"{self.transporter.name} - {self.date} ({self.time_slot})"
+        indexes = [models.Index(fields=["transporter", "date"])]

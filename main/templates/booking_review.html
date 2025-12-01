@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="rl-wizard">
+  <!-- Header -->
+  <header class="rl-wizard-header">
+    <a href="{% url 'mietfahrzeuge' %}" class="rl-back-link">← Zurück zur Übersicht</a>
+    <h1 class="rl-wizard-title">Buchung überprüfen</h1>
+    <p class="rl-wizard-subtitle">Überprüfen Sie Ihre Buchung vor der Bestätigung.</p>
+  </header>
+
+  <!-- Progress Card -->
+  <section class="rl-wizard-card rl-wizard-card--progress">
+    <div class="rl-wizard-progress">
+      <div class="rl-wizard-progress__top">
+        <span>Schritt 4 von 5</span>
+        <span>80% Abgeschlossen</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" style="width:80%;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Review Card -->
+  <section class="rl-wizard-card">
+    <header class="rl-wizard-card__header">
+      <h2 class="rl-card__title">Überprüfen &amp; Bestätigen</h2>
+      <p class="rl-card__subtitle">Bitte überprüfen Sie Ihre Buchungsdetails, bevor Sie bestätigen.</p>
+    </header>
+
+    <form method="post" class="rl-wizard-body">
+      {% csrf_token %}
+
+      <!-- Mietdetails -->
+      <div class="rl-review-section">
+        <h3 class="rl-review-title">Mietdetails</h3>
+        <dl class="rl-review-list">
+          <div class="rl-review-row">
+            <dt>Transporter:</dt>
+            <dd>{{ booking.transporter.name }}</dd>
+          </div>
+          <div class="rl-review-row">
+            <dt>Datum:</dt>
+            <dd>{{ booking.date|date:"d.m.Y" }}</dd>
+          </div>
+          <div class="rl-review-row">
+            <dt>Abholung:</dt>
+            <dd>{{ booking.get_time_slot_display }}</dd>
+          </div>
+          <div class="rl-review-row">
+            <dt>Mietdauer:</dt>
+            <dd>{% if rental_days %}{{ rental_days }} Tag(e){% else %}-{% endif %}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Kundendetails -->
+      <div class="rl-review-section">
+        <h3 class="rl-review-title">Kundendetails</h3>
+        <dl class="rl-review-list">
+          <div class="rl-review-row"><dt>Name:</dt><dd>{{ booking.customer_name }}</dd></div>
+          <div class="rl-review-row"><dt>E-Mail:</dt><dd>{{ booking.customer_email }}</dd></div>
+          <div class="rl-review-row"><dt>Telefon:</dt><dd>{{ booking.customer_phone|default:"-" }}</dd></div>
+        </dl>
+      </div>
+
+      <!-- Zusatzoptionen -->
+      <div class="rl-review-section">
+        <h3 class="rl-review-title">Zusatzoptionen</h3>
+        {% if extras %}
+          <ul class="rl-extra-list">
+            {% for label, price in extras %}
+              <li class="rl-extra-item">
+                <span>{{ label }}</span>
+                <span>CHF {{ price }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="rl-review-empty">Keine zusätzlichen Optionen ausgewählt.</p>
+        {% endif %}
+      </div>
+
+      <!-- Preisbox -->
+      <div class="rl-review-summary">
+        <div class="rl-review-summary-row">
+          <span>Basistarif{% if rental_days %} ({{ rental_days }} Tag(e)){% endif %}</span>
+          <span>{% if base_price %}CHF {{ base_price }}{% else %}CHF –{% endif %}</span>
+        </div>
+        <div class="rl-review-summary-row rl-review-summary-row--muted">
+          <span>Zusatzoptionen</span>
+          <span>{% if extras_total %}CHF {{ extras_total }}{% else %}CHF 0{% endif %}</span>
+        </div>
+        <div class="rl-review-summary-divider"></div>
+        <div class="rl-review-summary-row rl-review-summary-row--total">
+          <span>Gesamt:</span>
+          <span>{% if total_price %}CHF {{ total_price }}{% else %}CHF –{% endif %}</span>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <footer class="rl-wizard-footer">
+        <a href="{% url 'booking_options' %}" class="btn rl-btn-secondary">← Zurück</a>
+        <button type="submit" class="btn rl-btn-primary">Weiter zur Zahlung →</button>
+      </footer>
+    </form>
+  </section>
+</section>
+{% endblock %}

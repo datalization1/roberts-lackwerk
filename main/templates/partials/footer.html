@@ -1,0 +1,45 @@
+<footer class="rl-footer">
+  <div class="rl-footer-inner">
+    <div class="rl-footer-col">
+      <h4 class="rl-footer-title">Robert’s Lackwerk</h4>
+      <p class="rl-footer-text">
+        Lack, Karosserie und Fahrzeugpflege – von der kleinen Beule bis zum Unfallschaden.
+        Auf Wunsch mit Miet-Transporter für Ihren Umzug oder für die Reparaturdauer.
+      </p>
+    </div>
+
+    <div class="rl-footer-col">
+      <h4 class="rl-footer-title">Kontakt</h4>
+      <p class="rl-footer-text">
+        [Strasse und Hausnummer]<br>
+        [PLZ und Ort]
+      </p>
+      <p class="rl-footer-text">
+        Tel.: <a href="tel:[Telefonnummer]" class="rl-footer-link">[Telefonnummer]</a><br>
+        E-Mail: <a href="mailto:[E-Mail-Adresse]" class="rl-footer-link">[E-Mail-Adresse]</a>
+      </p>
+    </div>
+
+    <div class="rl-footer-col">
+      <h4 class="rl-footer-title">Dienstleistungen</h4>
+      <ul class="rl-footer-list">
+        <li><a href="{% url 'schaden_melden' %}" class="rl-footer-link">Schadenmeldung</a></li>
+        <li><a href="{% url 'mietfahrzeuge' %}" class="rl-footer-link">LKW &amp; Transporter Vermietung</a></li>
+        <li><a href="{% url 'ueber_uns' %}" class="rl-footer-link">Über uns</a></li>
+      </ul>
+    </div>
+
+    <div class="rl-footer-col">
+      <h4 class="rl-footer-title">Rechtliches</h4>
+      <ul class="rl-footer-list">
+        <li><a href="{% url 'impressum' %}" class="rl-footer-link">Impressum</a></li>
+        <li><a href="{% url 'datenschutz' %}" class="rl-footer-link">Datenschutz</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rl-footer-bottom">
+    <span>© {{ now|date:"Y" }} Robert's Lackwerk</span>
+    <span class="rl-footer-bottom-right">Website by Datalization</span>
+  </div>
+</footer>

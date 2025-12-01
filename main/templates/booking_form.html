@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="rl-wizard">
+
+  <!-- Header -->
+  <header class="rl-wizard-header">
+    <a href="{% url 'home' %}" class="rl-back-link">← Zurück zur Startseite</a>
+
+    <h1 class="rl-wizard-title">Buchung Transporter</h1>
+    <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse</p>
+  </header>
+
+  <!-- Progress Card -->
+  <section class="rl-wizard-card rl-wizard-card--progress">
+    <div class="rl-wizard-progress">
+      <div class="rl-wizard-progress__top">
+        <span>Schritt 2 von 5</span>
+        <span>40% Abgeschlossen</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" style="width:40%;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Karte: Kundendaten -->
+  <section class="rl-wizard-card">
+    <header class="rl-wizard-card__header">
+      <h2 class="rl-card__title">Kundendaten</h2>
+      <p class="rl-card__subtitle">Geben Sie Ihre Kontaktinformationen an</p>
+    </header>
+
+    <form method="post" class="rl-wizard-body">
+      {% csrf_token %}
+
+      <!-- Vollständiger Name -->
+      <div class="rl-wizard-field-group">
+        <label class="rl-field-label" for="id_customer_name">
+          Vollständiger Name <span class="rl-field-required">*</span>
+        </label>
+        <input
+          id="id_customer_name"
+          type="text"
+          name="customer_name"
+          class="rl-input"
+          placeholder="Vor- und Nachname"
+          value="{{ form.customer_name.value|default:'' }}"
+          required>
+      </div>
+
+      <!-- Adresse -->
+      <div class="rl-wizard-field-group">
+        <label class="rl-field-label" for="id_customer_address">
+          Adresse <span class="rl-field-required">*</span>
+        </label>
+        <input
+          id="id_customer_address"
+          type="text"
+          name="customer_address"
+          class="rl-input"
+          placeholder="Strasse, Stadt, Postleitzahl"
+          value="{{ form.customer_address.value|default:'' }}"
+          required>
+      </div>
+
+      <!-- Telefonnummer & E-Mail nebeneinander -->
+      <div class="rl-wizard-field-grid">
+        <div class="rl-wizard-field-group">
+          <label class="rl-field-label" for="id_customer_phone">
+            Telefonnummer <span class="rl-field-required">*</span>
+          </label>
+          <input
+            id="id_customer_phone"
+            type="text"
+            name="customer_phone"
+            class="rl-input"
+            placeholder="+41 XX XXX XX XX"
+            value="{{ form.customer_phone.value|default:'' }}"
+            required>
+        </div>
+
+        <div class="rl-wizard-field-group">
+          <label class="rl-field-label" for="id_customer_email">
+            E-Mail-Adresse <span class="rl-field-required">*</span>
+          </label>
+          <input
+            id="id_customer_email"
+            type="email"
+            name="customer_email"
+            class="rl-input"
+            placeholder="ihre.email@beispiel.ch"
+            value="{{ form.customer_email.value|default:'' }}"
+            required>
+        </div>
+      </div>
+
+      <!-- Führerscheinnummer -->
+      <div class="rl-wizard-field-group">
+        <label class="rl-field-label" for="id_driver_license_number">
+          Führerscheinnummer <span class="rl-field-required">*</span>
+        </label>
+        <input
+          id="id_driver_license_number"
+          type="text"
+          name="driver_license_number"
+          class="rl-input"
+          placeholder="Schweizer Führerscheinnummer"
+          value="{{ form.driver_license_number.value|default:'' }}"
+          required>
+        <p class="rl-field-help">
+          Sie müssen Ihren Führerschein bei der Abholung vorlegen.
+        </p>
+      </div>
+      {% if form.errors %}
+        <div class="form-errors">
+          {{ form.non_field_errors }}
+          {% for field in form %}
+            {% if field.errors %}
+              <p><strong>{{ field.label }}:</strong> {{ field.errors|join:", " }}</p>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      <!-- versteckte Felder für Step 1 -->
+      <input type="hidden" name="transporter" value="{{ transporter.id }}">
+      <input type="hidden" name="date" value="{{ form.initial.date }}">
+      <input type="hidden" name="time_slot" value="{{ form.initial.time_slot }}">
+
+      <!-- Footer Buttons -->
+      <footer class="rl-wizard-footer">
+        <a href="{% url 'mietfahrzeuge' %}" class="btn rl-btn-secondary">← Zurück</a>
+        <button type="submit" class="btn rl-btn-primary">Weiter →</button>
+      </footer>
+    </form>
+  </section>
+</section>
+{% endblock %}
