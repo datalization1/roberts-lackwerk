@@ -22,21 +22,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!import os
 SECRET_KEY = os.environ.get(
-    "DGJ4pVqX!%s4n9v#j3@8mQ$k2&uH7rZg^Wb0Fc*LpOEhT1yXw",
-    "django-insecure-s8-r#vc$pnvxgq07tvi00vgyu_lo3k%0%w_!1k%#k*%6xoc)79"
+    "DJANGO_SECRET_KEY",
+    "DGJ4pVqX!%s4n9v#j3@8mQ$k2&uH7rZg^Wb0Fc*LpOEhT1yXw"  # lokaler Fallback
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "roberts-lackwerk.ch",
     "www.roberts-lackwerk.ch",
-    ".herokuapp.com",
+    "roberts-lackwerk-611b83e56e00.herokuapp.com",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://roberts-lackwerk.ch",
+    "https://www.roberts-lackwerk.ch",
+    "https://roberts-lackwerk-611b83e56e00.herokuapp.com",
+]
 
 # Application definition
 
