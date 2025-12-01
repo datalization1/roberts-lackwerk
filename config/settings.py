@@ -43,6 +43,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://roberts-lackwerk-611b83e56e00.herokuapp.com",
 ]
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_SSL_REDIRECT = True
+
 # Application definition
 
 INSTALLED_APPS = [
