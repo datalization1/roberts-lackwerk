@@ -1,6 +1,5 @@
 from django.db import models
 
-
 # -----------------------------
 # Schaden melden (DamageReport)
 # -----------------------------
@@ -151,6 +150,8 @@ class Transporter(models.Model):
         null=True,
         help_text="Bild des Transporters hochladen"
     )
+    def __str__(self):
+        return self.name
 
     # (optional) Beschreibung – falls im Template genutzt
     description = models.TextField(blank=True, default="")

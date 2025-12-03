@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+  <div class="page-container" style="max-width:480px;margin:0 auto;">
+    <header class="section__header" style="text-align:center;margin-bottom:2rem;">
+      <h1 class="section__title">Admin Login</h1>
+      <p class="section__subtitle">Interner Bereich für Robert&apos;s Lackwerk</p>
+    </header>
+
+    {% if error_message %}
+      <div class="alert alert-danger" role="alert">
+        {{ error_message }}
+      </div>
+    {% endif %}
+
+    <form method="post" class="form">
+      {% csrf_token %}
+      <div class="form-field">
+        <label for="{{ form.username.id_for_label }}">Benutzername</label>
+        {{ form.username }}
+      </div>
+      <div class="form-field" style="margin-top:1rem;">
+        <label for="{{ form.password.id_for_label }}">Passwort</label>
+        {{ form.password }}
+      </div>
+      <div style="margin-top:1.5rem;display:flex;justify-content:flex-end;">
+        <button type="submit" class="btn btn-primary">Anmelden</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

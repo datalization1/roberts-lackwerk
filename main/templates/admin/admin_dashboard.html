@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+  <div class="page-container">
+
+    <header class="section__header" style="display:flex;justify-content:space-between;align-items:center;gap:1.5rem;">
+      <div>
+        <h1 class="section__title">Admin Dashboard</h1>
+        <p class="section__subtitle">Überblick über Schadenmeldungen &amp; Transporter-Buchungen</p>
+      </div>
+      <div style="display:flex;gap:.75rem;">
+        <a href="{% url 'home' %}" class="btn btn-ghost">Zur Website</a>
+        <a href="{% url 'admin_logout' %}" class="btn btn-secondary">Abmelden</a>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav style="margin-bottom:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;">
+      <a href="?tab=dashboard">Dashboard</a>
+      <a href="?tab=reports">Schadenmeldungen</a>
+      <a href="?tab=bookings">Buchungen</a>
+      <a href="?tab=availability">Verfügbarkeit</a>
+    </nav>
+
+    <!-- Inhalt je nach Tab – aktuell noch Platzhalter -->
+    {% if active_tab == "dashboard" %}
+    <!-- KPI-Kacheln -->
+    <div class="grid grid--4" style="margin-bottom:2rem;">
+        <article class="card card--soft">
+        <h3 class="rl-card__title">Schadenmeldungen gesamt</h3>
+        <p class="kpi-number">{{ total_reports }}</p>
+        <p class="kpi-sub">letzte 7 Tage: {{ recent_reports_count }}</p>
+        </article>
+
+        <article class="card card--soft">
+        <h3 class="rl-card__title">Buchungen gesamt</h3>
+        <p class="kpi-number">{{ total_bookings }}</p>
+        <p class="kpi-sub">heute: {{ bookings_today }}</p>
+        </article>
+
+        <article class="card card--soft">
+        <h3 class="rl-card__title">Zukünftige Buchungen</h3>
+        <p class="kpi-number">{{ upcoming_bookings }}</p>
+        <p class="kpi-sub">ab heute</p>
+        </article>
+
+        <article class="card card--soft">
+        <h3 class="rl-card__title">Transporter</h3>
+        <p class="kpi-number">{{ transporter_count }}</p>
+        <p class="kpi-sub">aktive Fahrzeuge</p>
+        </article>
+    </div>
+
+    <!-- Zwei Spalten: neue Reports & anstehende Buchungen -->
+    <div class="grid grid--2">
+        <section class="card card--soft">
+        <h3 class="rl-card__title">Neueste Schadenmeldungen</h3>
+        <ul class="list">
+            {% for report in recent_reports %}
+            <li class="list__item" style="margin-bottom:.5rem;">
+                <strong>
+                {% if report.company_name %}
+                    {{ report.company_name }}
+                {% else %}
+                    {{ report.first_name }} {{ report.last_name }}
+                {% endif %}
+                </strong>
+                <span> · {{ report.created_at|date:"d.m.Y H:i" }}</span>
+                {% if report.plate %}<span> · {{ report.plate }}</span>{% endif %}
+            </li>
+            {% empty %}
+            <li>Keine Schadenmeldungen vorhanden.</li>
+            {% endfor %}
+        </ul>
+        </section>
+
+        <section class="card card--soft">
+        <h3 class="rl-card__title">Anstehende Buchungen</h3>
+        <ul class="list">
+            {% for booking in upcoming_booking_list %}
+            <li class="list__item" style="margin-bottom:.5rem;">
+                <strong>{{ booking.transporter.name }}</strong>
+                <span> · {{ booking.date|date:"d.m.Y" }} ({{ booking.get_time_slot_display }})</span><br>
+                <span>{{ booking.customer_name }}</span>
+            </li>
+            {% empty %}
+            <li>Keine zukünftigen Buchungen vorhanden.</li>
+            {% endfor %}
+        </ul>
+        </section>
+    </div>
+
+    {% elif active_tab == "reports" %}
+      <p>Hier kommt die Liste der Schadenmeldungen hin.</p>
+    {% elif active_tab == "bookings" %}
+      <p>Hier kommt die Liste der Buchungen hin.</p>
+    {% elif active_tab == "availability" %}
+      <p>Hier bauen wir die Verfügbarkeitsansicht für Transporter auf.</p>
+    {% else %}
+      <p>Unbekannter Tab.</p>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

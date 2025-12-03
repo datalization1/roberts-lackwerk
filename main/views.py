@@ -1,5 +1,6 @@
 from datetime import timedelta, date
 from decimal import Decimal
+from django.utils import timezone
 import os
 import logging
 from django.conf import settings
@@ -10,6 +11,9 @@ from django.utils.dateparse import parse_date
 from django.core.files.storage import FileSystemStorage
 from formtools.wizard.views import SessionWizardView
 from django.db.models import Exists, OuterRef
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django import forms
 from .models import Transporter, Booking, DamageReport, DamagePhoto
 from .forms import (
     BookingForm,
@@ -21,6 +25,14 @@ from .forms import (
     ReviewForm,
 )
 
+# Admin Seite
+class AdminLoginForm(forms.Form):
+    username = forms.CharField(label="Benutzername", max_length=150)
+    password = forms.CharField(label="Passwort", widget=forms.PasswordInput)
+
+
+def is_staff_user(user):
+    return user.is_active and user.is_staff
 
 # temporärer Speicher (anlegen oder Pfad anpassen)
 file_storage = FileSystemStorage(
@@ -150,6 +162,7 @@ class ClaimWizard(SessionWizardView):
             DamagePhoto.objects.create(report=report, image=photo)
 
         # E-Mails (plain text; HTML-templates gerne später)
+        # E-Mails (plain text; HTML-templates gerne später)
         try:
             # Kunde
             send_mail(
@@ -159,7 +172,7 @@ class ClaimWizard(SessionWizardView):
                     f"Firma: {report.company_name or '-'}\n\n"
                     f"Wir haben Ihre Schadenmeldung erhalten und melden uns zeitnah."
                 ),
-                from_email="noreply@roberts-lackwerk.ch",
+                from_email=settings.CONTACT_EMAIL,          # <─ statt "noreply@..."
                 recipient_list=[report.email],
                 fail_silently=True,
             )
@@ -177,8 +190,8 @@ class ClaimWizard(SessionWizardView):
                     f"Teil: {report.car_part}\n"
                     f"Beschreibung: {report.message or '-'}\n"
                 ),
-                from_email="noreply@roberts-lackwerk.ch",
-                recipient_list=["info@roberts-lackwerk.ch"],
+                from_email=settings.CONTACT_EMAIL,          # <─ auch hier
+                recipient_list=[settings.CONTACT_EMAIL],    # <─ nur noch einmal zentral
                 fail_silently=True,
             )
         except Exception:
@@ -614,3 +627,78 @@ class ClaimWizard(SessionWizardView):
 
         # Redirect auf Erfolgseite – du hattest früher schon eine 'schaden_success'-View
         return redirect(reverse("schaden_success", kwargs={"pk": report.pk}))
+
+def admin_login_view(request):
+    # Wenn schon eingeloggt und Admin, direkt ins Dashboard
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect("admin_dashboard")
+
+    error_message = None
+
+    if request.method == "POST":
+        form = AdminLoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
+            user = authenticate(request, username=username, password=password)
+            if user is not None and user.is_staff:
+                login(request, user)
+                next_url = request.GET.get("next") or reverse("admin_dashboard")
+                return redirect(next_url)
+            else:
+                error_message = "Ungültige Zugangsdaten oder keine Admin-Berechtigung."
+    else:
+        form = AdminLoginForm()
+
+    context = {
+        "form": form,
+        "error_message": error_message,
+    }
+    return render(request, "admin/admin_login.html", context)
+
+
+@login_required
+def admin_logout_view(request):
+    logout(request)
+    return redirect("admin_login")
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def admin_dashboard_view(request):
+    tab = request.GET.get("tab", "dashboard")
+
+    today = timezone.localdate()
+    seven_days_ago = today - timedelta(days=7)
+
+    # KPIs
+    total_reports = DamageReport.objects.count()
+    recent_reports_count = DamageReport.objects.filter(
+        created_at__gte=seven_days_ago
+    ).count()
+
+    total_bookings = Booking.objects.count()
+    bookings_today = Booking.objects.filter(date=today).count()
+    upcoming_bookings = Booking.objects.filter(date__gte=today).count()
+
+    transporter_count = Transporter.objects.count()
+
+    # Listen für Dashboard
+    recent_reports = DamageReport.objects.order_by("-created_at")[:5]
+    upcoming_booking_list = (
+        Booking.objects.filter(date__gte=today)
+        .order_by("date", "time_slot")[:5]
+    )
+
+    context = {
+        "active_tab": tab,
+        "total_reports": total_reports,
+        "recent_reports_count": recent_reports_count,
+        "total_bookings": total_bookings,
+        "bookings_today": bookings_today,
+        "upcoming_bookings": upcoming_bookings,
+        "transporter_count": transporter_count,
+        "recent_reports": recent_reports,
+        "upcoming_booking_list": upcoming_booking_list,
+    }
+    return render(request, "admin/admin_dashboard.html", context)

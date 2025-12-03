@@ -1,6 +1,6 @@
 from django.utils.html import format_html
 from django.contrib import admin
-from .models import Transporter, Booking
+from .models import DamageReport, DamagePhoto, Transporter, Booking
 
 @admin.register(Transporter)
 class TransporterAdmin(admin.ModelAdmin):

@@ -168,3 +168,10 @@ LOGGING = {
         "schaden": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
     },
 }
+
+# E-Mail-Adresse für Schadenmeldungen & Vermietungen
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "info@roberts-lackwerk.ch")
+
+# optional, aber sinnvoll:
+DEFAULT_FROM_EMAIL = CONTACT_EMAIL
+SERVER_EMAIL = CONTACT_EMAIL

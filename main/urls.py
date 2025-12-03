@@ -34,4 +34,9 @@ urlpatterns = [
     path("mietfahrzeuge/buchung/review/", views.booking_review, name="booking_review"),          # Schritt 4
     path("mietfahrzeuge/buchung/zahlung/", views.booking_payment, name="booking_payment"),      # Schritt 5
     path("mietfahrzeuge/buchung/erfolg/<int:booking_id>/", views.booking_success, name="booking_success"),
+    
+    # Admin
+    path("intern/login/", views.admin_login_view, name="admin_login"),
+    path("intern/logout/", views.admin_logout_view, name="admin_logout"),
+    path("intern/dashboard/", views.admin_dashboard_view, name="admin_dashboard"),
 ]

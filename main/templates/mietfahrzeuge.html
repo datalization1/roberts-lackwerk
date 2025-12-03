@@ -55,46 +55,42 @@
           </div>
 
           <!-- Zeitblock -->
-          <div class="rl-wizard-field-group">
-            <label class="rl-field-label">Zeitblock auswählen <span class="rl-field-required">*</span></label>
+          <div class="form-field">
+            <label class="form-label">Zeitblock auswählen *</label>
             <div class="rl-timeblock-grid">
               <label class="rl-timeblock-card">
-                <input type="radio" name="timeblock" value="morning" class="rl-timeblock-card__input"
-                      {% if step1.timeblock %}{% if step1.timeblock == "morning" %}checked{% endif %}{% else %}checked{% endif %}>
-                <div class="rl-timeblock-card__inner">
-                  <div class="rl-timeblock-card__icon">☀️</div>
-                  <div class="rl-timeblock-card__text">
-                    <div class="rl-timeblock-card__title">Vormittag</div>
-                    <div class="rl-timeblock-card__subtitle">08:00 – 12:00</div>
+                <input type="radio" name="time_block" value="morning" class="rl-timeblock-input">
+                <div class="rl-timeblock-inner">
+                  <div class="rl-timeblock-icon">🌅</div>
+                  <div class="rl-timeblock-content">
+                    <div class="rl-timeblock-title">Vormittag</div>
+                    <div class="rl-timeblock-range">08:00 – 12:00</div>
                   </div>
                 </div>
               </label>
 
               <label class="rl-timeblock-card">
-                <input type="radio" name="timeblock" value="afternoon" class="rl-timeblock-card__input"
-                      {% if step1.timeblock == "afternoon" %}checked{% endif %}>
-                <div class="rl-timeblock-card__inner">
-                  <div class="rl-timeblock-card__icon">🌤</div>
-                  <div class="rl-timeblock-card__text">
-                    <div class="rl-timeblock-card__title">Nachmittag</div>
-                    <div class="rl-timeblock-card__subtitle">13:00 – 18:00</div>
+                <input type="radio" name="time_block" value="afternoon" class="rl-timeblock-input">
+                <div class="rl-timeblock-inner">
+                  <div class="rl-timeblock-icon">🌇</div>
+                  <div class="rl-timeblock-content">
+                    <div class="rl-timeblock-title">Nachmittag</div>
+                    <div class="rl-timeblock-range">13:00 – 18:00</div>
                   </div>
                 </div>
               </label>
 
               <label class="rl-timeblock-card">
-                <input type="radio" name="timeblock" value="fullday" class="rl-timeblock-card__input"
-                      {% if step1.timeblock == "fullday" %}checked{% endif %}>
-                <div class="rl-timeblock-card__inner">
-                  <div class="rl-timeblock-card__icon">🕒</div>
-                  <div class="rl-timeblock-card__text">
-                    <div class="rl-timeblock-card__title">Ganztag</div>
-                    <div class="rl-timeblock-card__subtitle">08:00 – 18:00</div>
+                <input type="radio" name="time_block" value="fullday" class="rl-timeblock-input">
+                <div class="rl-timeblock-inner">
+                  <div class="rl-timeblock-icon">🌕</div>
+                  <div class="rl-timeblock-content">
+                    <div class="rl-timeblock-title">Ganztag</div>
+                    <div class="rl-timeblock-range">08:00 – 18:00</div>
                   </div>
                 </div>
               </label>
             </div>
-            <p class="rl-help-text">Bei Ganztags-Mieten können Sie den Transporter mehrere Tage behalten.</p>
           </div>
 
           <!-- Rückgabedatum -->
