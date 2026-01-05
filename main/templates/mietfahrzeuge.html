@@ -35,7 +35,9 @@
         {% csrf_token %}
 
         <div class="rl-wizard-fields">
-
+          {% if form_error %}
+            <div class="rl-alert rl-alert--error">{{ form_error }}</div>
+          {% endif %}
           <!-- Abholdatum -->
           <div class="rl-wizard-field-group rl-field-group--date">
             <label class="rl-field-label" for="pickup_date">Abholdatum <span class="rl-field-required">*</span></label>
@@ -59,7 +61,8 @@
             <label class="form-label">Zeitblock auswählen *</label>
             <div class="rl-timeblock-grid">
               <label class="rl-timeblock-card">
-                <input type="radio" name="time_block" value="morning" class="rl-timeblock-input">
+                <input type="radio" name="time_block" value="morning" class="rl-timeblock-input"
+                  {% if step1.timeblock == 'morning' or step1.time_slot == 'MORNING' %}checked{% endif %}>
                 <div class="rl-timeblock-inner">
                   <div class="rl-timeblock-icon">🌅</div>
                   <div class="rl-timeblock-content">
@@ -70,7 +73,8 @@
               </label>
 
               <label class="rl-timeblock-card">
-                <input type="radio" name="time_block" value="afternoon" class="rl-timeblock-input">
+                <input type="radio" name="time_block" value="afternoon" class="rl-timeblock-input"
+                  {% if step1.timeblock == 'afternoon' or step1.time_slot == 'AFTERNOON' %}checked{% endif %}>
                 <div class="rl-timeblock-inner">
                   <div class="rl-timeblock-icon">🌇</div>
                   <div class="rl-timeblock-content">
@@ -81,7 +85,8 @@
               </label>
 
               <label class="rl-timeblock-card">
-                <input type="radio" name="time_block" value="fullday" class="rl-timeblock-input">
+                <input type="radio" name="time_block" value="fullday" class="rl-timeblock-input"
+                  {% if step1.timeblock == 'fullday' or step1.time_slot == 'FULLDAY' %}checked{% endif %}>
                 <div class="rl-timeblock-inner">
                   <div class="rl-timeblock-icon">🌕</div>
                   <div class="rl-timeblock-content">
@@ -94,7 +99,7 @@
           </div>
 
           <!-- Rückgabedatum -->
-          <div id="return_date_group" class="rl-wizard-field-group{% if step1.timeblock != 'fullday' %} is-hidden{% endif %}">
+          <div id="return_date_group" class="rl-wizard-field-group{% if step1.timeblock != 'fullday' and step1.time_slot != 'FULLDAY' %} is-hidden{% endif %}">
             <label class="rl-field-label" for="return_date">Rückgabedatum</label>
             <input id="return_date"
               name="return_date"
@@ -127,24 +132,28 @@
                         {% if t.is_unavailable %}
                           disabled
                         {% else %}
-                          {% if step1.transporter_id %}
-                            {% if step1.transporter_id == t.id %}checked{% endif %}
-                          {% elif forloop.first %}
-                            checked
-                          {% endif %}
-                        {% endif %}>
-                  <div class="rl-rental-card__inner">
-                    {% if t.is_unavailable %}
-                      <span class="rl-rental-card__badge rl-rental-card__badge--unavailable">Ausgebucht</span>
-                    {% else %}
-                      <span class="rl-rental-card__badge rl-rental-card__badge--available">Verfügbar</span>
-                    {% endif %}
-                    <div class="rl-rental-card__image" {% if t.image %}style="background-image:url('{{ t.image.url }}');"{% endif %}></div>
-                    <div class="rl-rental-card__body">
-                      <h3 class="rl-rental-card__title">{{ t.name }}</h3>
-                      {% if t.farbe %}<p class="rl-rental-card__meta">Farbe: {{ t.farbe }}</p>{% endif %}
-                      {% if t.preis_chf %}<p class="rl-rental-card__price">CHF {{ t.preis_chf|floatformat:0 }}</p>{% endif %}
-                      {% if t.is_unavailable and t.next_available_date %}
+                  {% if step1.transporter_id %}
+                    {% if step1.transporter_id == t.id %}checked{% endif %}
+                  {% elif forloop.first %}
+                    checked
+                  {% endif %}
+                {% endif %}>
+              <div class="rl-rental-card__inner">
+                {% if t.is_unavailable %}
+                  <span class="rl-rental-card__badge rl-rental-card__badge--unavailable">Ausgebucht</span>
+                {% else %}
+                  <span class="rl-rental-card__badge rl-rental-card__badge--available">Verfügbar</span>
+                {% endif %}
+                {% if t.image %}
+                  <div class="rl-rental-card__image" style="background-image:url('{{ t.image.url }}');"></div>
+                {% else %}
+                  <div class="rl-rental-card__image rl-rental-card__image--placeholder"></div>
+                {% endif %}
+                <div class="rl-rental-card__body">
+                  <h3 class="rl-rental-card__title">{{ t.name }}</h3>
+                  {% if t.farbe %}<p class="rl-rental-card__meta">Farbe: {{ t.farbe }}</p>{% endif %}
+                  {% if t.preis_chf %}<p class="rl-rental-card__price">CHF {{ t.preis_chf|floatformat:0 }}</p>{% endif %}
+                  {% if t.is_unavailable and t.next_available_date %}
                         <p class="rl-rental-card__note">Nächste Verfügbarkeit:<br>{{ t.next_available_date|date:"j.n.Y" }}</p>
                       {% endif %}
                     </div>
@@ -165,37 +174,24 @@
             <button type="submit" class="rl-btn-primary">Weiter →</button>
           </div>
         </footer>
-        <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          const input = document.getElementById('pickup_date');
-          const hint = document.querySelector('.rl-input-hint');
-
-          function toggleHint() {
-            if (!input || !hint) return;
-            if (input.value) {
-              hint.style.display = "none";
-            } else {
-              hint.style.display = "block";
-            }
-          }
-
-          input.addEventListener('change', toggleHint);
-          toggleHint();
-        });
-        </script>
       </form>
-      </footer>
-    </form>
   </section>
 </section>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
-  const radios = document.querySelectorAll('input[name="timeblock"]');
+  const radios = document.querySelectorAll('input[name="time_block"]');
   const returnGroup = document.getElementById('return_date_group');
-  if (!returnGroup || !radios.length) return;
+  const hint = document.querySelector('.rl-input-hint');
+  const input = document.getElementById('pickup_date');
+  if (!returnGroup) return;
+
+  function toggleHint() {
+    if (!input || !hint) return;
+    hint.style.display = input.value ? "none" : "block";
+  }
 
   function updateReturnVisibility(){
-    const selected = document.querySelector('input[name="timeblock"]:checked');
+    const selected = document.querySelector('input[name="time_block"]:checked');
     if (selected && selected.value === 'fullday'){
       returnGroup.classList.remove('is-hidden');
     }else{
@@ -204,7 +200,16 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   radios.forEach(r => r.addEventListener('change', updateReturnVisibility));
+  if (input) {
+    input.addEventListener('change', toggleHint);
+    toggleHint();
+  }
   updateReturnVisibility();
 });
 </script>
+<style>
+  .rl-rental-card__image--placeholder {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+  }
+</style>
 {% endblock %}

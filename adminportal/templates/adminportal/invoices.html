@@ -34,8 +34,11 @@
       <div class="fig-table__cell">Kunde</div>
       <div class="fig-table__cell">Betrag</div>
       <div class="fig-table__cell">Status</div>
+      <div class="fig-table__cell">Mahnstufe</div>
+      <div class="fig-table__cell">Zahlung</div>
       <div class="fig-table__cell">Rechnungsdatum</div>
       <div class="fig-table__cell">Fällig</div>
+      <div class="fig-table__cell">Historie</div>
       <div class="fig-table__cell">Aktion</div>
     </div>
     {% for invoice in invoices %}
@@ -57,12 +60,42 @@
             <span class="fig-badge">{{ invoice.get_status_display }}</span>
           {% endif %}
         </div>
+        <div class="fig-table__cell">
+          {% if invoice.reminder_level %}Stufe {{ invoice.reminder_level }}{% else %}-{% endif %}
+        </div>
+        <div class="fig-table__cell">
+          {% if invoice.payment_date %}{{ invoice.payment_date }}{% else %}-{% endif %}
+        </div>
         <div class="fig-table__cell">{{ invoice.issue_date }}</div>
         <div class="fig-table__cell">
           {% if invoice.due_date %}{{ invoice.due_date }}{% else %}-{% endif %}
         </div>
         <div class="fig-table__cell">
+          {% if invoice.payment_events %}
+            <details>
+              <summary>Events ({{ invoice.payment_events|length }})</summary>
+              <ul style="margin:6px 0 0 14px; color:#94a3b8; font-size:13px;">
+                {% for ev in invoice.payment_events|slice:":5" %}
+                  <li>{{ ev.ts|default:ev.ts }} · {{ ev.kind }} — {{ ev.note }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            -
+          {% endif %}
+        </div>
+        <div class="fig-table__cell">
           <a class="fig-btn fig-btn--ghost" href="{% url 'portal_invoice_pdf' invoice.pk %}">PDF</a>
+          {% if invoice.status != "paid" %}
+            <form method="post" action="{% url 'portal_invoice_mark_paid' invoice.pk %}" style="display:inline-block;">
+              {% csrf_token %}
+              <button class="fig-btn fig-btn--primary" type="submit" style="margin-left:4px;">Als bezahlt markieren</button>
+            </form>
+            <form method="post" action="{% url 'portal_invoice_raise_reminder' invoice.pk %}" style="display:inline-block; margin-left:4px;">
+              {% csrf_token %}
+              <button class="fig-btn fig-btn--ghost" type="submit">Mahnstufe +1</button>
+            </form>
+          {% endif %}
         </div>
       </div>
     {% empty %}

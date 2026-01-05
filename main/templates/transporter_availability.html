@@ -15,7 +15,11 @@
 <div class="card shadow mb-4">
     <div class="card-body">
         <h2 class="card-title">{{ transporter.name }}</h2>
-        <img src="{{ transporter.image.url }}" alt="{{ transporter.name }}" class="img-fluid mb-3">
+    {% if transporter.image %}
+      <img src="{{ transporter.image.url }}" alt="{{ transporter.name }}" class="img-fluid mb-3">
+    {% else %}
+      <div class="img-fluid mb-3" style="height: 220px; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 12px;"></div>
+    {% endif %}
         <p>{{ transporter.description }}</p>
     </div>
 </div>

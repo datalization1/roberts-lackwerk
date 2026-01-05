@@ -2,6 +2,22 @@
 {% load static %}
 
 {% block content %}
+<style>
+.fig-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 1.5rem; z-index: 40; }
+.fig-modal__card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; max-width: 720px; width: 100%; padding: 24px; color: #e2e8f0; }
+.fig-modal__card h4 { margin-bottom: 12px; }
+.fig-modal__grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 10px 18px; }
+.fig-modal__row { display: flex; justify-content: space-between; gap: 12px; }
+.fig-modal__label { color: #94a3b8; font-size: 13px; }
+.fig-modal__value { color: #e2e8f0; font-weight: 600; }
+.fig-modal:target { display: flex; }
+.fig-modal__close { float: right; color: #94a3b8; text-decoration: none; }
+.fig-filter { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+.fig-filter input, .fig-filter select { background: #0f172a; border: 1px solid #1e293b; color: #e2e8f0; padding: 6px 10px; border-radius: 8px; }
+.fig-timeline { display: grid; gap: 10px; margin-top: 14px; }
+.fig-timeline__item { border: 1px solid #1e293b; border-radius: 10px; padding: 12px; background: #0b1222; }
+.fig-timeline__title { font-weight: 700; }
+</style>
 <div class="figma-home figma-home--admin">
   <section class="fig-admin">
     <header class="fig-admin__hero">
@@ -121,8 +137,30 @@
       <section class="fig-admin__panel fig-admin__panel--wide">
         <header class="fig-admin__panel-header">
           <h3>Alle Schadenmeldungen</h3>
-          <p class="fig-admin__panel-subtitle">Neueste Einträge zuerst</p>
+          <p class="fig-admin__panel-subtitle">Neueste Einträge zuerst · Filterbar nach Status/Datum</p>
         </header>
+        <form method="get" class="fig-filter">
+          <input type="hidden" name="tab" value="reports" />
+          <label>
+            <span class="fig-modal__label">Status</span>
+            <select name="report_status">
+              <option value="all" {% if report_status == 'all' %}selected{% endif %}>Alle</option>
+              <option value="new" {% if report_status == 'new' %}selected{% endif %}>Neu</option>
+              <option value="in_progress" {% if report_status == 'in_progress' %}selected{% endif %}>In Bearbeitung</option>
+              <option value="done" {% if report_status == 'done' %}selected{% endif %}>Abgeschlossen</option>
+            </select>
+          </label>
+          <label>
+            <span class="fig-modal__label">Von</span>
+            <input type="date" name="report_from" value="{% if report_from %}{{ report_from|date:'Y-m-d' }}{% endif %}">
+          </label>
+          <label>
+            <span class="fig-modal__label">Bis</span>
+            <input type="date" name="report_to" value="{% if report_to %}{{ report_to|date:'Y-m-d' }}{% endif %}">
+          </label>
+          <button class="fig-btn fig-btn--ghost" type="submit">Filtern</button>
+          <a class="fig-btn fig-btn--ghost" href="?tab=reports">Reset</a>
+        </form>
         <div class="fig-table">
           <div class="fig-table__row fig-table__row--head">
             <div class="fig-table__cell fig-table__cell--id">ID</div>
@@ -130,6 +168,7 @@
             <div class="fig-table__cell">Fahrzeug</div>
             <div class="fig-table__cell">Datum</div>
             <div class="fig-table__cell">Versicherung</div>
+            <div class="fig-table__cell">Aktion</div>
           </div>
           {% for report in reports_list %}
             <div class="fig-table__row">
@@ -146,6 +185,42 @@
               <div class="fig-table__cell">
                 {% if report.insurer %}{{ report.insurer }}{% else %}-{% endif %}
               </div>
+              <div class="fig-table__cell">
+                <a class="fig-btn fig-btn--ghost fig-btn--xs" href="#report-{{ report.pk }}">Details</a>
+              </div>
+            </div>
+            <div class="fig-modal" id="report-{{ report.pk }}">
+              <div class="fig-modal__card">
+                <a class="fig-modal__close" href="#close">×</a>
+                <h4>Schadenmeldung SM-{{ report.pk }}</h4>
+                <div class="fig-modal__grid">
+                  <div>
+                    <div class="fig-modal__label">Kunde</div>
+                    <div class="fig-modal__value">
+                      {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
+                    </div>
+                    <div class="fig-modal__label">{{ report.email }} · {{ report.phone }}</div>
+                  </div>
+                  <div>
+                    <div class="fig-modal__label">Fahrzeug</div>
+                    <div class="fig-modal__value">{{ report.car_brand }} {{ report.car_model }}</div>
+                    <div class="fig-modal__label">VIN: {{ report.vin|default:"-" }} · Kennz.: {{ report.plate|default:"-" }}</div>
+                  </div>
+                  <div>
+                    <div class="fig-modal__label">Versicherung</div>
+                    <div class="fig-modal__value">{{ report.insurer|default:"-" }}</div>
+                    <div class="fig-modal__label">Policen-Nr.: {{ report.policy_number|default:"-" }}</div>
+                  </div>
+                  <div>
+                    <div class="fig-modal__label">Status</div>
+                    <div class="fig-modal__value">{{ report.get_status_display|default:report.status }}</div>
+                  </div>
+                </div>
+                <hr style="border-color:#1e293b; margin:14px 0;">
+                <p class="fig-modal__label">Beschreibung</p>
+                <p class="fig-modal__value">{{ report.message|default:"Keine Beschreibung" }}</p>
+                <p class="fig-modal__label">Erstellt: {{ report.created_at|date:"d.m.Y H:i" }}</p>
+              </div>
             </div>
           {% empty %}
             <p class="fig-empty fig-table__empty">Keine Schadenmeldungen vorhanden.</p>
@@ -156,8 +231,32 @@
       <section class="fig-admin__panel fig-admin__panel--wide">
         <header class="fig-admin__panel-header">
           <h3>Buchungsübersicht</h3>
-          <p class="fig-admin__panel-subtitle">Letzte Buchungen</p>
+          <p class="fig-admin__panel-subtitle">Letzte Buchungen · Filterbar nach Status/Datum</p>
         </header>
+        <form method="get" class="fig-filter">
+          <input type="hidden" name="tab" value="bookings" />
+          <label>
+            <span class="fig-modal__label">Status</span>
+            <select name="booking_status">
+              <option value="all" {% if booking_status == 'all' %}selected{% endif %}>Alle</option>
+              <option value="pending" {% if booking_status == 'pending' %}selected{% endif %}>Ausstehend</option>
+              <option value="confirmed" {% if booking_status == 'confirmed' %}selected{% endif %}>Bestätigt</option>
+              <option value="active" {% if booking_status == 'active' %}selected{% endif %}>Aktiv</option>
+              <option value="completed" {% if booking_status == 'completed' %}selected{% endif %}>Abgeschlossen</option>
+              <option value="cancelled" {% if booking_status == 'cancelled' %}selected{% endif %}>Storniert</option>
+            </select>
+          </label>
+          <label>
+            <span class="fig-modal__label">Von</span>
+            <input type="date" name="booking_from" value="{% if booking_from %}{{ booking_from|date:'Y-m-d' }}{% endif %}">
+          </label>
+          <label>
+            <span class="fig-modal__label">Bis</span>
+            <input type="date" name="booking_to" value="{% if booking_to %}{{ booking_to|date:'Y-m-d' }}{% endif %}">
+          </label>
+          <button class="fig-btn fig-btn--ghost" type="submit">Filtern</button>
+          <a class="fig-btn fig-btn--ghost" href="?tab=bookings">Reset</a>
+        </form>
         <div class="fig-table">
           <div class="fig-table__row fig-table__row--head">
             <div class="fig-table__cell fig-table__cell--id">ID</div>
@@ -165,6 +264,7 @@
             <div class="fig-table__cell">Kunde</div>
             <div class="fig-table__cell">Datum</div>
             <div class="fig-table__cell">Zeitslot</div>
+            <div class="fig-table__cell">Aktion</div>
           </div>
           {% for booking in bookings_list %}
             <div class="fig-table__row">
@@ -179,9 +279,57 @@
               </div>
               <div class="fig-table__cell">{{ booking.date|date:"d.m.Y" }}</div>
               <div class="fig-table__cell">{{ booking.get_time_slot_display }}</div>
+              <div class="fig-table__cell">
+                <a class="fig-btn fig-btn--ghost fig-btn--xs" href="#booking-{{ booking.pk }}">Details</a>
+              </div>
+            </div>
+            <div class="fig-modal" id="booking-{{ booking.pk }}">
+              <div class="fig-modal__card">
+                <a class="fig-modal__close" href="#close">×</a>
+                <h4>Buchung BU-{{ booking.pk }}</h4>
+                <div class="fig-modal__grid">
+                  <div>
+                    <div class="fig-modal__label">Transporter</div>
+                    <div class="fig-modal__value">{{ booking.transporter.name }}</div>
+                    <div class="fig-modal__label">{{ booking.transporter.kennzeichen }}</div>
+                  </div>
+                  <div>
+                    <div class="fig-modal__label">Zeitraum</div>
+                    <div class="fig-modal__value">{{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}</div>
+                    <div class="fig-modal__label">Pickup: {{ booking.pickup_date|default:booking.date|date:"d.m.Y" }} {{ booking.pickup_time|default:"" }}</div>
+                  </div>
+                  <div>
+                    <div class="fig-modal__label">Kunde</div>
+                    <div class="fig-modal__value">{{ booking.customer_name }}</div>
+                    <div class="fig-modal__label">{{ booking.customer_email }} · {{ booking.customer_phone }}</div>
+                  </div>
+                  <div>
+                    <div class="fig-modal__label">Status</div>
+                    <div class="fig-modal__value">{{ booking.get_status_display|default:booking.status }}</div>
+                    <div class="fig-modal__label">Zahlung: {{ booking.payment_status|default:"-" }}</div>
+                  </div>
+                </div>
+                <hr style="border-color:#1e293b; margin:14px 0;">
+                <p class="fig-modal__label">Notizen</p>
+                <p class="fig-modal__value">{{ booking.admin_notes|default:"Keine Notizen" }}</p>
+              </div>
             </div>
           {% empty %}
             <p class="fig-empty fig-table__empty">Keine Buchungen erfasst.</p>
+          {% endfor %}
+        </div>
+
+        <h4 style="margin-top:18px;">Timeline (nächste Termine)</h4>
+        <div class="fig-timeline">
+          {% for b in bookings_timeline %}
+            <div class="fig-timeline__item">
+              <div class="fig-timeline__title">{{ b.date|date:"d.m.Y" }} · {{ b.get_time_slot_display }}</div>
+              <div class="fig-modal__label">{{ b.transporter.name }} ({{ b.transporter.kennzeichen }})</div>
+              <div class="fig-modal__value">{{ b.customer_name }}</div>
+              <div class="fig-modal__label">Status: {{ b.get_status_display|default:b.status }} · Zahlung: {{ b.payment_status|default:"-" }}</div>
+            </div>
+          {% empty %}
+            <p class="fig-empty">Keine kommenden Buchungen.</p>
           {% endfor %}
         </div>
       </section>

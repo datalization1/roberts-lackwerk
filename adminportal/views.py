@@ -27,6 +27,14 @@ def _is_staff(user):
     return user.groups.filter(name__in=["admin", "manager", "employee"]).exists()
 
 
+def _has_role(user, roles):
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user.groups.filter(name__in=roles).exists()
+
+
 def _base_context(active_tab: str):
     today = timezone.localdate()
     seven_days_ago = today - timedelta(days=7)
@@ -198,6 +206,32 @@ def invoices(request):
 
 
 @login_required
+@user_passes_test(lambda u: _has_role(u, ["admin", "manager"]))
+def invoice_mark_paid(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if request.method == "POST":
+        today = timezone.localdate()
+        invoice.status = "paid"
+        invoice.payment_date = today
+        invoice.add_event("paid", "Im Portal als bezahlt markiert")
+        invoice.save(update_fields=["status", "payment_date", "payment_events", "updated_at"])
+    return redirect("portal_invoices")
+
+
+@login_required
+@user_passes_test(lambda u: _has_role(u, ["admin", "manager"]))
+def invoice_raise_reminder(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if request.method == "POST":
+        invoice.reminder_level = min((invoice.reminder_level or 0) + 1, 3)
+        invoice.status = "overdue"
+        invoice.last_reminded_at = timezone.localdate()
+        invoice.add_event("reminder", f"Mahnstufe {invoice.reminder_level} gesetzt")
+        invoice.save(update_fields=["reminder_level", "status", "last_reminded_at", "payment_events", "updated_at"])
+    return redirect("portal_invoices")
+
+
+@login_required
 @user_passes_test(_is_staff)
 def invoice_pdf(request, pk):
     invoice = get_object_or_404(Invoice.objects.select_related("customer"), pk=pk)
@@ -205,35 +239,41 @@ def invoice_pdf(request, pk):
     p = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    y = height - 50
-    p.setFont("Helvetica-Bold", 16)
+    y = height - 60
+    p.setFont("Helvetica-Bold", 18)
     p.drawString(40, y, f"Rechnung {invoice.invoice_number}")
-    y -= 30
-    p.setFont("Helvetica", 11)
-    p.drawString(40, y, f"Kunde: {invoice.customer}")
-    y -= 18
+    y -= 25
+    p.setFont("Helvetica", 10)
+    p.drawString(40, y, f"Datum: {invoice.issue_date} | Fällig: {invoice.due_date or '-'}")
+    y -= 16
+    p.drawString(40, y, f"Status: {invoice.get_status_display()} | Mahnstufe: {invoice.reminder_level or 0}")
+    if invoice.payment_date:
+        y -= 14
+        p.drawString(40, y, f"Bezahlt am: {invoice.payment_date}")
+
+    y -= 24
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(40, y, "Kunde")
+    p.setFont("Helvetica", 10)
+    y -= 16
+    p.drawString(40, y, f"{invoice.customer or '-'}")
+    y -= 14
     p.drawString(40, y, f"E-Mail: {invoice.customer.email if invoice.customer else ''}")
-    y -= 18
+    y -= 14
     p.drawString(40, y, f"Telefon: {invoice.customer.phone if invoice.customer else ''}")
 
-    y -= 30
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(40, y, "Rechnungsdetails")
-    p.setFont("Helvetica", 11)
-    y -= 18
-    p.drawString(40, y, f"Datum: {invoice.issue_date}")
-    y -= 18
-    p.drawString(40, y, f"Fällig: {invoice.due_date or '-'}")
-    y -= 18
-    p.drawString(40, y, f"Betrag: CHF {invoice.amount_chf}")
-    y -= 18
-    p.drawString(40, y, f"Status: {invoice.get_status_display()}")
     y -= 24
-    p.drawString(40, y, f"Beschreibung:")
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(40, y, "Details")
+    p.setFont("Helvetica", 10)
     y -= 16
-    for line in (invoice.description or "-").splitlines():
+    p.drawString(40, y, f"Betrag: CHF {invoice.amount_chf}")
+    y -= 14
+    p.drawString(40, y, f"Beschreibung:")
+    y -= 14
+    for line in (invoice.description or "-").splitlines() or ["-"]:
         p.drawString(50, y, line[:100])
-        y -= 14
+        y -= 12
         if y < 60:
             p.showPage()
             y = height - 60

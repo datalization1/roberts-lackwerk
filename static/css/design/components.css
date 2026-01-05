@@ -34,7 +34,7 @@
 .rl-wizard-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem;}
 @media(max-width:900px){.rl-wizard-field-grid{grid-template-columns:1fr;}}
 .rl-wizard-label{font-size:.85rem;font-weight:500;color:var(--text-soft);margin-bottom:.25rem;display:block;}
-.rl-wizard-card input[type="text"],.rl-wizard-card input[type="email"],.rl-wizard-card input[type="tel"],.rl-wizard-card select,.rl-wizard-card textarea{width:100%;padding:.75rem 1rem;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);font-size:var(--font-base);outline:none;transition:border-color var(--transition-fast),box-shadow var(--transition-fast),background-color var(--transition-fast);}
+.rl-wizard-card input[type="text"],.rl-wizard-card input[type="email"],.rl-wizard-card input[type="tel"],.rl-wizard-card select,.rl-wizard-card textarea{width:100%;padding:.75rem 1rem;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-elevated);color:#e5e7eb;font-size:var(--font-base);outline:none;transition:border-color var(--transition-fast),box-shadow var(--transition-fast),background-color var(--transition-fast);}
 .rl-wizard-card input::placeholder,.rl-wizard-card textarea::placeholder{color:var(--text-muted);}
 .rl-wizard-card input:focus,.rl-wizard-card select:focus,.rl-wizard-card textarea:focus{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary);background:#101010;}
 .rl-wizard-card .form-check-label{font-size:.85rem;color:var(--text-soft);}
@@ -180,7 +180,9 @@
 .rl-rental-status__link{border:none;background:transparent;color:var(--primary-soft);font-size:.8rem;display:inline-flex;align-items:center;gap:.25rem;cursor:pointer;padding:0;}
 .rl-field-group--date .rl-input-wrapper{position:relative;}
 .rl-input-hint{position:absolute;left:1rem;top:50%;transform:translateY(-50%);font-size:.8rem;color:rgba(255,255,255,.45);pointer-events:none;transition:opacity .15s;}
-.rl-input--date::-webkit-datetime-edit{color:transparent;} .rl-input--date:focus::-webkit-datetime-edit{color:#fff;}
+.rl-input--date::-webkit-datetime-edit{color:#e5e7eb;}
+.rl-input--date:focus::-webkit-datetime-edit{color:#fff;}
+.rl-input--date::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.9;}
 
 /* Progressbar & Optionen in Buchung */
 .rl-wizard{max-width:960px;margin:0 auto;padding:1rem 0;}

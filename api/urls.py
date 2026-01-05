@@ -12,6 +12,7 @@ from .views import (
 from .viewsets_uploads import DamagePhotoUploadView
 from .meta import MetaOptionsView
 from .auth_views import LoginView, LogoutView, MeView
+from .stripe_views import PaymentIntentCreateView, StripeWebhookView
 
 router = routers.DefaultRouter()
 router.register(r"customers", CustomerViewSet, basename="customer")
@@ -28,4 +29,6 @@ urlpatterns = [
     path("auth/login/", LoginView.as_view(), name="auth-login"),
     path("auth/logout/", LogoutView.as_view(), name="auth-logout"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
+    path("payments/create-intent/", PaymentIntentCreateView.as_view(), name="stripe-create-intent"),
+    path("stripe/webhook/", StripeWebhookView.as_view(), name="stripe-webhook"),
 ]

@@ -1,4 +1,4 @@
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from decimal import Decimal
 from django.utils import timezone
 import os
@@ -15,6 +15,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
 from .models import Transporter, Booking, DamageReport, DamagePhoto
+from api.validators import validate_booking_conflict
 from .forms import (
     BookingForm,
     AvailabilitySearchForm,
@@ -241,8 +242,8 @@ def mietfahrzeuge(request):
     if request.method == "POST":
         transporter_id = request.POST.get("transporter_id")
         pickup_date = request.POST.get("pickup_date")
-        timeblock = request.POST.get("timeblock")
-        return_date = request.POST.get("return_date")  # 🔹 neu
+        timeblock = request.POST.get("time_block") or request.POST.get("timeblock")
+        return_date = request.POST.get("return_date")
 
         if transporter_id and pickup_date and timeblock:
             slot_map = {
@@ -263,7 +264,18 @@ def mietfahrzeuge(request):
 
             return redirect("booking_create", transporter_id=transporter_id)
 
-        # wenn etwas fehlt → einfach durchfallen und Formular mit step1_data neu rendern
+        # wenn etwas fehlt → Fehlermeldung setzen und Formular neu rendern
+        context = {
+            "transporters": transporters,
+            "step1": step1_data,
+            "has_filter": False,
+            "all_available": False,
+            "any_unavailable": False,
+            "available_count": transporters.count(),
+            "total_count": transporters.count(),
+            "form_error": "Bitte Abholdatum, Zeitblock und einen Transporter auswählen.",
+        }
+        return render(request, "mietfahrzeuge.html", context)
 
     # 🔹 Verfügbarkeit pro Transporter prüfen (nur wenn Datum + Slot gewählt)
     selected_date_str = step1_data.get("date")
@@ -350,10 +362,19 @@ def book_transporter(request, transporter_id):
                 booking.date = booking_instance.date
                 booking.time_slot = booking_instance.time_slot
 
-            booking.save()
-            request.session["current_booking_id"] = booking.id
-
-            return redirect("booking_options")
+            try:
+                validate_booking_conflict(
+                    transporter=booking.transporter,
+                    booking_date=booking.date,
+                    time_slot=booking.time_slot,
+                    instance_id=booking_instance.id if booking_instance else None,
+                )
+            except Exception as e:
+                form.add_error(None, str(e))
+            else:
+                booking.save()
+                request.session["current_booking_id"] = booking.id
+                return redirect("booking_options")
     else:
         # GET → Formular befüllen
         if booking_instance:
@@ -626,6 +647,21 @@ def admin_logout_view(request):
 def admin_dashboard_view(request):
     tab = request.GET.get("tab", "dashboard")
 
+    # Filter helpers
+    def parse_date(param):
+        try:
+            return datetime.strptime(param, "%Y-%m-%d").date()
+        except Exception:
+            return None
+
+    report_status = request.GET.get("report_status")
+    report_from = parse_date(request.GET.get("report_from", ""))
+    report_to = parse_date(request.GET.get("report_to", ""))
+
+    booking_status = request.GET.get("booking_status")
+    booking_from = parse_date(request.GET.get("booking_from", ""))
+    booking_to = parse_date(request.GET.get("booking_to", ""))
+
     today = timezone.localdate()
     seven_days_ago = today - timedelta(days=7)
 
@@ -648,9 +684,31 @@ def admin_dashboard_view(request):
         .order_by("date", "time_slot")[:5]
     )
 
-    # Tabellen für CRM-Ansichten
-    reports_list = DamageReport.objects.order_by("-created_at")[:50]
-    bookings_list = Booking.objects.select_related("transporter").order_by("-date")[:50]
+    # Tabellen für CRM-Ansichten mit Filtern
+    reports_qs = DamageReport.objects.order_by("-created_at")
+    if report_status and report_status != "all":
+        reports_qs = reports_qs.filter(status=report_status)
+    if report_from:
+        reports_qs = reports_qs.filter(created_at__date__gte=report_from)
+    if report_to:
+        reports_qs = reports_qs.filter(created_at__date__lte=report_to)
+    reports_list = reports_qs[:100]
+
+    bookings_qs = Booking.objects.select_related("transporter").order_by("-date", "-created_at")
+    if booking_status and booking_status != "all":
+        bookings_qs = bookings_qs.filter(status=booking_status)
+    if booking_from:
+        bookings_qs = bookings_qs.filter(date__gte=booking_from)
+    if booking_to:
+        bookings_qs = bookings_qs.filter(date__lte=booking_to)
+    bookings_list = bookings_qs[:100]
+
+    # Timeline/Calendar Light
+    bookings_timeline = (
+        Booking.objects.filter(date__gte=today)
+        .select_related("transporter")
+        .order_by("date", "time_slot")[:120]
+    )
     transporters = Transporter.objects.all().order_by("name")
 
     context = {
@@ -665,6 +723,13 @@ def admin_dashboard_view(request):
         "upcoming_booking_list": upcoming_booking_list,
         "reports_list": reports_list,
         "bookings_list": bookings_list,
+        "bookings_timeline": bookings_timeline,
+        "report_status": report_status or "all",
+        "report_from": report_from,
+        "report_to": report_to,
+        "booking_status": booking_status or "all",
+        "booking_from": booking_from,
+        "booking_to": booking_to,
         "transporters": transporters,
     }
     return render(request, "admin/admin_dashboard.html", context)

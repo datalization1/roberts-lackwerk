@@ -49,6 +49,11 @@ class Invoice(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     issue_date = models.DateField(default=timezone.localdate)
     due_date = models.DateField(null=True, blank=True)
+    payment_date = models.DateField(null=True, blank=True)
+    payment_method = models.CharField(max_length=30, blank=True)
+    payment_events = models.JSONField(default=list, blank=True)
+    reminder_level = models.PositiveSmallIntegerField(default=0)
+    last_reminded_at = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -86,6 +91,17 @@ class Invoice(models.Model):
         if not self.is_overdue:
             return 0
         return (timezone.localdate() - self.due_date).days
+
+    def add_event(self, kind, note=""):
+        events = list(self.payment_events or [])
+        events.append(
+            {
+                "kind": kind,
+                "note": note,
+                "ts": timezone.now().isoformat(),
+            }
+        )
+        self.payment_events = events
 
 
 class PortalSettings(models.Model):
