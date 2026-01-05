@@ -1,0 +1,49 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Buchung BU-{{ booking.pk }}</h3>
+    <p class="fig-admin__panel-subtitle">{{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}</p>
+  </header>
+  <div class="fig-admin__cards fig-admin__cards--grid">
+    <article class="fig-admin__card">
+      <p class="fig-admin__card-label">Kunde</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">{{ booking.customer_name }}</div>
+      <p class="fig-admin__card-meta">{{ booking.customer_email }}</p>
+      <p class="fig-admin__card-meta">{{ booking.customer_phone }}</p>
+      <p class="fig-admin__card-meta">{{ booking.customer_address }}</p>
+    </article>
+    <article class="fig-admin__card">
+      <p class="fig-admin__card-label">Transporter</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">{{ booking.transporter.name }}</div>
+      <p class="fig-admin__card-meta">Kennzeichen: {{ booking.transporter.kennzeichen }}</p>
+    </article>
+    <article class="fig-admin__card">
+      <p class="fig-admin__card-label">Optionen</p>
+      <p class="fig-admin__card-meta">Zusatzversicherung: {{ booking.additional_insurance|yesno:"Ja,Nein" }}</p>
+      <p class="fig-admin__card-meta">Umzugsdecken: {{ booking.moving_blankets|yesno:"Ja,Nein" }}</p>
+      <p class="fig-admin__card-meta">Sackkarre: {{ booking.hand_truck|yesno:"Ja,Nein" }}</p>
+    </article>
+  </div>
+
+  <div class="fig-admin__panel" style="margin-top:14px;">
+    <header class="fig-admin__panel-header">
+      <h4>Status & Notizen</h4>
+    </header>
+    <form method="post" class="fig-form">
+      {% csrf_token %}
+      <div class="fig-form__grid">
+        <div>{{ form.status.label_tag }} {{ form.status }}</div>
+      </div>
+      <div class="fig-form__row">
+        {{ form.admin_notes.label_tag }} {{ form.admin_notes }}
+      </div>
+      <div class="fig-form__actions">
+        <button type="submit" class="fig-btn fig-btn--primary">Speichern</button>
+      </div>
+    </form>
+    <p class="fig-admin__card-meta">Notiz Kunde: {{ booking.additional_notes|default:"-" }}</p>
+  </div>
+</section>
+{% endblock %}

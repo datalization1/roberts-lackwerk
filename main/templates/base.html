@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{% static 'css/design/variables.css' %}">
     <link rel="stylesheet" href="{% static 'css/design/layout.css' %}">
     <link rel="stylesheet" href="{% static 'css/design/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/figma.css' %}">
 </head>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
@@ -55,6 +56,33 @@ document.addEventListener('DOMContentLoaded',function(){
     if (window.lucide) {
       lucide.createIcons();
     }
+
+    // Set max today for date inputs
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelectorAll('input[data-max-today="true"]').forEach(function(el){
+      el.setAttribute('max', today);
+    });
+
+    // Basic file size/type check for inputs carrying data-max-size (MB)
+    document.querySelectorAll('input[type="file"][data-max-size]').forEach(function(el){
+      el.addEventListener('change', function(ev){
+        const maxMB = parseInt(el.dataset.maxSize || '5', 10);
+        const maxBytes = maxMB * 1024 * 1024;
+        const allowed = (el.getAttribute('accept') || '').split(',').filter(Boolean);
+        for (const file of el.files) {
+          if (file.size > maxBytes) {
+            alert(`Datei ${file.name} ist zu groß. Maximal ${maxMB} MB.`);
+            el.value = '';
+            return;
+          }
+          if (allowed.length && !allowed.includes(file.type)) {
+            alert(`Datei ${file.name} hat einen ungültigen Typ (${file.type}).`);
+            el.value = '';
+            return;
+          }
+        }
+      });
+    });
   });
 </script>
   </body>

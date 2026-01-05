@@ -1,0 +1,63 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Verfügbarkeit</h3>
+    <p class="fig-admin__panel-subtitle">Transporter und nächste Verfügbarkeiten</p>
+  </header>
+  <form method="get" class="fig-form">
+    <div class="fig-form__grid">
+      <div><label>Datum</label><input type="date" name="date" value="{{ target_date|date:'Y-m-d' }}"></div>
+    </div>
+    <div class="fig-form__actions">
+      <button class="fig-btn fig-btn--primary" type="submit">Prüfen</button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_availability' %}">Heute</a>
+    </div>
+  </form>
+  <div class="fig-admin__cards fig-admin__cards--grid">
+    {% for transporter in transporters %}
+      <article class="fig-admin__card fig-admin__card--tall">
+        <p class="fig-admin__card-label">Transporter</p>
+        <div class="fig-admin__card-value fig-admin__card-value--small">{{ transporter.name }}</div>
+        <p class="fig-admin__card-meta">Kennzeichen: {{ transporter.kennzeichen }}</p>
+        <p class="fig-admin__card-meta">Verfügbar ab {{ transporter.verfuegbar_ab|date:"d.m.Y" }}</p>
+        {% if transporter.id in busy_ids %}
+          <span class="fig-badge fig-badge--warning">Belegt am {{ target_date|date:"d.m.Y" }}</span>
+        {% else %}
+          <span class="fig-badge fig-badge--success">Verfügbar</span>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="fig-empty">Keine Transporter vorhanden.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Bevorstehende Buchungen</h3>
+    <p class="fig-admin__panel-subtitle">Ab {{ target_date|date:"d.m.Y" }}</p>
+  </header>
+  <div class="fig-table">
+    {% for booking in upcoming %}
+      <div class="fig-table__row">
+        <div class="fig-table__cell fig-table__cell--id">
+          <a href="{% url 'portal_booking_detail' booking.pk %}">BU-{{ booking.pk }}</a>
+        </div>
+        <div class="fig-table__cell">
+          {{ booking.transporter.name }}
+          <div class="fig-table__meta">{{ booking.date|date:"d.m.Y" }}</div>
+        </div>
+        <div class="fig-table__cell">
+          {{ booking.customer_name }}
+          <div class="fig-table__meta">{{ booking.customer_email }}</div>
+        </div>
+        <div class="fig-table__cell">{{ booking.get_time_slot_display }}</div>
+      </div>
+    {% empty %}
+      <p class="fig-empty fig-table__empty">Keine kommenden Buchungen.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

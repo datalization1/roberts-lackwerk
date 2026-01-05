@@ -1,0 +1,79 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Einstellungen</h3>
+    <p class="fig-admin__panel-subtitle">Portal-Konfiguration</p>
+  </header>
+  {% if settings_saved %}
+    <p class="fig-badge fig-badge--success">Einstellungen gespeichert.</p>
+  {% endif %}
+  <form method="post" class="fig-form">
+    {% csrf_token %}
+    <div class="fig-admin__panel" style="margin:0 0 16px 0;">
+      <header class="fig-admin__panel-header">
+        <h4>Basis</h4>
+      </header>
+      <div class="fig-form__grid">
+        <div>{{ settings_form.contact_email.label_tag }} {{ settings_form.contact_email }}</div>
+        <div>{{ settings_form.default_currency.label_tag }} {{ settings_form.default_currency }}</div>
+        <div>{{ settings_form.default_daily_price.label_tag }} {{ settings_form.default_daily_price }}</div>
+      </div>
+      <div class="fig-form__row">
+        {{ settings_form.branding_text.label_tag }} {{ settings_form.branding_text }}
+      </div>
+    </div>
+
+    <div class="fig-admin__panel" style="margin:0 0 16px 0;">
+      <header class="fig-admin__panel-header">
+        <h4>Benachrichtigungen</h4>
+      </header>
+      <div class="fig-form__grid">
+        <div class="fig-form__row">
+          <label class="checkbox">
+            {{ settings_form.notify_new_damage }} Schadenmeldungen melden
+          </label>
+        </div>
+        <div class="fig-form__row">
+          <label class="checkbox">
+            {{ settings_form.notify_new_booking }} Buchungen melden
+          </label>
+        </div>
+      </div>
+      <div class="fig-form__row">
+        {{ settings_form.notification_recipients.label_tag }} {{ settings_form.notification_recipients }}
+        <p class="fig-admin__card-meta">Leer lassen = Standard CONTACT_EMAIL</p>
+      </div>
+    </div>
+
+    <div class="fig-admin__panel" style="margin:0 0 16px 0;">
+      <header class="fig-admin__panel-header">
+        <h4>SMTP</h4>
+      </header>
+      <div class="fig-form__grid">
+        <div>{{ settings_form.smtp_host.label_tag }} {{ settings_form.smtp_host }}</div>
+        <div>{{ settings_form.smtp_port.label_tag }} {{ settings_form.smtp_port }}</div>
+        <div>{{ settings_form.smtp_user.label_tag }} {{ settings_form.smtp_user }}</div>
+        <div>{{ settings_form.smtp_password.label_tag }} {{ settings_form.smtp_password }}</div>
+      </div>
+      <div class="fig-form__grid">
+        <div class="fig-form__row">
+          <label class="checkbox">
+            {{ settings_form.smtp_use_tls }} TLS verwenden
+          </label>
+        </div>
+        <div class="fig-form__row">
+          <label class="checkbox">
+            {{ settings_form.smtp_use_ssl }} SSL verwenden
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="fig-form__actions">
+      <button class="fig-btn fig-btn--primary" type="submit">Speichern</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

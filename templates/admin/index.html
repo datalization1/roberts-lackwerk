@@ -1,0 +1,99 @@
+{% extends "admin/base_site.html" %}
+{% load admin_dashboard static %}
+
+{% block title %}Admin Dashboard | Roberts Lackwerk{% endblock %}
+
+{% block content %}
+<div class="fig-admin">
+  <header class="fig-admin__hero">
+    <div>
+      <p class="fig-eyebrow">Verwaltung von Schadenmeldungen und Buchungen</p>
+      <h1>Admin Dashboard</h1>
+      <p class="fig-subtitle">Aktuelle Meldungen, Buchungen und Fahrzeuge im Überblick</p>
+    </div>
+    <span class="fig-admin__badge">Administrator</span>
+  </header>
+
+  <nav class="fig-admin__tabs">
+    <span class="fig-admin__tab is-active">Dashboard</span>
+    <span class="fig-admin__tab">Schadenmeldungen</span>
+    <span class="fig-admin__tab">Buchungen</span>
+    <span class="fig-admin__tab">Fahrzeuge</span>
+    <span class="fig-admin__tab">Kunden</span>
+    <span class="fig-admin__tab">Rechnungen</span>
+    <span class="fig-admin__tab">Zeitplan</span>
+    <span class="fig-admin__tab">Verfügbarkeit</span>
+    <span class="fig-admin__tab">Einstellungen</span>
+  </nav>
+
+  {% admin_metrics as metrics %}
+  <section class="fig-admin__kpis">
+    <article class="fig-admin__card">
+      <h4>Schadenmeldungen</h4>
+      <div class="value">{{ metrics.reports_total }}</div>
+      <div class="meta">Gesamt</div>
+    </article>
+    <article class="fig-admin__card">
+      <h4>Buchungen</h4>
+      <div class="value">{{ metrics.bookings_total }}</div>
+      <div class="meta">Gesamt</div>
+    </article>
+    <article class="fig-admin__card">
+      <h4>Transporter</h4>
+      <div class="value">{{ metrics.transporters_total }}</div>
+      <div class="meta">Aktiv</div>
+    </article>
+    <article class="fig-admin__card">
+      <h4>In Bearbeitung</h4>
+      <div class="value">–</div>
+      <div class="meta">Statusverwaltung folgt</div>
+    </article>
+  </section>
+
+  <div class="fig-admin__panels">
+    <section class="fig-admin__panel">
+      <h3>Neueste Schadenmeldungen</h3>
+      <p class="subtitle">Kürzlich eingereichte Meldungen</p>
+      <div class="fig-list">
+        {% latest_reports 4 as reports %}
+        {% for report in reports %}
+          <article class="fig-list__item">
+            <div>
+              <div class="fig-list__title">
+                {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
+              </div>
+              <div class="fig-list__meta">
+                {{ report.car_brand }} {{ report.car_model }}{% if report.plate %} · {{ report.plate }}{% endif %}
+              </div>
+            </div>
+            <div class="fig-badge fig-badge--warning">Neu</div>
+          </article>
+        {% empty %}
+          <p class="fig-empty">Noch keine Schadenmeldungen vorhanden.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="fig-admin__panel">
+      <h3>Anstehende Buchungen</h3>
+      <p class="subtitle">Nächste Abholtermine</p>
+      <div class="fig-list">
+        {% upcoming_bookings 4 as bookings %}
+        {% for booking in bookings %}
+          <article class="fig-list__item">
+            <div>
+              <div class="fig-list__title">{{ booking.transporter.name }}</div>
+              <div class="fig-list__meta">
+                {{ booking.customer_name }} · {{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}
+              </div>
+            </div>
+            <div class="fig-badge fig-badge--success">Bestätigt</div>
+          </article>
+        {% empty %}
+          <p class="fig-empty">Keine zukünftigen Buchungen vorhanden.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

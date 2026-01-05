@@ -1,0 +1,24 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Fahrzeuge</h3>
+    <p class="fig-admin__panel-subtitle">Alle registrierten Transporter</p>
+  </header>
+  <div class="fig-admin__cards fig-admin__cards--grid">
+    {% for transporter in transporters %}
+      <article class="fig-admin__card fig-admin__card--tall">
+        <p class="fig-admin__card-label">Transporter</p>
+        <div class="fig-admin__card-value fig-admin__card-value--small">{{ transporter.name }}</div>
+        <p class="fig-admin__card-meta">Kennzeichen: {{ transporter.kennzeichen }}</p>
+        <p class="fig-admin__card-meta">Farbe: {{ transporter.farbe|default:"-" }}</p>
+        <p class="fig-admin__card-meta">Verfügbar ab {{ transporter.verfuegbar_ab|date:"d.m.Y" }}</p>
+        <p class="fig-admin__card-meta">Preis: CHF {{ transporter.preis_chf }}</p>
+      </article>
+    {% empty %}
+      <p class="fig-empty">Keine Fahrzeuge hinterlegt.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

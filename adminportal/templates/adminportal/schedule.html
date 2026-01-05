@@ -1,0 +1,114 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Zeitplan</h3>
+    <p class="fig-admin__panel-subtitle">Gebuchte Slots chronologisch</p>
+  </header>
+  <form method="get" class="fig-form">
+    <div class="fig-form__grid">
+      <div><label>Suche</label><input type="text" name="q" value="{{ filter.q }}"></div>
+      <div>
+        <label>Status</label>
+        <select name="status">
+          <option value="">Alle</option>
+          <option value="pending" {% if filter.status == "pending" %}selected{% endif %}>Ausstehend</option>
+          <option value="confirmed" {% if filter.status == "confirmed" %}selected{% endif %}>Bestätigt</option>
+          <option value="completed" {% if filter.status == "completed" %}selected{% endif %}>Abgeschlossen</option>
+          <option value="cancelled" {% if filter.status == "cancelled" %}selected{% endif %}>Storniert</option>
+        </select>
+      </div>
+      <div>
+        <label>Fahrzeug</label>
+        <select name="transporter">
+          <option value="">Alle</option>
+          {% for t in transporters %}
+            <option value="{{ t.id }}" {% if filter.transporter|add:'' == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div><label>Von</label><input type="date" name="from" value="{{ filter.from }}"></div>
+      <div><label>Bis</label><input type="date" name="to" value="{{ filter.to }}"></div>
+    </div>
+    <div class="fig-form__actions">
+      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_schedule' %}">Zurücksetzen</a>
+    </div>
+  </form>
+  {% if grouped_bookings %}
+    {% for date, items in grouped_bookings.items %}
+      <div class="fig-admin__panel" style="margin-bottom:12px;">
+        <div class="fig-admin__panel-header">
+          <h4>{{ date|date:"l, d.m.Y" }}</h4>
+          <p class="fig-admin__panel-subtitle">{{ items|length }} Buchung(en)</p>
+        </div>
+        <div class="fig-table">
+          {% for booking in items %}
+            <div class="fig-table__row">
+              <div class="fig-table__cell fig-table__cell--id">
+                <a href="{% url 'portal_booking_detail' booking.pk %}">BU-{{ booking.pk }}</a>
+              </div>
+              <div class="fig-table__cell">
+                {{ booking.transporter.name }}
+                <div class="fig-table__meta">{{ booking.get_time_slot_display }}</div>
+              </div>
+              <div class="fig-table__cell">
+                {{ booking.customer_name }}
+                <div class="fig-table__meta">{{ booking.customer_email }}</div>
+              </div>
+              <div class="fig-table__cell">
+                {% if booking.status == "confirmed" %}
+                  <span class="fig-badge fig-badge--success">Bestätigt</span>
+                {% elif booking.status == "pending" %}
+                  <span class="fig-badge fig-badge--warning">Ausstehend</span>
+                {% elif booking.status == "completed" %}
+                  <span class="fig-badge fig-badge--info">Abgeschlossen</span>
+                {% elif booking.status == "cancelled" %}
+                  <span class="fig-badge">Storniert</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="fig-empty fig-table__empty">Keine Termine.</p>
+  {% endif %}
+
+  {% if timeline_rows %}
+    <div class="fig-admin__panel" style="margin-top:18px;">
+      <header class="fig-admin__panel-header">
+        <h4>Timeline</h4>
+        <p class="fig-admin__panel-subtitle">Übersicht für {{ timeline_dates|length }} Tage</p>
+      </header>
+      <div class="fig-table fig-table--scroll">
+        <div class="fig-table__row fig-table__row--head" style="grid-template-columns:180px repeat({{ timeline_dates|length }},120px);overflow-x:auto;">
+          <div class="fig-table__cell">Transporter</div>
+          {% for day in timeline_dates %}
+            <div class="fig-table__cell">{{ day|date:"d.m." }}</div>
+          {% endfor %}
+        </div>
+        {% for row in timeline_rows %}
+          <div class="fig-table__row" style="grid-template-columns:180px repeat({{ timeline_dates|length }},120px);overflow-x:auto;">
+            <div class="fig-table__cell fig-table__cell--id">{{ row.transporter.name }}</div>
+            {% for booking in row.slots %}
+              <div class="fig-table__cell">
+                {% if booking %}
+                  <span class="fig-badge {% if booking.status == 'confirmed' %}fig-badge--success{% elif booking.status == 'pending' %}fig-badge--warning{% elif booking.status == 'cancelled' %}fig-badge--muted{% else %}fig-badge--info{% endif %}">
+                    {{ booking.get_time_slot_display }}
+                  </span>
+                  <div class="fig-table__meta">{{ booking.customer_name }}</div>
+                {% else %}
+                  <span class="fig-badge fig-badge--ghost">Frei</span>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

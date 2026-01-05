@@ -21,6 +21,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("intern/", include("adminportal.urls")),
+    path("api/", include("api.urls")),
     path("", include("main.urls")),  # einziges Include – keine direkten View-Imports hier!
 ]
 

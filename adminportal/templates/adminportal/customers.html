@@ -1,0 +1,70 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Kunden</h3>
+    <p class="fig-admin__panel-subtitle">Abgeleitet aus Schadenmeldungen und Buchungen</p>
+  </header>
+  <form method="get" class="fig-form">
+    <div class="fig-form__grid">
+      <div><label>Suche</label><input type="text" name="q" value="{{ filter.q }}"></div>
+    </div>
+    <div class="fig-form__actions">
+      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_customers' %}">Zurücksetzen</a>
+    </div>
+  </form>
+  {% if customer_created %}
+    <p class="fig-badge fig-badge--success">Kunde erstellt.</p>
+  {% endif %}
+  <form method="post" class="fig-form">
+    {% csrf_token %}
+    <div class="fig-form__grid">
+      <div>{{ customer_form.first_name.label_tag }} {{ customer_form.first_name }}</div>
+      <div>{{ customer_form.last_name.label_tag }} {{ customer_form.last_name }}</div>
+      <div>{{ customer_form.company.label_tag }} {{ customer_form.company }}</div>
+      <div>{{ customer_form.email.label_tag }} {{ customer_form.email }}</div>
+      <div>{{ customer_form.phone.label_tag }} {{ customer_form.phone }}</div>
+      <div>{{ customer_form.address.label_tag }} {{ customer_form.address }}</div>
+      <div>{{ customer_form.postal_code.label_tag }} {{ customer_form.postal_code }}</div>
+      <div>{{ customer_form.city.label_tag }} {{ customer_form.city }}</div>
+      <div>{{ customer_form.source.label_tag }} {{ customer_form.source }}</div>
+    </div>
+    <div class="fig-form__row">
+      {{ customer_form.notes.label_tag }} {{ customer_form.notes }}
+    </div>
+    <div class="fig-form__actions">
+      <button type="submit" class="fig-btn fig-btn--primary">Kunde speichern</button>
+    </div>
+  </form>
+  <div class="fig-table">
+    <div class="fig-table__row fig-table__row--head">
+      <div class="fig-table__cell">Name</div>
+      <div class="fig-table__cell">E-Mail</div>
+      <div class="fig-table__cell">Quelle</div>
+      <div class="fig-table__cell">Telefon</div>
+      <div class="fig-table__cell">Ort</div>
+    </div>
+    {% for customer in customers %}
+      <div class="fig-table__row">
+        <div class="fig-table__cell">
+          {% if customer.company %}{{ customer.company }}{% else %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}
+        </div>
+        <div class="fig-table__cell">{{ customer.email }}</div>
+        <div class="fig-table__cell">
+          <span class="fig-badge fig-badge--success">{{ customer.get_source_display }}</span>
+        </div>
+        <div class="fig-table__cell">{{ customer.phone }}</div>
+        <div class="fig-table__cell">
+          {% if customer.postal_code or customer.city %}
+            {{ customer.postal_code }} {{ customer.city }}
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <p class="fig-empty fig-table__empty">Keine Kunden gefunden.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

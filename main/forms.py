@@ -23,8 +23,18 @@ class MultipleFileField(forms.FileField):
             return []
         # Django gibt bei multiple-Uploads bereits eine Liste zurück
         if isinstance(files, (list, tuple)):
-            return files
-        return [files]
+            file_list = list(files)
+        else:
+            file_list = [files]
+
+        max_files = 5
+        max_size_mb = 5
+        if len(file_list) > max_files:
+            raise forms.ValidationError(f"Maximal {max_files} Dateien erlaubt.")
+        for f in file_list:
+            if f.size > max_size_mb * 1024 * 1024:
+                raise forms.ValidationError(f"{f.name}: Datei ist größer als {max_size_mb} MB.")
+        return file_list
 
 # ---------- Schaden melden: Step 1 ----------
 class CarDetailsForm(forms.Form):
@@ -45,7 +55,13 @@ class PersonalDetailsForm(forms.Form):
     address = forms.CharField(label="Address", max_length=200,
                               widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Street, City, Postal Code"}))
     phone = forms.CharField(label="Phone Number", max_length=50, required=False,
-                            widget=forms.TextInput(attrs={"class":"form-control","placeholder":"+41 XX XXX XX XX"}))
+                            widget=forms.TextInput(attrs={
+                                "class":"form-control",
+                                "placeholder":"+41 XX XXX XX XX",
+                                "pattern": r"^(\+41|0).{7,}$",
+                                "title": "Telefonnummer bitte mit +41 oder 0 beginnen",
+                                "inputmode": "tel",
+                            }))
     email = forms.EmailField(label="Email Address",
                              widget=forms.EmailInput(attrs={"class":"form-control","placeholder":"your.email@example.com"}))
 
@@ -88,15 +104,16 @@ class InsuranceDetailsForm(forms.Form):
 # ---------- Schaden melden: Step 4 ----------
 DAMAGE_MULTI_CHOICES = [(k, v) for k, v in CAR_PART_CHOICES if k != "OTHER"] + [("OTHER", "Sonstiges")]
 
-class MultiFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Entfernt die Fehlermeldung von Django 4
-        self.attrs["multiple"] = True
-
 class AccidentDetailsForm(forms.Form):
+    DAMAGE_TYPE_CHOICES = [
+        ("Unfallschaden", "Unfallschaden"),
+        ("Hagelschaden", "Hagelschaden"),
+        ("Parkschaden", "Parkschaden"),
+        ("Wildschaden", "Wildschaden"),
+        ("Vandalismus", "Vandalismus"),
+        ("Sonstiges", "Sonstiges"),
+    ]
+
     damaged_parts = forms.MultipleChoiceField(
         label="Beschädigte Teile",
         choices=DAMAGE_PART_CODES,              # kommt aus models.py
@@ -104,25 +121,47 @@ class AccidentDetailsForm(forms.Form):
         required=False,
     )
 
+    accident_date = forms.DateField(
+        label="Unfalldatum",
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control", "data-max-today": "true"}),
+        required=True,
+    )
+
+    accident_location = forms.CharField(
+        label="Unfallort",
+        max_length=200,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ort des Unfalls"}),
+        required=True,
+    )
+
+    damage_type = forms.ChoiceField(
+        label="Schadensart",
+        choices=DAMAGE_TYPE_CHOICES,
+        widget=forms.Select(attrs={"class": "form-select"}),
+        required=True,
+    )
+
     message = forms.CharField(
         label="Schadenbeschreibung",
-        required=False,
+        required=True,
         widget=forms.Textarea(
             attrs={
                 "class": "form-control",
                 "rows": 4,
-                "placeholder": "Beschreiben Sie den Schaden so genau wie möglich."
+                "placeholder": "Beschreiben Sie den Schaden so genau wie möglich.",
+                "minlength": "20",
             }
         ),
     )
 
-    # NEU: EIN einzelnes Bild, kein multiple
-    photos = forms.ImageField(
+    photos = MultipleFileField(
         label="Schadenfotos",
         required=False,
-        widget=forms.ClearableFileInput(
+        widget=MultipleFileInput(
             attrs={
-                "accept": "image/*",           # kein multiple, kein Spezial-Widget
+                "accept": "image/jpeg,image/png,image/webp",
+                "data-max-size": "5",  # MB
+                "data-max-files": "5",
             }
         ),
     )
@@ -143,6 +182,18 @@ class BookingForm(forms.ModelForm):
             "customer_email",
             "driver_license_number",
         ]
+        widgets = {
+            "customer_phone": forms.TextInput(attrs={
+                "placeholder": "+41 XX XXX XX XX",
+                "pattern": r"^(\+41|0).{7,}$",
+                "title": "Telefonnummer bitte mit +41 oder 0 beginnen",
+                "inputmode": "tel",
+            }),
+            "driver_license_number": forms.TextInput(attrs={
+                "minlength": "5",
+                "placeholder": "Schweizer Führerscheinnummer",
+            }),
+        }
 
     def clean(self):
         cleaned = super().clean()

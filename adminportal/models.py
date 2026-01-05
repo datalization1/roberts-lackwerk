@@ -1,0 +1,115 @@
+from django.db import models
+from django.utils import timezone
+
+from main.models import DamageReport, Booking
+
+
+class Customer(models.Model):
+    SOURCE_CHOICES = [
+        ("damage-report", "Schadenmeldung"),
+        ("rental", "Vermietung"),
+        ("manual", "Manuell"),
+        ("both", "Beides"),
+    ]
+
+    first_name = models.CharField(max_length=80, blank=True)
+    last_name = models.CharField(max_length=80, blank=True)
+    company = models.CharField(max_length=120, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=50, blank=True)
+    address = models.CharField(max_length=200, blank=True)
+    city = models.CharField(max_length=120, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default="manual")
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        if self.company:
+            return self.company
+        return f"{self.first_name} {self.last_name}".strip() or self.email
+
+
+class Invoice(models.Model):
+    STATUS_CHOICES = [
+        ("draft", "Entwurf"),
+        ("pending", "Offen"),
+        ("paid", "Bezahlt"),
+        ("overdue", "Überfällig"),
+        ("cancelled", "Storniert"),
+    ]
+
+    invoice_number = models.CharField(max_length=40, unique=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="invoices")
+    related_report = models.ForeignKey(DamageReport, on_delete=models.SET_NULL, null=True, blank=True, related_name="invoices")
+    related_booking = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, blank=True, related_name="invoices")
+    description = models.TextField(blank=True)
+    amount_chf = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    issue_date = models.DateField(default=timezone.localdate)
+    due_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.invoice_number
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = self.generate_invoice_number()
+        if not self.due_date and self.issue_date:
+            self.due_date = self.issue_date + timezone.timedelta(days=30)
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def generate_invoice_number(cls):
+        today = timezone.localdate()
+        year = today.year
+        prefix = f"RE-{year}-"
+        last = cls.objects.filter(invoice_number__startswith=prefix).order_by("-invoice_number").first()
+        if last:
+            try:
+                last_counter = int(last.invoice_number.split("-")[-1])
+            except Exception:
+                last_counter = 0
+        else:
+            last_counter = 0
+        return f"{prefix}{last_counter + 1:04d}"
+
+    @property
+    def is_overdue(self):
+        return self.due_date and self.status in ["pending", "overdue"] and self.due_date < timezone.localdate()
+
+    @property
+    def overdue_days(self):
+        if not self.is_overdue:
+            return 0
+        return (timezone.localdate() - self.due_date).days
+
+
+class PortalSettings(models.Model):
+    contact_email = models.EmailField(blank=True, default="")
+    branding_text = models.CharField(max_length=200, blank=True, default="Verwaltung von Schadenmeldungen und Buchungen")
+    default_daily_price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    default_currency = models.CharField(max_length=8, default="CHF")
+    notify_new_damage = models.BooleanField(default=True)
+    notify_new_booking = models.BooleanField(default=True)
+    notification_recipients = models.CharField(max_length=400, blank=True, default="")
+    smtp_host = models.CharField(max_length=200, blank=True, default="")
+    smtp_port = models.PositiveIntegerField(default=587)
+    smtp_user = models.CharField(max_length=200, blank=True, default="")
+    smtp_password = models.CharField(max_length=200, blank=True, default="")
+    smtp_use_tls = models.BooleanField(default=True)
+    smtp_use_ssl = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Portal Einstellungen"
+
+    class Meta:
+        verbose_name = "Portal Einstellung"
+        verbose_name_plural = "Portal Einstellungen"
+
+# Create your models here.

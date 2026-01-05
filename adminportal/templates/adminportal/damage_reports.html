@@ -1,0 +1,156 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Schadenmeldungen</h3>
+    <p class="fig-admin__panel-subtitle">Neueste Einträge zuerst</p>
+  </header>
+  <form method="get" class="fig-form">
+    <div class="fig-form__grid">
+      <div><label>Suche</label><input type="text" name="q" value="{{ filter.q }}"></div>
+      <div>
+        <label>Status</label>
+        <select name="status">
+          <option value="">Alle</option>
+          <option value="pending" {% if filter.status == "pending" %}selected{% endif %}>Ausstehend</option>
+          <option value="in_progress" {% if filter.status == "in_progress" %}selected{% endif %}>In Bearbeitung</option>
+          <option value="completed" {% if filter.status == "completed" %}selected{% endif %}>Abgeschlossen</option>
+        </select>
+      </div>
+      <div><label>Von</label><input type="date" name="from" value="{{ filter.from }}"></div>
+      <div><label>Bis</label><input type="date" name="to" value="{{ filter.to }}"></div>
+    </div>
+    <div class="fig-form__actions">
+      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_damage_reports' %}">Zurücksetzen</a>
+    </div>
+  </form>
+  <div class="fig-table">
+    <div class="fig-table__row fig-table__row--head">
+      <div class="fig-table__cell fig-table__cell--id">ID</div>
+      <div class="fig-table__cell">Kunde</div>
+      <div class="fig-table__cell">Fahrzeug</div>
+      <div class="fig-table__cell">Datum</div>
+      <div class="fig-table__cell">Dateien</div>
+      <div class="fig-table__cell">Status</div>
+      <div class="fig-table__cell">Aktionen</div>
+    </div>
+    {% for report in reports %}
+      <div class="fig-table__row">
+        <div class="fig-table__cell fig-table__cell--id">
+          <a href="{% url 'portal_damage_report_detail' report.pk %}">SM-{{ report.pk }}</a>
+        </div>
+        <div class="fig-table__cell">
+          {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
+          <div class="fig-table__meta">{{ report.email }}</div>
+        </div>
+        <div class="fig-table__cell">
+          {{ report.car_brand }} {{ report.car_model }}
+          <div class="fig-table__meta">{% if report.plate %}{{ report.plate }}{% endif %}</div>
+        </div>
+        <div class="fig-table__cell">{{ report.created_at|date:"d.m.Y" }}</div>
+        <div class="fig-table__cell">
+          {% with report.photos.count as cnt %}
+            {% if cnt %}
+              <span class="fig-badge fig-badge--ghost">{{ cnt }} Datei{% if cnt != 1 %}en{% endif %}</span>
+            {% else %}
+              <span class="fig-badge fig-badge--muted">0</span>
+            {% endif %}
+          {% endwith %}
+        </div>
+        <div class="fig-table__cell">
+          {% if report.status == "pending" %}
+            <span class="fig-badge fig-badge--warning">Ausstehend</span>
+          {% elif report.status == "in_progress" %}
+            <span class="fig-badge fig-badge--info">In Bearbeitung</span>
+          {% elif report.status == "completed" %}
+            <span class="fig-badge fig-badge--success">Abgeschlossen</span>
+          {% endif %}
+        </div>
+        <div class="fig-table__cell">
+          <button class="fig-btn fig-btn--ghost js-open-modal" data-target="report-{{ report.pk }}">Details</button>
+        </div>
+      </div>
+    {% empty %}
+      <p class="fig-empty fig-table__empty">Keine Schadenmeldungen vorhanden.</p>
+    {% endfor %}
+  </div>
+
+  {% for report in reports %}
+    <dialog id="modal-report-{{ report.pk }}" class="fig-modal">
+      <article class="fig-modal__content">
+        <header class="fig-modal__header">
+          <h4>SM-{{ report.pk }} · {{ report.created_at|date:"d.m.Y H:i" }}</h4>
+          <button type="button" class="fig-modal__close js-close-modal" data-target="report-{{ report.pk }}">×</button>
+        </header>
+        <div class="fig-modal__body">
+          <div class="fig-admin__cards fig-admin__cards--grid">
+            <div class="fig-admin__card">
+              <p class="fig-admin__card-label">Kunde</p>
+              <div class="fig-admin__card-value fig-admin__card-value--small">
+                {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
+              </div>
+              <p class="fig-admin__card-meta">{{ report.email }} · {{ report.phone|default:"-" }}</p>
+              <p class="fig-admin__card-meta">{{ report.address|default:"-" }}</p>
+            </div>
+            <div class="fig-admin__card">
+              <p class="fig-admin__card-label">Fahrzeug</p>
+              <div class="fig-admin__card-value fig-admin__card-value--small">{{ report.car_brand }} {{ report.car_model }}</div>
+              <p class="fig-admin__card-meta">Plate: {{ report.plate|default:"-" }} · VIN: {{ report.vin|default:"-" }}</p>
+            </div>
+            <div class="fig-admin__card">
+              <p class="fig-admin__card-label">Versicherung</p>
+              <div class="fig-admin__card-value fig-admin__card-value--small">{{ report.insurer|default:"-" }}</div>
+              <p class="fig-admin__card-meta">Police: {{ report.policy_number|default:"-" }}</p>
+              <p class="fig-admin__card-meta">Schadennr.: {{ report.accident_number|default:"-" }}</p>
+            </div>
+          </div>
+          <div class="fig-admin__panel" style="margin-top:12px;">
+            <h5>Schadendetails</h5>
+            <p class="fig-admin__card-meta">Unfalldatum: {{ report.accident_date|date:"d.m.Y"|default:"-" }} · Ort: {{ report.accident_location|default:"-" }}</p>
+            <p class="fig-admin__card-meta">Schadensart: {{ report.damage_type|default:"-" }}</p>
+            <p class="fig-admin__card-meta">Teile: {% if report.damaged_parts %}{{ report.damaged_parts|join:", " }}{% else %}-{% endif %}</p>
+            <p class="fig-admin__card-meta">Beschreibung: {{ report.message|default:"-" }}</p>
+          </div>
+          <div class="fig-admin__panel" style="margin-top:12px;">
+            <h5>Uploads</h5>
+            {% if report.photos.all %}
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">
+                {% for photo in report.photos.all %}
+                  <a href="{{ photo.public_url }}" target="_blank" class="fig-admin__card fig-admin__card--clickable" style="text-decoration:none;padding:8px;">
+                    <div class="fig-admin__card-label">#{{ photo.id }}</div>
+                    <img src="{{ photo.public_url }}" alt="" style="width:100%;height:90px;object-fit:cover;border-radius:6px;">
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="fig-admin__card-meta">Keine Dateien.</p>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    </dialog>
+  {% endfor %}
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openButtons = document.querySelectorAll('.js-open-modal');
+    const closeButtons = document.querySelectorAll('.js-close-modal');
+    const openModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+      else if (dlg) dlg.classList.add('is-visible');
+    };
+    const closeModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (!dlg) return;
+      if (typeof dlg.close === 'function') dlg.close();
+      dlg.classList.remove('is-visible');
+    };
+    openButtons.forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.target)));
+    closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.target)));
+  });
+</script>
+{% endblock %}

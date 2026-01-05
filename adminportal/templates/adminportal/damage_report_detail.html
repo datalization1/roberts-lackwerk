@@ -1,0 +1,75 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Schadenmeldung SM-{{ report.pk }}</h3>
+    <p class="fig-admin__panel-subtitle">{{ report.created_at|date:"d.m.Y H:i" }}</p>
+  </header>
+  <div class="fig-admin__cards fig-admin__cards--grid">
+    <article class="fig-admin__card">
+      <p class="fig-admin__card-label">Kunde</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">
+        {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
+      </div>
+      <p class="fig-admin__card-meta">{{ report.email }}</p>
+      <p class="fig-admin__card-meta">{{ report.phone }}</p>
+    </article>
+    <article class="fig-admin__card">
+      <p class="fig-admin__card-label">Fahrzeug</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">{{ report.car_brand }} {{ report.car_model }}</div>
+      <p class="fig-admin__card-meta">Kennzeichen: {{ report.plate|default:"-" }}</p>
+      <p class="fig-admin__card-meta">VIN: {{ report.vin|default:"-" }}</p>
+    </article>
+    <article class="fig-admin__card">
+      <p class="fig-admin__card-label">Versicherung</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">{{ report.insurer|default:"-" }}</div>
+      <p class="fig-admin__card-meta">Policennr.: {{ report.policy_number|default:"-" }}</p>
+      <p class="fig-admin__card-meta">Ansprechperson: {{ report.insurer_contact|default:"-" }}</p>
+    </article>
+  </div>
+
+  <div class="fig-admin__panel" style="margin-top:14px;">
+    <header class="fig-admin__panel-header">
+      <h4>Status & Notizen</h4>
+    </header>
+    <form method="post" class="fig-form">
+      {% csrf_token %}
+      <div class="fig-form__grid">
+        <div>{{ form.status.label_tag }} {{ form.status }}</div>
+      </div>
+      <div class="fig-form__row">
+        {{ form.admin_notes.label_tag }} {{ form.admin_notes }}
+      </div>
+      <div class="fig-form__actions">
+        <button type="submit" class="fig-btn fig-btn--primary">Speichern</button>
+      </div>
+    </form>
+    <p class="fig-admin__card-meta">Schadenbeschreibung: {{ report.message|default:"-" }}</p>
+  </div>
+
+  <div class="fig-admin__panel" style="margin-top:14px;">
+    <header class="fig-admin__panel-header">
+      <h4>Uploads</h4>
+    </header>
+    {% if report.photos.all %}
+      <div class="fig-upload-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+        {% for photo in report.photos.all %}
+          <a href="{{ photo.public_url }}" target="_blank" class="fig-admin__card fig-admin__card--clickable" style="text-decoration:none;">
+            <div class="fig-admin__card-label">#{{ photo.id }} · {{ photo.uploaded_at|date:"d.m.Y H:i" }}</div>
+            {% if photo.public_url %}
+              <div style="background:#0f172a;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;min-height:80px;">
+                <img src="{{ photo.public_url }}" alt="Upload {{ photo.id }}" style="max-width:100%;max-height:140px;object-fit:cover;border-radius:6px;">
+              </div>
+            {% else %}
+              <p class="fig-admin__card-meta">Keine Vorschau verfügbar</p>
+            {% endif %}
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="fig-empty">Keine Dateien vorhanden.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

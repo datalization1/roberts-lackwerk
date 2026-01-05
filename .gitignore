@@ -5,8 +5,19 @@ staticfiles/
 __pycache__/
 *.py[cod]
 
+# macOS Finder
+.DS_Store
+
 # Virtualenv
 .venv/
+venv/
+.env
+
+# IDE / Editor
+.vscode/
+
+# Generated admin static (collectstatic)
+static/admin/
 
 # Dumps / DB-Exports
 latest.dump

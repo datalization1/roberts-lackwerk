@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.utils.dateparse import parse_date
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import FileSystemStorage, default_storage
 from formtools.wizard.views import SessionWizardView
 from django.db.models import Exists, OuterRef
 from django.contrib.auth import authenticate, login, logout
@@ -24,6 +24,7 @@ from .forms import (
     AccidentDetailsForm,
     ReviewForm,
 )
+from .utils.emailing import send_templated_mail
 
 # Admin Seite
 class AdminLoginForm(forms.Form):
@@ -34,11 +35,17 @@ class AdminLoginForm(forms.Form):
 def is_staff_user(user):
     return user.is_active and user.is_staff
 
-# temporärer Speicher (anlegen oder Pfad anpassen)
-file_storage = FileSystemStorage(
-    location=os.path.join(settings.MEDIA_ROOT, "wizard")
-)
-os.makedirs(os.path.join(settings.MEDIA_ROOT, "wizard"), exist_ok=True)
+# temporärer Speicher (lokal oder S3-kompatibel)
+def get_wizard_storage():
+    storage = default_storage
+    if isinstance(storage, FileSystemStorage):
+        # Lokale Ablage
+        wizard_dir = os.path.join(settings.MEDIA_ROOT, "wizard")
+        os.makedirs(wizard_dir, exist_ok=True)
+        return FileSystemStorage(location=wizard_dir)
+    return storage
+
+file_storage = get_wizard_storage()
 logger = logging.getLogger("schaden")
 
 # ---------- Statische Seiten ----------
@@ -102,14 +109,18 @@ class ClaimWizard(SessionWizardView):
         ctx["current_step_title"] = titles.get(self.steps.current, "")  # ← NEU
 
         if self.steps.current == "review":
-            ctx["data"] = {
-                **(self.get_cleaned_data_for_step("car") or {}),
-                **(self.get_cleaned_data_for_step("personal") or {}),
-                **(self.get_cleaned_data_for_step("insurance") or {}),
-                **({k: v for k, v in (self.get_cleaned_data_for_step("accident") or {}).items() if k != "photos"}),
+            car = self.get_cleaned_data_for_step("car") or {}
+            personal = self.get_cleaned_data_for_step("personal") or {}
+            insurance = self.get_cleaned_data_for_step("insurance") or {}
+            accident = self.get_cleaned_data_for_step("accident") or {}
+            ctx["summary"] = {
+                "car": car,
+                "personal": personal,
+                "insurance": insurance,
+                "accident": accident,
             }
-            acc = self.get_cleaned_data_for_step("accident") or {}
-            ctx["photos"] = acc.get("photos", [])
+            ctx["data"] = {**car, **personal, **insurance, **{k: v for k, v in accident.items() if k != "photos"}}
+            ctx["photos"] = accident.get("photos", [])
         return ctx
 
     def process_step(self, form):
@@ -152,48 +163,50 @@ class ClaimWizard(SessionWizardView):
 
             message      = accident.get("message", ""),
             damaged_parts= accident.get("damaged_parts", []),
+            accident_date = accident.get("accident_date"),
+            accident_location = accident.get("accident_location", ""),
+            damage_type = accident.get("damage_type", ""),
             # car_part lassen wir optional leer (wir haben mehrere parts)
         )
 
-        # Fotos speichern
-        # Fotos speichern (ein einzelnes Bild)
-        photo = accident.get("photos")
-        if photo:
-            DamagePhoto.objects.create(report=report, image=photo)
+        # Mehrfach-Fotos speichern (lokal oder S3)
+        photos = accident.get("photos") or []
+        for file_obj in photos:
+            photo = DamagePhoto.objects.create(report=report, image=file_obj)
+            if photo.image:
+                photo.file_url = photo.image.url
+                photo.save(update_fields=["file_url"])
 
-        # E-Mails (plain text; HTML-templates gerne später)
-        # E-Mails (plain text; HTML-templates gerne später)
+        # E-Mails via Templates + Settings
         try:
-            # Kunde
-            send_mail(
+            from adminportal.models import PortalSettings  # lokale Import, um Zirkeln zu vermeiden
+            portal_settings = PortalSettings.objects.first()
+        except Exception:
+            portal_settings = None
+
+        try:
+            send_templated_mail(
                 subject=f"Bestätigung Ihrer Schadenmeldung #{report.pk}",
-                message=(
-                    f"Hallo {report.first_name or ''} {report.last_name or ''}\n"
-                    f"Firma: {report.company_name or '-'}\n\n"
-                    f"Wir haben Ihre Schadenmeldung erhalten und melden uns zeitnah."
-                ),
-                from_email=settings.CONTACT_EMAIL,          # <─ statt "noreply@..."
-                recipient_list=[report.email],
-                fail_silently=True,
+                template_path="emails/claim_customer.html",
+                context={"report": report},
+                recipients=[report.email],
+                from_email=settings.CONTACT_EMAIL,
+                portal_settings=portal_settings,
             )
-            # Robert's Lackwerk
-            send_mail(
-                subject=f"Neue Schadenmeldung #{report.pk}",
-                message=(
-                    f"Name: {report.first_name or ''} {report.last_name or ''}\n"
-                    f"Firma: {report.company_name or '-'}\n"
-                    f"E-Mail: {report.email}\n"
-                    f"Telefon: {report.phone or '-'}\n"
-                    f"Kontrollschild: {'Nicht bekannt' if report.no_plate else (report.plate or '-')}\n"
-                    f"Versicherung: {report.insurer or report.other_insurer or '-'}\n"
-                    f"Policen-Nr.: {report.policy_number or '-'}\n"
-                    f"Teil: {report.car_part}\n"
-                    f"Beschreibung: {report.message or '-'}\n"
-                ),
-                from_email=settings.CONTACT_EMAIL,          # <─ auch hier
-                recipient_list=[settings.CONTACT_EMAIL],    # <─ nur noch einmal zentral
-                fail_silently=True,
-            )
+            if not portal_settings or portal_settings.notify_new_damage:
+                recipients = []
+                if portal_settings and portal_settings.notification_recipients:
+                    recipients = [r.strip() for r in portal_settings.notification_recipients.split(",") if r.strip()]
+                if not recipients:
+                    recipients = [settings.CONTACT_EMAIL]
+                send_templated_mail(
+                    subject=f"Neue Schadenmeldung #{report.pk}",
+                    template_path="emails/claim_admin.html",
+                    context={"report": report},
+                    recipients=recipients,
+                    from_email=settings.CONTACT_EMAIL,
+                    portal_settings=portal_settings,
+                )
         except Exception:
             pass
         return redirect(reverse("schaden_success", kwargs={"pk": report.pk}))
@@ -530,6 +543,38 @@ def booking_payment(request):
         booking.payment_method = "CARD" if method == "CARD" else "CASH"
         booking.save()
 
+        try:
+            from adminportal.models import PortalSettings
+            portal_settings = PortalSettings.objects.first()
+        except Exception:
+            portal_settings = None
+
+        try:
+            send_templated_mail(
+                subject=f"Buchungsbestätigung BU-{booking.id}",
+                template_path="emails/booking_customer.html",
+                context={"booking": booking},
+                recipients=[booking.customer_email],
+                from_email=settings.CONTACT_EMAIL,
+                portal_settings=portal_settings,
+            )
+            if not portal_settings or portal_settings.notify_new_booking:
+                recipients = []
+                if portal_settings and portal_settings.notification_recipients:
+                    recipients = [r.strip() for r in portal_settings.notification_recipients.split(",") if r.strip()]
+                if not recipients:
+                    recipients = [settings.CONTACT_EMAIL]
+                send_templated_mail(
+                    subject=f"Neue Buchung BU-{booking.id}",
+                    template_path="emails/booking_admin.html",
+                    context={"booking": booking},
+                    recipients=recipients,
+                    from_email=settings.CONTACT_EMAIL,
+                    portal_settings=portal_settings,
+                )
+        except Exception:
+            pass
+
         if "current_booking_id" in request.session:
             del request.session["current_booking_id"]
 
@@ -540,93 +585,6 @@ def booking_payment(request):
         "total_price": total_price,
     }
     return render(request, "booking_payment.html", context)
-
-class ClaimWizard(SessionWizardView):
-    form_list = FORMS
-    file_storage = file_storage
-    template_name = "claim_wizard.html"
-
-    # dein post() usw. bleibt wie bisher ...
-
-    def get_context_data(self, form=None, **kwargs):
-        ctx = super().get_context_data(form=form, **kwargs)
-
-        # Titel pro Schritt (falls du das schon hast, kannst du diesen Block anpassen/übernehmen)
-        step_titles = {
-            "car": "Fahrzeugdaten",
-            "personal": "Personendaten",
-            "insurance": "Versicherungsdaten",
-            "accident": "Schadendetails & Fotos",
-            "review": "Zusammenfassung",
-        }
-        ctx["current_step_title"] = step_titles.get(self.steps.current, "")
-
-        # Zusätzliche Daten für Schritt 5
-        if self.steps.current == "review":
-            car = self.get_cleaned_data_for_step("car") or {}
-            personal = self.get_cleaned_data_for_step("personal") or {}
-            insurance = self.get_cleaned_data_for_step("insurance") or {}
-            accident = self.get_cleaned_data_for_step("accident") or {}
-
-            ctx["summary"] = {
-                "car": car,
-                "personal": personal,
-                "insurance": insurance,
-                "accident": accident,
-            }
-            ctx["uploaded_photo"] = accident.get("photos")
-
-        return ctx
-
-    def done(self, form_list, **kwargs):
-        """
-        Wird aufgerufen, wenn alle Schritte erfolgreich durchlaufen wurden.
-        Hier speichern wir den Schaden in der Datenbank und leiten zur Success-Seite weiter.
-        """
-        car       = self.get_cleaned_data_for_step("car") or {}
-        personal  = self.get_cleaned_data_for_step("personal") or {}
-        insurance = self.get_cleaned_data_for_step("insurance") or {}
-        accident  = self.get_cleaned_data_for_step("accident") or {}
-
-        # Vollständiger Name aus full_name aufteilen
-        first_name = ""
-        last_name  = ""
-        full_name = personal.get("full_name", "")
-        if full_name:
-            parts = full_name.strip().split(" ", 1)
-            first_name = parts[0]
-            if len(parts) > 1:
-                last_name = parts[1]
-
-        # DamageReport anlegen – Felder ggf. an dein Model anpassen
-        report = DamageReport.objects.create(
-            first_name   = first_name,
-            last_name    = last_name,
-            email        = personal.get("email", ""),
-            phone        = personal.get("phone", ""),
-            address      = personal.get("address", ""),
-
-            car_brand    = car.get("car_brand", ""),
-            car_model    = car.get("car_model", ""),
-            vin          = car.get("vin", ""),
-            plate        = car.get("plate", ""),
-
-            insurer         = insurance.get("insurer", ""),
-            policy_number   = insurance.get("policy_number", ""),
-            accident_number = insurance.get("accident_number", ""),
-            insurer_contact = insurance.get("insurer_contact", ""),
-
-            message       = accident.get("message", ""),
-            damaged_parts = accident.get("damaged_parts", []),
-        )
-
-        # EIN Foto speichern (wir haben das Formular ja auf ein Bild reduziert)
-        photo = accident.get("photos")
-        if photo:
-            DamagePhoto.objects.create(report=report, image=photo)
-
-        # Redirect auf Erfolgseite – du hattest früher schon eine 'schaden_success'-View
-        return redirect(reverse("schaden_success", kwargs={"pk": report.pk}))
 
 def admin_login_view(request):
     # Wenn schon eingeloggt und Admin, direkt ins Dashboard
@@ -690,6 +648,11 @@ def admin_dashboard_view(request):
         .order_by("date", "time_slot")[:5]
     )
 
+    # Tabellen für CRM-Ansichten
+    reports_list = DamageReport.objects.order_by("-created_at")[:50]
+    bookings_list = Booking.objects.select_related("transporter").order_by("-date")[:50]
+    transporters = Transporter.objects.all().order_by("name")
+
     context = {
         "active_tab": tab,
         "total_reports": total_reports,
@@ -700,5 +663,8 @@ def admin_dashboard_view(request):
         "transporter_count": transporter_count,
         "recent_reports": recent_reports,
         "upcoming_booking_list": upcoming_booking_list,
+        "reports_list": reports_list,
+        "bookings_list": bookings_list,
+        "transporters": transporters,
     }
     return render(request, "admin/admin_dashboard.html", context)

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # -----------------------------
 # Schaden melden (DamageReport)
@@ -64,8 +65,118 @@ INSURER_CHOICES = [
     (INSURER_NO, "Ohne Versicherung melden"),
 ]
 
+
+# -----------------------------
+# Kunden / Fahrzeuge / Rechnungen
+# -----------------------------
+class Customer(models.Model):
+    SOURCE_CHOICES = [
+        ("rental", "Transporter-Buchung"),
+        ("damage-report", "Schadenmeldung"),
+        ("manual", "Manuell"),
+        ("both", "Beides"),
+    ]
+
+    first_name = models.CharField(max_length=80)
+    last_name = models.CharField(max_length=80)
+    email = models.EmailField()
+    phone = models.CharField(max_length=50)
+    address = models.CharField(max_length=200)
+    city = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=10)
+    company = models.CharField(max_length=120, blank=True)
+    notes = models.TextField(blank=True)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default="manual")
+    created_date = models.DateField(auto_now_add=True)
+    customer_since = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+
+class Vehicle(models.Model):
+    VEHICLE_TYPES = [
+        ("small", "Sprinter Klein"),
+        ("medium", "Sprinter Mittel"),
+        ("large", "Sprinter Gross"),
+    ]
+    VEHICLE_STATUSES = [
+        ("available", "Verfügbar"),
+        ("rented", "Vermietet"),
+        ("maintenance", "In Wartung"),
+        ("out-of-service", "Außer Betrieb"),
+    ]
+
+    type = models.CharField(max_length=10, choices=VEHICLE_TYPES)
+    license_plate = models.CharField(max_length=20, unique=True)
+    brand = models.CharField(max_length=50)
+    model = models.CharField(max_length=50)
+    year = models.PositiveIntegerField(null=True, blank=True)
+    mileage = models.PositiveIntegerField(default=0)
+    volume = models.DecimalField(max_digits=5, decimal_places=1, help_text="m³", null=True, blank=True)
+    payload = models.PositiveIntegerField(help_text="kg", null=True, blank=True)
+    features = models.JSONField(default=list, blank=True)
+    daily_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    vin = models.CharField(max_length=32, blank=True)
+    insurance_number = models.CharField(max_length=64, blank=True)
+    next_service = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=VEHICLE_STATUSES, default="available")
+    photo = models.ImageField(upload_to="vehicle_photos/%Y/%m/%d/", null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.brand} {self.model} ({self.license_plate})"
+
+
+class Invoice(models.Model):
+    INVOICE_STATUS = [
+        ("unpaid", "Offen"),
+        ("paid", "Bezahlt"),
+        ("overdue", "Überfällig"),
+        ("cancelled", "Storniert"),
+    ]
+    INVOICE_TYPES = [
+        ("damage-report", "Schadenmeldung"),
+        ("rental", "Vermietung"),
+        ("other", "Sonstiges"),
+    ]
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="invoices")
+    invoice_date = models.DateField(default=timezone.now)
+    due_date = models.DateField(null=True, blank=True)
+    items = models.JSONField(default=list, blank=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    vat_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=INVOICE_STATUS, default="unpaid")
+    payment_date = models.DateField(null=True, blank=True)
+    payment_method = models.CharField(max_length=30, blank=True)
+    type = models.CharField(max_length=20, choices=INVOICE_TYPES, default="other")
+    related_id = models.CharField(max_length=32, blank=True)
+    notes = models.TextField(blank=True)
+    public_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Rechnung {self.id} ({self.customer})"
+
+
 # … oben bleibt alles
 class DamageReport(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Ausstehend"),
+        ("in_progress", "In Bearbeitung"),
+        ("completed", "Abgeschlossen"),
+    ]
+
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="damage_reports",
+    )
     # bestehend …
     first_name = models.CharField("Vorname", max_length=80, blank=True, null=True)
     last_name  = models.CharField("Nachname", max_length=80, blank=True, null=True)
@@ -78,11 +189,17 @@ class DamageReport(models.Model):
     car_brand = models.CharField("Automarke", max_length=80, blank=True)
     car_model = models.CharField("Automodell", max_length=80, blank=True)
     vin       = models.CharField("Stammnummer (VIN)", max_length=32, blank=True)
+    first_registration = models.DateField("Erstzulassung", null=True, blank=True)
+    mileage = models.PositiveIntegerField("Kilometerstand", null=True, blank=True)
 
     # Schaden
     car_part = models.CharField(max_length=50, choices=CAR_PART_CHOICES, blank=True)  # ← war früher ohne blank
     # Mehrfachauswahl (Figma Checkbox-Liste)
     damaged_parts = models.JSONField("Beschädigte Teile", default=list, blank=True)
+    affected_parts = models.JSONField("Betroffene Teile", default=list, blank=True)
+    damage_type = models.CharField("Schadensart", max_length=50, blank=True)
+    accident_date = models.DateField("Unfalldatum", null=True, blank=True)
+    accident_location = models.CharField("Unfallort", max_length=200, blank=True)
     message = models.TextField(blank=True)
 
     # Adresse (Figma Step 2)
@@ -98,6 +215,12 @@ class DamageReport(models.Model):
     # NEU: gemäss Figma (optional)
     accident_number = models.CharField("Schaden-/Unfallnummer", max_length=64, blank=True)
     insurer_contact = models.CharField("Versicherung Ansprechperson", max_length=120, blank=True)
+    other_party_involved = models.BooleanField(default=False)
+    police_involved = models.BooleanField(default=False)
+    documents = models.JSONField(default=list, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    admin_notes = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -111,10 +234,27 @@ class DamagePhoto(models.Model):
         verbose_name="Zugehöriger Report",
     )
     image       = models.ImageField(upload_to="damage_photos/%Y/%m/%d/")
+    file_url    = models.URLField(blank=True, default="")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Foto für {self.report.display_name} ({self.uploaded_at:%Y-%m-%d %H:%M})"
+        display = getattr(self.report, "display_name", None) or f"{(self.report.first_name or '').strip()} {(self.report.last_name or '').strip()}".strip()
+        return f"Foto für {display or self.report_id} ({self.uploaded_at:%Y-%m-%d %H:%M})"
+
+    @property
+    def public_url(self):
+        """Gibt eine nutzbare URL zurück (S3 oder lokal)."""
+        if self.file_url:
+            return self.file_url
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                return ""
+        return ""
+
+    class Meta:
+        ordering = ["-uploaded_at"]
 
 
 # -----------------------------
@@ -174,15 +314,46 @@ class Transporter(models.Model):
 
 
 class Booking(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Ausstehend"),
+        ("confirmed", "Bestätigt"),
+        ("completed", "Abgeschlossen"),
+        ("cancelled", "Storniert"),
+    ]
+
     TIME_SLOTS = [
         ("MORNING", "Vormittag"),
         ("AFTERNOON", "Nachmittag"),
         ("FULLDAY", "Ganzer Tag"),
     ]
 
+    INSURANCE_CHOICES = [
+        ("basic", "Basis"),
+        ("full", "Vollkasko"),
+        ("premium", "Premium"),
+    ]
+
+    KM_CHOICES = [
+        ("100km", "100 km"),
+        ("200km", "200 km"),
+        ("unlimited", "Unbegrenzt"),
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ("unpaid", "Offen"),
+        ("paid", "Bezahlt"),
+        ("refunded", "Erstattet"),
+    ]
+
     transporter  = models.ForeignKey(Transporter, on_delete=models.CASCADE)
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True, blank=True, related_name="bookings")
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name="bookings")
     date         = models.DateField()
     time_slot    = models.CharField(max_length=10, choices=TIME_SLOTS)
+    pickup_date  = models.DateField(null=True, blank=True)
+    return_date  = models.DateField(null=True, blank=True)
+    pickup_time  = models.CharField(max_length=5, blank=True)
+    return_time  = models.CharField(max_length=5, blank=True)
 
     customer_name   = models.CharField(max_length=100)
     customer_email  = models.EmailField()
@@ -199,11 +370,24 @@ class Booking(models.Model):
     tie_down_straps      = models.BooleanField(default=False)
     additional_notes     = models.TextField(blank=True, null=True)
 
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    admin_notes = models.TextField(blank=True)
+
+    # Neue Felder für SPA/Preislogik
+    km_package = models.CharField(max_length=20, choices=KM_CHOICES, default="100km")
+    extras = models.JSONField(default=list, blank=True)
+    insurance = models.CharField(max_length=20, choices=INSURANCE_CHOICES, default="basic")
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     PAYMENT_METHOD_CHOICES = [
         ("CARD", "Kreditkarte (Stripe)"),
         ("CASH", "Barzahlung"),
     ]
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES, default="CASH")
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default="unpaid")
+    transaction_id = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ("transporter", "date", "time_slot")

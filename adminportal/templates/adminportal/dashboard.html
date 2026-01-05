@@ -1,0 +1,99 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<div class="fig-admin__kpis">
+  <article class="fig-admin__card">
+    <p class="fig-admin__card-label">Schadenmeldungen</p>
+    <div class="fig-admin__card-value">{{ kpi.reports_total }}</div>
+    <p class="fig-admin__card-meta">Neu (7 Tage): {{ kpi.reports_recent }}</p>
+    <p class="fig-admin__card-meta">Ausstehend: {{ kpi.reports_pending|default:"0" }}</p>
+  </article>
+  <article class="fig-admin__card">
+    <p class="fig-admin__card-label">Buchungen</p>
+    <div class="fig-admin__card-value">{{ kpi.bookings_total }}</div>
+    <p class="fig-admin__card-meta">Heute: {{ kpi.bookings_today }}</p>
+    <p class="fig-admin__card-meta">Ausstehend: {{ kpi.bookings_pending|default:"0" }}</p>
+  </article>
+  <article class="fig-admin__card">
+    <p class="fig-admin__card-label">Anstehend</p>
+    <div class="fig-admin__card-value">{{ kpi.bookings_upcoming }}</div>
+    <p class="fig-admin__card-meta">inkl. bestätigte Slots</p>
+  </article>
+  <article class="fig-admin__card">
+    <p class="fig-admin__card-label">Transporter</p>
+    <div class="fig-admin__card-value">{{ kpi.transporters_total }}</div>
+    <p class="fig-admin__card-meta">Aktiv im Bestand</p>
+  </article>
+</div>
+
+<div class="fig-admin__panels">
+  <section class="fig-admin__panel">
+    <header class="fig-admin__panel-header">
+      <h3>Neueste Schadenmeldungen</h3>
+      <p class="fig-admin__panel-subtitle">Letzte Eingänge</p>
+    </header>
+    <div class="fig-list">
+      {% for report in recent_reports %}
+        <article class="fig-list__item">
+          <div>
+            <div class="fig-list__title">
+              {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
+            </div>
+            <div class="fig-list__meta">
+              {{ report.car_brand }} {{ report.car_model }}{% if report.plate %} · {{ report.plate }}{% endif %}
+            </div>
+          </div>
+          <div class="fig-badge fig-badge--warning">Neu</div>
+        </article>
+      {% empty %}
+        <p class="fig-empty">Noch keine Schadenmeldungen vorhanden.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="fig-admin__panel">
+    <header class="fig-admin__panel-header">
+      <h3>Anstehende Buchungen</h3>
+      <p class="fig-admin__panel-subtitle">Nächste Abholtermine</p>
+    </header>
+    <div class="fig-list">
+      {% for booking in upcoming_bookings %}
+        <article class="fig-list__item">
+          <div>
+            <div class="fig-list__title">{{ booking.transporter.name }}</div>
+            <div class="fig-list__meta">
+              {{ booking.customer_name }} · {{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}
+            </div>
+          </div>
+          <div class="fig-badge fig-badge--success">Bestätigt</div>
+        </article>
+      {% empty %}
+        <p class="fig-empty">Keine zukünftigen Buchungen vorhanden.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Transporter-Übersicht</h3>
+    <p class="fig-admin__panel-subtitle">Verfügbare Fahrzeuge</p>
+  </header>
+  <div class="fig-admin__cards">
+    {% for transporter in transporters %}
+      <article class="fig-admin__card fig-admin__card--inline">
+        <div>
+          <p class="fig-admin__card-label">Name</p>
+          <div class="fig-admin__card-value fig-admin__card-value--small">{{ transporter.name }}</div>
+          <p class="fig-admin__card-meta">Kennzeichen: {{ transporter.kennzeichen }}</p>
+        </div>
+        <div class="fig-admin__card-meta">
+          Verfügbar ab {{ transporter.verfuegbar_ab|date:"d.m.Y" }}
+        </div>
+      </article>
+    {% empty %}
+      <p class="fig-empty">Noch keine Transporter erfasst.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

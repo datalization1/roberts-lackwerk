@@ -1,0 +1,73 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Rechnungen</h3>
+    <p class="fig-admin__panel-subtitle">Einfaches Rechnungslisting</p>
+  </header>
+  {% if invoice_created %}
+    <p class="fig-badge fig-badge--success">Rechnung erfasst.</p>
+  {% endif %}
+  <form method="post" class="fig-form">
+    {% csrf_token %}
+    <div class="fig-form__grid">
+      <div>{{ invoice_form.invoice_number.label_tag }} {{ invoice_form.invoice_number }}</div>
+      <div>{{ invoice_form.customer.label_tag }} {{ invoice_form.customer }}</div>
+      <div>{{ invoice_form.amount_chf.label_tag }} {{ invoice_form.amount_chf }}</div>
+      <div>{{ invoice_form.status.label_tag }} {{ invoice_form.status }}</div>
+      <div>{{ invoice_form.issue_date.label_tag }} {{ invoice_form.issue_date }}</div>
+      <div>{{ invoice_form.due_date.label_tag }} {{ invoice_form.due_date }}</div>
+      <div>{{ invoice_form.related_report.label_tag }} {{ invoice_form.related_report }}</div>
+      <div>{{ invoice_form.related_booking.label_tag }} {{ invoice_form.related_booking }}</div>
+    </div>
+    <div class="fig-form__row">
+      {{ invoice_form.description.label_tag }} {{ invoice_form.description }}
+    </div>
+    <div class="fig-form__actions">
+      <button type="submit" class="fig-btn fig-btn--primary">Rechnung speichern</button>
+    </div>
+  </form>
+  <div class="fig-table">
+    <div class="fig-table__row fig-table__row--head">
+      <div class="fig-table__cell fig-table__cell--id">Nr.</div>
+      <div class="fig-table__cell">Kunde</div>
+      <div class="fig-table__cell">Betrag</div>
+      <div class="fig-table__cell">Status</div>
+      <div class="fig-table__cell">Rechnungsdatum</div>
+      <div class="fig-table__cell">Fällig</div>
+      <div class="fig-table__cell">Aktion</div>
+    </div>
+    {% for invoice in invoices %}
+      <div class="fig-table__row">
+        <div class="fig-table__cell fig-table__cell--id">{{ invoice.invoice_number }}</div>
+        <div class="fig-table__cell">
+          {{ invoice.customer }}
+          <div class="fig-table__meta">{{ invoice.customer.email }}</div>
+        </div>
+        <div class="fig-table__cell">CHF {{ invoice.amount_chf }}</div>
+        <div class="fig-table__cell">
+          {% if invoice.status == "paid" %}
+            <span class="fig-badge fig-badge--success">Bezahlt</span>
+          {% elif invoice.status == "overdue" or invoice.is_overdue %}
+            <span class="fig-badge fig-badge--warning">Überfällig{% if invoice.overdue_days %} ({{ invoice.overdue_days }}T){% endif %}</span>
+          {% elif invoice.status == "pending" %}
+            <span class="fig-badge fig-badge--warning">Offen</span>
+          {% else %}
+            <span class="fig-badge">{{ invoice.get_status_display }}</span>
+          {% endif %}
+        </div>
+        <div class="fig-table__cell">{{ invoice.issue_date }}</div>
+        <div class="fig-table__cell">
+          {% if invoice.due_date %}{{ invoice.due_date }}{% else %}-{% endif %}
+        </div>
+        <div class="fig-table__cell">
+          <a class="fig-btn fig-btn--ghost" href="{% url 'portal_invoice_pdf' invoice.pk %}">PDF</a>
+        </div>
+      </div>
+    {% empty %}
+      <p class="fig-empty fig-table__empty">Noch keine Rechnungen erfasst.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

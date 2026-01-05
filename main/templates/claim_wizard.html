@@ -144,6 +144,20 @@
 
         {# ---------- STEP 4: Schaden (accident) ---------- #}
         {% if wizard.steps.current == "accident" %}
+          <div class="rl-wizard-field-group rl-wizard-field-inline">
+            <div>
+              <label class="rl-wizard-label" for="{{ form.accident_date.id_for_label }}">Unfalldatum *</label>
+              {{ form.accident_date }} {{ form.accident_date.errors }}
+            </div>
+            <div>
+              <label class="rl-wizard-label" for="{{ form.accident_location.id_for_label }}">Unfallort *</label>
+              {{ form.accident_location }} {{ form.accident_location.errors }}
+            </div>
+          </div>
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.damage_type.id_for_label }}">Schadensart *</label>
+            {{ form.damage_type }} {{ form.damage_type.errors }}
+          </div>
           <div class="rl-wizard-field-group">
             <label class="rl-wizard-label">Beschädigte Teile</label>
             <ul class="rl-checkbox-grid">
@@ -163,7 +177,7 @@
           </div>
           <div class="rl-wizard-field-group">
             <label class="rl-wizard-label" for="{{ form.photos.id_for_label }}">Schadenfotos *</label>
-            <p class="rl-wizard-help">Laden Sie klare Fotos der beschädigten Bereiche hoch (maximal 10 Bilder).</p>
+            <p class="rl-wizard-help">Laden Sie klare Fotos der beschädigten Bereiche hoch (bis zu 5 Bilder, je max. 5 MB).</p>
 
             <div class="rl-upload-dropzone">
               <div class="rl-upload-icon">⬆</div>
@@ -244,10 +258,26 @@
                   <dd>{{ summary.accident.message|default:"–" }}</dd>
                 </div>
                 <div>
+                  <dt>Unfalldatum</dt>
+                  <dd>{{ summary.accident.accident_date|default:"–" }}</dd>
+                </div>
+                <div>
+                  <dt>Unfallort</dt>
+                  <dd>{{ summary.accident.accident_location|default:"–" }}</dd>
+                </div>
+                <div>
+                  <dt>Schadensart</dt>
+                  <dd>{{ summary.accident.damage_type|default:"–" }}</dd>
+                </div>
+                <div>
                   <dt>Foto</dt>
                   <dd>
-                    {% if uploaded_photo %}
-                      {{ uploaded_photo.name }} ({{ uploaded_photo.size|filesizeformat }})
+                    {% if photos %}
+                      <ul>
+                        {% for file in photos %}
+                          <li>{{ file.name }} ({{ file.size|filesizeformat }})</li>
+                        {% endfor %}
+                      </ul>
                     {% else %}
                       Kein Foto hochgeladen.
                     {% endif %}
@@ -317,7 +347,14 @@ document.addEventListener('DOMContentLoaded',function(){
       list.textContent = 'Keine Dateien ausgewählt.';
       return;
     }
-    Array.from(this.files).forEach(function(f){
+    const files = Array.from(this.files).slice(0,5);
+    if(this.files.length > files.length){
+      const note = document.createElement('div');
+      note.className = 'rl-upload-file rl-upload-file--warning';
+      note.textContent = 'Es werden nur die ersten 5 Dateien übernommen.';
+      list.appendChild(note);
+    }
+    files.forEach(function(f){
       const row = document.createElement('div');
       row.className = 'rl-upload-file';
       row.textContent = f.name;

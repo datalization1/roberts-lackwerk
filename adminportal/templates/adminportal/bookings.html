@@ -1,0 +1,145 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header">
+    <h3>Buchungen</h3>
+    <p class="fig-admin__panel-subtitle">Letzte Buchungen</p>
+  </header>
+  <form method="get" class="fig-form">
+    <div class="fig-form__grid">
+      <div><label>Suche</label><input type="text" name="q" value="{{ filter.q }}"></div>
+      <div>
+        <label>Status</label>
+        <select name="status">
+          <option value="">Alle</option>
+          <option value="pending" {% if filter.status == "pending" %}selected{% endif %}>Ausstehend</option>
+          <option value="confirmed" {% if filter.status == "confirmed" %}selected{% endif %}>Bestätigt</option>
+          <option value="completed" {% if filter.status == "completed" %}selected{% endif %}>Abgeschlossen</option>
+          <option value="cancelled" {% if filter.status == "cancelled" %}selected{% endif %}>Storniert</option>
+        </select>
+      </div>
+      <div>
+        <label>Fahrzeug</label>
+        <select name="transporter">
+          <option value="">Alle Fahrzeuge</option>
+          {% for t in transporters %}
+            <option value="{{ t.id }}" {% if filter.transporter|add:'' == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div><label>Von</label><input type="date" name="from" value="{{ filter.from }}"></div>
+      <div><label>Bis</label><input type="date" name="to" value="{{ filter.to }}"></div>
+    </div>
+    <div class="fig-form__actions">
+      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_bookings' %}">Zurücksetzen</a>
+    </div>
+  </form>
+  <div class="fig-table">
+    <div class="fig-table__row fig-table__row--head">
+      <div class="fig-table__cell fig-table__cell--id">ID</div>
+      <div class="fig-table__cell">Transporter</div>
+      <div class="fig-table__cell">Kunde</div>
+      <div class="fig-table__cell">Datum</div>
+      <div class="fig-table__cell">Zeitslot</div>
+      <div class="fig-table__cell">Aktionen</div>
+    </div>
+    {% for booking in bookings %}
+      <div class="fig-table__row">
+        <div class="fig-table__cell fig-table__cell--id">
+          <a href="{% url 'portal_booking_detail' booking.pk %}">BU-{{ booking.pk }}</a>
+        </div>
+        <div class="fig-table__cell">
+          {{ booking.transporter.name }}
+          <div class="fig-table__meta">{{ booking.transporter.kennzeichen }}</div>
+        </div>
+        <div class="fig-table__cell">
+          {{ booking.customer_name }}
+          <div class="fig-table__meta">{{ booking.customer_email }}</div>
+        </div>
+        <div class="fig-table__cell">{{ booking.date|date:"d.m.Y" }}</div>
+        <div class="fig-table__cell">
+          {{ booking.get_time_slot_display }}
+          <div class="fig-table__meta">
+            {% if booking.status == "pending" %}
+              <span class="fig-badge fig-badge--warning">Ausstehend</span>
+            {% elif booking.status == "confirmed" %}
+              <span class="fig-badge fig-badge--success">Bestätigt</span>
+            {% elif booking.status == "completed" %}
+              <span class="fig-badge fig-badge--info">Abgeschlossen</span>
+            {% elif booking.status == "cancelled" %}
+              <span class="fig-badge">Storniert</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="fig-table__cell">
+          <button class="fig-btn fig-btn--ghost js-open-modal" data-target="booking-{{ booking.pk }}">Details</button>
+        </div>
+      </div>
+    {% empty %}
+      <p class="fig-empty fig-table__empty">Keine Buchungen erfasst.</p>
+    {% endfor %}
+  </div>
+
+  {% for booking in bookings %}
+    <dialog id="modal-booking-{{ booking.pk }}" class="fig-modal">
+      <article class="fig-modal__content">
+        <header class="fig-modal__header">
+          <h4>BU-{{ booking.pk }} · {{ booking.date|date:"d.m.Y" }}</h4>
+          <button type="button" class="fig-modal__close js-close-modal" data-target="booking-{{ booking.pk }}">×</button>
+        </header>
+        <div class="fig-modal__body">
+          <div class="fig-admin__cards fig-admin__cards--grid">
+            <div class="fig-admin__card">
+              <p class="fig-admin__card-label">Transporter</p>
+              <div class="fig-admin__card-value fig-admin__card-value--small">{{ booking.transporter.name }}</div>
+              <p class="fig-admin__card-meta">{{ booking.transporter.kennzeichen }}</p>
+              <p class="fig-admin__card-meta">{{ booking.get_time_slot_display }}</p>
+            </div>
+            <div class="fig-admin__card">
+              <p class="fig-admin__card-label">Kunde</p>
+              <div class="fig-admin__card-value fig-admin__card-value--small">{{ booking.customer_name }}</div>
+              <p class="fig-admin__card-meta">{{ booking.customer_email }} · {{ booking.customer_phone }}</p>
+              <p class="fig-admin__card-meta">{{ booking.customer_address }}</p>
+            </div>
+            <div class="fig-admin__card">
+              <p class="fig-admin__card-label">Zahlung</p>
+              <div class="fig-admin__card-value fig-admin__card-value--small">{{ booking.total_price|default:"-" }} CHF</div>
+              <p class="fig-admin__card-meta">Status: {{ booking.payment_status }}</p>
+              <p class="fig-admin__card-meta">Methode: {{ booking.payment_method }}</p>
+            </div>
+          </div>
+          <div class="fig-admin__panel" style="margin-top:12px;">
+            <h5>Extras</h5>
+            <p class="fig-admin__card-meta">
+              Versicherung: {{ booking.get_insurance_display }} · KM: {{ booking.get_km_package_display }}
+            </p>
+            <p class="fig-admin__card-meta">Notiz: {{ booking.additional_notes|default:"-" }}</p>
+          </div>
+        </div>
+      </article>
+    </dialog>
+  {% endfor %}
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openButtons = document.querySelectorAll('.js-open-modal');
+    const closeButtons = document.querySelectorAll('.js-close-modal');
+    const openModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+      else if (dlg) dlg.classList.add('is-visible');
+    };
+    const closeModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (!dlg) return;
+      if (typeof dlg.close === 'function') dlg.close();
+      dlg.classList.remove('is-visible');
+    };
+    openButtons.forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.target)));
+    closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.target)));
+  });
+</script>
+{% endblock %}

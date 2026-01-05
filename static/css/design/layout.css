@@ -1,4 +1,4 @@
-.page-bg{min-height:100vh;background:radial-gradient(circle at top,#311212 0,#050505 45%,#020202 100%);color:var(--text);}
+.page-bg{min-height:100vh;background:#0a0a0a;color:var(--text);}
 .page-main{min-height:calc(100vh - var(--nav-height));padding-top:var(--spacing-16);padding-bottom:0;}
 .page-container{max-width:var(--container-width);margin:0 auto;padding:0 var(--spacing-12);}
 .rl-footer{border-top:1px solid #151515;background:#050505;color:var(--text-muted);text-align:center;padding:1.25rem 0;font-size:.8rem;letter-spacing:.03em;}
