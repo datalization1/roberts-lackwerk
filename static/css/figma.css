@@ -19,23 +19,23 @@
 .fig-hero {
   position: relative;
   overflow: hidden;
-  border-radius: var(--fig-radius);
-  background: radial-gradient(circle at 20% 20%, rgba(220,38,38,0.08), transparent 35%), linear-gradient(120deg, #220b0d 0%, #0a0a0a 100%);
-  padding: 72px 48px;
-  margin-bottom: 28px;
+  border-radius: 0;
+  background: linear-gradient(135deg, rgba(120,0,0,.85), rgba(0,0,0,.95));
+  padding: 84px 0 64px 0;
+  margin: 0 0 28px 0;
 }
 .fig-hero__bg {
   position: absolute;
   inset: 0;
-  background: url('https://images.unsplash.com/photo-1607582278043-51ce82ad1a52?auto=format&fit=crop&w=1400&q=80') center/cover;
-  opacity: 0.12;
-  filter: blur(6px);
+  background: none;
 }
 .fig-hero__inner {
   position: relative;
-  max-width: 840px;
+  width: 100%;
   display: grid;
   gap: 14px;
+  margin: 0;
+  padding: 0 48px;
 }
 .fig-eyebrow {
   text-transform: uppercase;
@@ -59,6 +59,7 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 10px;
+  justify-content: center;
 }
 .fig-btn {
   display: inline-flex;
@@ -82,14 +83,15 @@
 }
 
 .fig-section {
-  background: var(--fig-surface);
-  border: 1px solid var(--fig-border);
-  border-radius: var(--fig-radius);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   padding: 32px 24px;
   margin-bottom: 24px;
 }
 .fig-section--alt {
-  background: var(--fig-surface-strong);
+  background: #1a1a1d;
+  border: none;
 }
 .fig-section__head {
   text-align: center;
@@ -126,11 +128,12 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: var(--fig-accent-soft);
+  background: rgba(220,38,38,.12);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--fig-accent);
+  color: #ff4d4f;
+  border: 1px solid rgba(220,38,38,.25);
 }
 
 .fig-pill {
@@ -145,11 +148,12 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: var(--fig-accent-soft);
+  background: rgba(220,38,38,.12);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--fig-accent);
+  color: #ff4d4f;
+  border: 1px solid rgba(220,38,38,.25);
 }
 .fig-pill h3 { margin: 0; }
 .fig-pill p { margin: 2px 0 0 0; color: var(--fig-muted); }

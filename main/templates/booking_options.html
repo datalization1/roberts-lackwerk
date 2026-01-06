@@ -5,20 +5,32 @@
 
   <!-- Header -->
   <header class="rl-wizard-header">
-    <a href="{% url 'home' %}" class="rl-back-link">← Zurück zur Startseite</a>
     <h1 class="rl-wizard-title">Buchung Transporter</h1>
     <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse</p>
   </header>
 
   <!-- Progress Card (separat, NICHT im Header) -->
   <section class="rl-wizard-card rl-wizard-card--progress">
-    <div class="rl-wizard-progress">
-      <div class="rl-wizard-progress__top">
-        <span>Schritt 3 von 5</span>
-        <span>60% Abgeschlossen</span>
+    <div class="rl-stepper">
+      <div class="rl-stepper__item is-active">
+        <span class="rl-stepper__label">Mietdetails</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
       </div>
-      <div class="progress-track">
-        <div class="progress-bar" style="width:60%;"></div>
+      <div class="rl-stepper__item is-active">
+        <span class="rl-stepper__label">Kundendaten</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item is-active">
+        <span class="rl-stepper__label">Zusatzoptionen</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Überprüfung</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Zahlung</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
       </div>
     </div>
   </section>

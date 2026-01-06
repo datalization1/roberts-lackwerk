@@ -5,21 +5,32 @@
 
   <!-- Header -->
   <header class="rl-wizard-header">
-    <a href="{% url 'home' %}" class="rl-back-link">← Zurück zur Startseite</a>
-
     <h1 class="rl-wizard-title">Buchung Transporter</h1>
     <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse</p>
   </header>
 
   <!-- Progress Card -->
   <section class="rl-wizard-card rl-wizard-card--progress">
-    <div class="rl-wizard-progress">
-      <div class="rl-wizard-progress__top">
-        <span>Schritt 2 von 5</span>
-        <span>40% Abgeschlossen</span>
+    <div class="rl-stepper">
+      <div class="rl-stepper__item is-active">
+        <span class="rl-stepper__label">Mietdetails</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
       </div>
-      <div class="progress-track">
-        <div class="progress-bar" style="width:40%;"></div>
+      <div class="rl-stepper__item is-active">
+        <span class="rl-stepper__label">Kundendaten</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Zusatzoptionen</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Überprüfung</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Zahlung</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
       </div>
     </div>
   </section>
@@ -31,7 +42,7 @@
       <p class="rl-card__subtitle">Geben Sie Ihre Kontaktinformationen an</p>
     </header>
 
-    <form method="post" class="rl-wizard-body">
+    <form method="post" class="rl-wizard-body" enctype="multipart/form-data">
       {% csrf_token %}
 
       <!-- Vollständiger Name -->
@@ -98,18 +109,29 @@
       <!-- Führerscheinnummer -->
       <div class="rl-wizard-field-group">
         <label class="rl-field-label" for="id_driver_license_number">
-          Führerscheinnummer <span class="rl-field-required">*</span>
+          Führerscheinnummer
         </label>
         <input
           id="id_driver_license_number"
           type="text"
           name="driver_license_number"
           class="rl-input"
-          placeholder="Schweizer Führerscheinnummer"
-          value="{{ form.driver_license_number.value|default:'' }}"
-          required>
+          placeholder="Schweizer Führerscheinnummer (optional)"
+          value="{{ form.driver_license_number.value|default:'' }}">
+      </div>
+      <div class="rl-wizard-field-group">
+        <label class="rl-field-label" for="id_driver_license_photo">
+          Führerscheinfoto (optional)
+        </label>
+        <input
+          id="id_driver_license_photo"
+          type="file"
+          name="driver_license_photo"
+          class="rl-input"
+          accept="image/jpeg,image/png,application/pdf"
+          capture="environment">
         <p class="rl-field-help">
-          Sie müssen Ihren Führerschein bei der Abholung vorlegen.
+          Laden Sie ein Foto oder PDF Ihres Führerscheins hoch (optional).
         </p>
       </div>
       {% if form.errors %}

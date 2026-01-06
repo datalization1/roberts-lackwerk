@@ -4,23 +4,34 @@
 {% block content %}
 <section class="rl-wizard-page">
 
-  <a href="{% url 'home' %}" class="rl-wizard-back">← Zurück zur Startseite</a>
-
   <!-- Header -->
   <header class="rl-wizard-header">
-    <h1 class="rl-wizard-title">Buchung Transporter</h1>
-    <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse.</p>
+    <h1 class="rl-wizard-title">Transporter-Vermietung Buchung</h1>
+    <p class="rl-wizard-subtitle">Buchen Sie einen Umzugstransporter für Ihre Umzugsbedürfnisse.</p>
   </header>
 
   <!-- Progress Card -->
   <section class="rl-wizard-card rl-wizard-card--progress">
-    <div class="rl-wizard-progress">
-      <div class="rl-wizard-progress__top">
-        <span>Schritt 1 von 5</span>
-        <span>20% Abgeschlossen</span>
+    <div class="rl-stepper">
+      <div class="rl-stepper__item is-active">
+        <span class="rl-stepper__label">Mietdetails</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
       </div>
-      <div class="progress-track">
-        <div class="progress-bar" style="width:20%;"></div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Kundendaten</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Zusatzoptionen</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Überprüfung</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
+      </div>
+      <div class="rl-stepper__item">
+        <span class="rl-stepper__label">Zahlung</span>
+        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
       </div>
     </div>
   </section>
@@ -28,7 +39,7 @@
   <section class="rl-wizard-card">
     <header class="rl-wizard-card__header">
       <h2 class="rl-wizard-card__title">Mietdetails</h2>
-      <p class="rl-wizard-card__subtitle">Wählen Sie Ihren LKW und den Mietzeitraum.</p>
+      <p class="rl-wizard-card__subtitle">Wählen Sie Ihren Transporter und den Mietzeitraum.</p>
     </header>
 
       <form method="post">
@@ -47,6 +58,7 @@
                 name="pickup_date"
                 type="date"
                 class="rl-input rl-input--date"
+                placeholder="tt.mm.jjjj"
                 value="{{ step1.date|default:'' }}">
 
               <span class="rl-input-hint"
@@ -64,7 +76,12 @@
                 <input type="radio" name="time_block" value="morning" class="rl-timeblock-input"
                   {% if step1.timeblock == 'morning' or step1.time_slot == 'MORNING' %}checked{% endif %}>
                 <div class="rl-timeblock-inner">
-                  <div class="rl-timeblock-icon">🌅</div>
+                  <div class="rl-timeblock-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <circle cx="12" cy="12" r="4"></circle>
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+                    </svg>
+                  </div>
                   <div class="rl-timeblock-content">
                     <div class="rl-timeblock-title">Vormittag</div>
                     <div class="rl-timeblock-range">08:00 – 12:00</div>
@@ -76,7 +93,15 @@
                 <input type="radio" name="time_block" value="afternoon" class="rl-timeblock-input"
                   {% if step1.timeblock == 'afternoon' or step1.time_slot == 'AFTERNOON' %}checked{% endif %}>
                 <div class="rl-timeblock-inner">
-                  <div class="rl-timeblock-icon">🌇</div>
+                  <div class="rl-timeblock-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <path d="M12 3v5"></path>
+                      <path d="m16 7-4 4-4-4"></path>
+                      <path d="M4 21h16"></path>
+                      <path d="M4 17h16"></path>
+                      <path d="M8 21h8"></path>
+                    </svg>
+                  </div>
                   <div class="rl-timeblock-content">
                     <div class="rl-timeblock-title">Nachmittag</div>
                     <div class="rl-timeblock-range">13:00 – 18:00</div>
@@ -88,7 +113,12 @@
                 <input type="radio" name="time_block" value="fullday" class="rl-timeblock-input"
                   {% if step1.timeblock == 'fullday' or step1.time_slot == 'FULLDAY' %}checked{% endif %}>
                 <div class="rl-timeblock-inner">
-                  <div class="rl-timeblock-icon">🌕</div>
+                  <div class="rl-timeblock-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <path d="M12 7v5l3 3"></path>
+                    </svg>
+                  </div>
                   <div class="rl-timeblock-content">
                     <div class="rl-timeblock-title">Ganztag</div>
                     <div class="rl-timeblock-range">08:00 – 18:00</div>
@@ -114,7 +144,10 @@
             <div class="rl-rental-status__text">
               {% if not has_filter %}
                 <strong>Bitte Abholdatum & Zeitblock wählen.</strong>
-                <span> Danach zeigen wir die Verfügbarkeit der Fahrzeuge an.</span>
+                <span>Wählen Sie zuerst das Datum, um verfügbare Fahrzeuge zu sehen.</span>
+              {% elif all_available %}
+                <strong>Alle Fahrzeuge verfügbar!</strong>
+                <span>Wählen Sie Ihr bevorzugtes Modell.</span>
               {% else %}
                 <strong>{{ available_count }} von {{ total_count }} Fahrzeugen verfügbar</strong>
                 <span>für den gewählten Zeitraum.</span>

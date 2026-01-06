@@ -23,3 +23,6 @@ static/admin/
 # Dumps / DB-Exports
 latest.dump
 db.sqlite3
+
+# Design assets (local Figma export)
+Figma/

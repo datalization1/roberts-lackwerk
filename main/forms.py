@@ -18,14 +18,13 @@ class MultipleFileField(forms.FileField):
     })
 
     def clean(self, data, initial=None):
-        files = super().clean(data, initial)
-        if not files:
+        # Bypass parent clean, damit wir Listen unverändert verarbeiten können
+        if not data:
             return []
-        # Django gibt bei multiple-Uploads bereits eine Liste zurück
-        if isinstance(files, (list, tuple)):
-            file_list = list(files)
+        if isinstance(data, (list, tuple)):
+            file_list = list(data)
         else:
-            file_list = [files]
+            file_list = [data]
 
         max_files = 5
         max_size_mb = 5
@@ -38,23 +37,66 @@ class MultipleFileField(forms.FileField):
 
 # ---------- Schaden melden: Step 1 ----------
 class CarDetailsForm(forms.Form):
-    plate = forms.CharField(label="License Plate", max_length=16, required=False,
-                            widget=forms.TextInput(attrs={"class":"form-control", "placeholder":"e.g., ZH 123456"}))
-    car_brand = forms.CharField(label="Car Brand", max_length=80,
-                                widget=forms.TextInput(attrs={"class":"form-control","placeholder":"e.g., BMW, Audi, VW"}))
-    car_model = forms.CharField(label="Car Model", max_length=80,
-                                widget=forms.TextInput(attrs={"class":"form-control","placeholder":"e.g., 3 Series, A4, Golf"}))
-    vin = forms.CharField(label="Stammnummer (VIN)", max_length=32,
-                          widget=forms.TextInput(attrs={"class":"form-control","placeholder":"17-digit vehicle identification number"}))
+    plate = forms.CharField(label="Kontrollschild *", max_length=16, required=True,
+                            widget=forms.TextInput(attrs={"class":"form-control", "placeholder":"z.B. ZH 123456"}))
+    car_brand = forms.CharField(label="Fahrzeugmarke *", max_length=80,
+                                widget=forms.TextInput(attrs={"class":"form-control","placeholder":"z.B. BMW, Audi, VW"}))
+    car_model = forms.CharField(label="Fahrzeugmodell *", max_length=80,
+                                widget=forms.TextInput(attrs={"class":"form-control","placeholder":"z.B. 3er, A4, Golf"}))
+    vin = forms.CharField(
+        label="Stammnummer (12-stellig)",
+        max_length=32,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "z.B. 123.456.789",
+                "pattern": r"^\\d{3}\\.\\d{3}\\.\\d{3}$",
+                "title": "Bitte im Format 123.456.789 eingeben.",
+                "inputmode": "numeric",
+            }
+        ),
+    )
+    type_certificate_number = forms.CharField(
+        label="Typenscheinnummer (6-stellig)",
+        max_length=16,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "z.B. 123456",
+                "pattern": r"^\\d{6}$",
+                "title": "Bitte eine 6-stellige Typenscheinnummer eingeben.",
+                "inputmode": "numeric",
+            }
+        ),
+    )
+    registration_document = forms.FileField(
+        label="Fahrzeugausweis (Foto/PDF)",
+        required=False,
+        widget=forms.ClearableFileInput(
+            attrs={
+                "class": "form-control",
+                "accept": "image/jpeg,image/png,application/pdf",
+                "capture": "environment",  # erlaubt direktes Fotografieren auf mobilen Geräten
+            }
+        ),
+    )
 
 
 # ---------- Schaden melden: Step 2 ----------
 class PersonalDetailsForm(forms.Form):
-    full_name = forms.CharField(label="Full Name", max_length=160,
-                                widget=forms.TextInput(attrs={"class":"form-control","placeholder":"First and Last Name"}))
-    address = forms.CharField(label="Address", max_length=200,
-                              widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Street, City, Postal Code"}))
-    phone = forms.CharField(label="Phone Number", max_length=50, required=False,
+    first_name = forms.CharField(label="Vorname *", max_length=80,
+                                widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Vorname"}))
+    last_name = forms.CharField(label="Nachname *", max_length=80,
+                                widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Nachname"}))
+    address_street = forms.CharField(label="Strasse & Nr. *", max_length=200,
+                              widget=forms.TextInput(attrs={"class":"form-control","placeholder":"z.B. Bahnhofstrasse 1"}))
+    postal_code = forms.CharField(label="PLZ *", max_length=10,
+                              widget=forms.TextInput(attrs={"class":"form-control","placeholder":"8000"}))
+    city = forms.CharField(label="Ort *", max_length=120,
+                              widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Zürich"}))
+    phone = forms.CharField(label="Telefon *", max_length=50, required=True,
                             widget=forms.TextInput(attrs={
                                 "class":"form-control",
                                 "placeholder":"+41 XX XXX XX XX",
@@ -62,34 +104,45 @@ class PersonalDetailsForm(forms.Form):
                                 "title": "Telefonnummer bitte mit +41 oder 0 beginnen",
                                 "inputmode": "tel",
                             }))
-    email = forms.EmailField(label="Email Address",
-                             widget=forms.EmailInput(attrs={"class":"form-control","placeholder":"your.email@example.com"}))
+    email = forms.EmailField(label="E-Mail *",
+                             widget=forms.EmailInput(attrs={"class":"form-control","placeholder":"name@example.com"}))
 
 
 # ---------- Schaden melden: Step 3 ----------
 class InsuranceDetailsForm(forms.Form):
     insurer = forms.ChoiceField(
-        label="Insurance Company",
+        label="Versicherung *",
         choices=INSURER_CHOICES,
         widget=forms.Select(attrs={"class": "form-select"}),
     )
     policy_number = forms.CharField(
-        label="Insurance Document Number",
+        label="Policennummer",
         max_length=64,
         required=False,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "If available"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Falls vorhanden"}),
     )
     accident_number = forms.CharField(
-        label="Accident Number",
+        label="Schadennummer",
         max_length=64,
         required=False,
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Claim/Accident reference number"}),
     )
     insurer_contact = forms.CharField(
-        label="Insurance Contact Person",
+        label="Kontakt bei der Versicherung",
         max_length=120,
         required=False,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Name of your insurance contact"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Kontaktperson"}),
+    )
+    insurer_contact_phone = forms.CharField(
+        label="Telefon Kontaktperson",
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Telefon (optional)"}),
+    )
+    insurer_contact_email = forms.EmailField(
+        label="E-Mail Kontaktperson",
+        required=False,
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "E-Mail (optional)"}),
     )
 
     def clean(self):
@@ -181,6 +234,7 @@ class BookingForm(forms.ModelForm):
             "customer_phone",
             "customer_email",
             "driver_license_number",
+            "driver_license_photo",
         ]
         widgets = {
             "customer_phone": forms.TextInput(attrs={
@@ -191,7 +245,11 @@ class BookingForm(forms.ModelForm):
             }),
             "driver_license_number": forms.TextInput(attrs={
                 "minlength": "5",
-                "placeholder": "Schweizer Führerscheinnummer",
+                "placeholder": "Schweizer Führerscheinnummer (optional)",
+            }),
+            "driver_license_photo": forms.ClearableFileInput(attrs={
+                "accept": "image/jpeg,image/png,application/pdf",
+                "capture": "environment",
             }),
         }
 

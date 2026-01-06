@@ -14,7 +14,7 @@ from django.db.models import Exists, OuterRef
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
-from .models import Transporter, Booking, DamageReport, DamagePhoto
+from .models import Transporter, Booking, DamageReport, DamagePhoto, DAMAGE_PART_CODES
 from api.validators import validate_booking_conflict
 from .forms import (
     BookingForm,
@@ -108,18 +108,25 @@ class ClaimWizard(SessionWizardView):
         }
         ctx["step_titles"] = titles
         ctx["current_step_title"] = titles.get(self.steps.current, "")  # ← NEU
+        ctx["steps_list"] = [name for name, _ in FORMS]
+        car_data = self.get_cleaned_data_for_step("car") or {}
+        ctx["car_registration_document"] = car_data.get("registration_document")
 
         if self.steps.current == "review":
-            car = self.get_cleaned_data_for_step("car") or {}
+            car = car_data
             personal = self.get_cleaned_data_for_step("personal") or {}
             insurance = self.get_cleaned_data_for_step("insurance") or {}
             accident = self.get_cleaned_data_for_step("accident") or {}
+            parts_map = dict(DAMAGE_PART_CODES)
+            parts_codes = accident.get("damaged_parts") or []
+            parts_labels = [parts_map.get(code, code) for code in parts_codes]
             ctx["summary"] = {
                 "car": car,
                 "personal": personal,
                 "insurance": insurance,
                 "accident": accident,
             }
+            ctx["damaged_parts_labels"] = parts_labels
             ctx["data"] = {**car, **personal, **insurance, **{k: v for k, v in accident.items() if k != "photos"}}
             ctx["photos"] = accident.get("photos", [])
         return ctx
@@ -139,28 +146,29 @@ class ClaimWizard(SessionWizardView):
         accident  = self.get_cleaned_data_for_step("accident") or {}
 
         # Full name splitten
-        first_name, last_name = "", ""
-        if personal.get("full_name"):
-            parts = personal["full_name"].strip().split(" ", 1)
-            first_name = parts[0]
-            last_name  = parts[1] if len(parts) > 1 else ""
+        first_name = personal.get("first_name", "")
+        last_name = personal.get("last_name", "")
 
         report = DamageReport.objects.create(
             first_name   = first_name,
             last_name    = last_name,
             email        = personal.get("email"),
             phone        = personal.get("phone", ""),
-            address      = personal.get("address", ""),
+            address      = f"{personal.get('address_street','')} {personal.get('postal_code','')} {personal.get('city','')}".strip(),
 
             car_brand    = car.get("car_brand", ""),
             car_model    = car.get("car_model", ""),
             vin          = car.get("vin", ""),
+            type_certificate_number = car.get("type_certificate_number", ""),
+            registration_document = car.get("registration_document"),
             plate        = car.get("plate", ""),
 
             insurer         = ins.get("insurer", ""),
             policy_number   = ins.get("policy_number", ""),
             accident_number = ins.get("accident_number", ""),
             insurer_contact = ins.get("insurer_contact", ""),
+            insurer_contact_phone = ins.get("insurer_contact_phone", ""),
+            insurer_contact_email = ins.get("insurer_contact_email", ""),
 
             message      = accident.get("message", ""),
             damaged_parts= accident.get("damaged_parts", []),
@@ -345,7 +353,7 @@ def book_transporter(request, transporter_id):
 
     if request.method == "POST":
         # Form enthält NUR Kundendaten
-        form = BookingForm(request.POST, instance=booking_instance)
+        form = BookingForm(request.POST, request.FILES, instance=booking_instance)
 
         if form.is_valid():
             booking = form.save(commit=False)

@@ -19,29 +19,29 @@ CAR_PART_CHOICES = [
 
 # Für UI-Checkboxen (Codes ≠ Model-Choices zwingend; wir nutzen diese Liste in Forms)
 DAMAGE_PART_CODES = [
-    ("FRONT_BUMPER", "Front Bumper"),
-    ("REAR_BUMPER", "Rear Bumper"),
-    ("FRONT_LEFT_DOOR", "Front Left Door"),
-    ("FRONT_RIGHT_DOOR", "Front Right Door"),
-    ("REAR_LEFT_DOOR", "Rear Left Door"),
-    ("REAR_RIGHT_DOOR", "Rear Right Door"),
-    ("FRONT_LEFT_FENDER", "Front Left Fender"),
-    ("FRONT_RIGHT_FENDER", "Front Right Fender"),
-    ("REAR_LEFT_FENDER", "Rear Left Fender"),
-    ("REAR_RIGHT_FENDER", "Rear Right Fender"),
-    ("HOOD", "Hood"),
-    ("TRUNK", "Trunk/Boot"),
-    ("WINDSHIELD", "Windshield"),
-    ("REAR_WINDOW", "Rear Window"),
-    ("SIDE_MIRROR_LEFT", "Side Mirror (Left)"),
-    ("SIDE_MIRROR_RIGHT", "Side Mirror (Right)"),
-    ("HEADLIGHT_LEFT", "Headlight (Left)"),
-    ("HEADLIGHT_RIGHT", "Headlight (Right)"),
-    ("TAILLIGHT_LEFT", "Taillight (Left)"),
-    ("TAILLIGHT_RIGHT", "Taillight (Right)"),
-    ("ROOF", "Roof"),
-    ("WHEELS", "Wheels/Rims"),
-    ("OTHER", "Other"),
+    ("FRONT_BUMPER", "Frontstossstange"),
+    ("REAR_BUMPER", "Heckstossstange"),
+    ("FRONT_LEFT_DOOR", "Tür vorne links"),
+    ("FRONT_RIGHT_DOOR", "Tür vorne rechts"),
+    ("REAR_LEFT_DOOR", "Tür hinten links"),
+    ("REAR_RIGHT_DOOR", "Tür hinten rechts"),
+    ("FRONT_LEFT_FENDER", "Kotflügel vorne links"),
+    ("FRONT_RIGHT_FENDER", "Kotflügel vorne rechts"),
+    ("REAR_LEFT_FENDER", "Kotflügel hinten links"),
+    ("REAR_RIGHT_FENDER", "Kotflügel hinten rechts"),
+    ("HOOD", "Motorhaube"),
+    ("TRUNK", "Heckklappe"),
+    ("WINDSHIELD", "Frontscheibe"),
+    ("REAR_WINDOW", "Heckscheibe"),
+    ("SIDE_MIRROR_LEFT", "Seitenspiegel links"),
+    ("SIDE_MIRROR_RIGHT", "Seitenspiegel rechts"),
+    ("HEADLIGHT_LEFT", "Scheinwerfer links"),
+    ("HEADLIGHT_RIGHT", "Scheinwerfer rechts"),
+    ("TAILLIGHT_LEFT", "Rücklicht links"),
+    ("TAILLIGHT_RIGHT", "Rücklicht rechts"),
+    ("ROOF", "Dach"),
+    ("WHEELS", "Felgen/Räder"),
+    ("OTHER", "Sonstiges"),
 ]
 DAMAGED_PART_CHOICES = DAMAGE_PART_CODES
 
@@ -189,6 +189,8 @@ class DamageReport(models.Model):
     car_brand = models.CharField("Automarke", max_length=80, blank=True)
     car_model = models.CharField("Automodell", max_length=80, blank=True)
     vin       = models.CharField("Stammnummer (VIN)", max_length=32, blank=True)
+    type_certificate_number = models.CharField("Typenscheinnummer", max_length=16, blank=True)
+    registration_document = models.FileField("Fahrzeugausweis", upload_to="vehicle_docs/%Y/%m/%d/", blank=True, null=True)
     first_registration = models.DateField("Erstzulassung", null=True, blank=True)
     mileage = models.PositiveIntegerField("Kilometerstand", null=True, blank=True)
 
@@ -215,6 +217,8 @@ class DamageReport(models.Model):
     # NEU: gemäss Figma (optional)
     accident_number = models.CharField("Schaden-/Unfallnummer", max_length=64, blank=True)
     insurer_contact = models.CharField("Versicherung Ansprechperson", max_length=120, blank=True)
+    insurer_contact_phone = models.CharField("Telefon Kontaktperson", max_length=50, blank=True)
+    insurer_contact_email = models.EmailField("E-Mail Kontaktperson", blank=True)
     other_party_involved = models.BooleanField(default=False)
     police_involved = models.BooleanField(default=False)
     documents = models.JSONField(default=list, blank=True)
@@ -361,7 +365,8 @@ class Booking(models.Model):
 
     # 🔹 NEU
     customer_address        = models.CharField("Adresse", max_length=255)
-    driver_license_number   = models.CharField("Führerscheinnummer", max_length=100)
+    driver_license_number   = models.CharField("Führerscheinnummer", max_length=100, blank=True)
+    driver_license_photo    = models.FileField("Führerscheinfoto", upload_to="license_photos/%Y/%m/%d/", blank=True, null=True)
 
     # Zusatzoptionen usw. (was du bereits hast)
     additional_insurance = models.BooleanField(default=False)
