@@ -179,7 +179,13 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-if "test" in sys.argv:
+if (
+    "test" in sys.argv
+    or "pytest" in sys.modules
+    or os.environ.get("PYTEST_CURRENT_TEST")
+    or os.environ.get("CI")
+    or os.environ.get("GITHUB_ACTIONS")
+):
     STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 else:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
