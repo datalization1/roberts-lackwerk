@@ -46,8 +46,7 @@ if DEBUG:
 else:
     ALLOWED_HOSTS = os.environ.get(
         "DJANGO_ALLOWED_HOSTS",
-        "roberts-lackwerk-bf57599aa7c8.herokuapp.com",
-        "roberts-lackwerk.ch, www.roberts-lackwerk.ch", 
+        "roberts-lackwerk-bf57599aa7c8.herokuapp.com,roberts-lackwerk.ch,www.roberts-lackwerk.ch",
     ).split(",")
 
 # Security: lokal kein HTTPS-Zwang, auf Heroku schon
