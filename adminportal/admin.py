@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import Invoice
+from .models import AuditLog, Invoice
 
 
 @admin.register(Invoice)
@@ -22,3 +22,10 @@ class InvoiceAdmin(admin.ModelAdmin):
         self.message_user(request, f"{queryset.count()} Rechnung(en) als bezahlt markiert.")
 
     mark_as_paid.short_description = "Als bezahlt markieren"
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "action", "actor", "ip_address")
+    list_filter = ("action",)
+    search_fields = ("action", "actor__username", "ip_address")

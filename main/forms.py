@@ -1,6 +1,9 @@
+from datetime import date
 from django import forms
-from .models import CAR_PART_CHOICES, TIME_SLOTS, INSURER_CHOICES, INSURER_OTHER, Booking, DAMAGE_PART_CODES, DAMAGED_PART_CHOICES
 import logging
+import re
+
+from .models import CAR_PART_CHOICES, TIME_SLOTS, INSURER_CHOICES, INSURER_OTHER, INSURER_NO, Booking, DAMAGE_PART_CODES, DAMAGED_PART_CHOICES
 
 class MultipleFileInput(forms.ClearableFileInput):
     """
@@ -17,6 +20,12 @@ class MultipleFileField(forms.FileField):
         "accept": "image/jpeg,image/png,image/jpg"
     })
 
+    def __init__(self, *args, allowed_types=None, max_files=5, max_size_mb=5, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.allowed_types = set(allowed_types) if allowed_types else None
+        self.max_files = max_files
+        self.max_size_mb = max_size_mb
+
     def clean(self, data, initial=None):
         # Bypass parent clean, damit wir Listen unverändert verarbeiten können
         if not data:
@@ -26,13 +35,13 @@ class MultipleFileField(forms.FileField):
         else:
             file_list = [data]
 
-        max_files = 5
-        max_size_mb = 5
-        if len(file_list) > max_files:
-            raise forms.ValidationError(f"Maximal {max_files} Dateien erlaubt.")
+        if len(file_list) > self.max_files:
+            raise forms.ValidationError(f"Maximal {self.max_files} Dateien erlaubt.")
         for f in file_list:
-            if f.size > max_size_mb * 1024 * 1024:
-                raise forms.ValidationError(f"{f.name}: Datei ist größer als {max_size_mb} MB.")
+            if f.size > self.max_size_mb * 1024 * 1024:
+                raise forms.ValidationError(f"{f.name}: Datei ist größer als {self.max_size_mb} MB.")
+            if self.allowed_types and getattr(f, "content_type", None) not in self.allowed_types:
+                raise forms.ValidationError(f"{f.name}: Dateityp nicht erlaubt.")
         return file_list
 
 # ---------- Schaden melden: Step 1 ----------
@@ -51,8 +60,6 @@ class CarDetailsForm(forms.Form):
             attrs={
                 "class": "form-control",
                 "placeholder": "z.B. 123.456.789",
-                "pattern": r"^\\d{3}\\.\\d{3}\\.\\d{3}$",
-                "title": "Bitte im Format 123.456.789 eingeben.",
                 "inputmode": "numeric",
             }
         ),
@@ -65,8 +72,6 @@ class CarDetailsForm(forms.Form):
             attrs={
                 "class": "form-control",
                 "placeholder": "z.B. 123456",
-                "pattern": r"^\\d{6}$",
-                "title": "Bitte eine 6-stellige Typenscheinnummer eingeben.",
                 "inputmode": "numeric",
             }
         ),
@@ -83,6 +88,29 @@ class CarDetailsForm(forms.Form):
         ),
     )
 
+    def clean_plate(self):
+        plate = (self.cleaned_data.get("plate") or "").strip().upper()
+        match = re.match(r"^(?P<canton>[A-Z]{2})\s?(?P<number>\d{1,6})$", plate)
+        if not match:
+            raise forms.ValidationError("Kontrollschild muss dem Format 'ZH123456' oder 'ZH 123456' entsprechen.")
+        return f"{match.group('canton')}{match.group('number')}"
+
+    def clean_vin(self):
+        vin = (self.cleaned_data.get("vin") or "").strip()
+        if not vin:
+            return vin
+        digits = re.sub(r"\D", "", vin)
+        if len(digits) != 9:
+            raise forms.ValidationError("Stammnummer muss 9-stellig sein (z.B. 123.456.789).")
+        return f"{digits[:3]}.{digits[3:6]}.{digits[6:]}"
+
+    def clean_type_certificate_number(self):
+        num = (self.cleaned_data.get("type_certificate_number") or "").strip()
+        if not num:
+            return num
+        if not re.match(r"^\d{6}$", num):
+            raise forms.ValidationError("Typenscheinnummer muss 6-stellig sein.")
+        return num
 
 # ---------- Schaden melden: Step 2 ----------
 class PersonalDetailsForm(forms.Form):
@@ -107,6 +135,21 @@ class PersonalDetailsForm(forms.Form):
     email = forms.EmailField(label="E-Mail *",
                              widget=forms.EmailInput(attrs={"class":"form-control","placeholder":"name@example.com"}))
 
+    def clean_postal_code(self):
+        code = (self.cleaned_data.get("postal_code") or "").strip()
+        if not re.match(r"^\d{4}$", code):
+            raise forms.ValidationError("PLZ muss 4-stellig sein.")
+        return code
+
+    def clean_phone(self):
+        phone = (self.cleaned_data.get("phone") or "").strip()
+        digits = "".join(ch for ch in phone if ch.isdigit())
+        if not (phone.startswith("+41") or phone.startswith("0")):
+            raise forms.ValidationError("Telefonnummer muss mit +41 oder 0 beginnen.")
+        if len(digits) < 9:
+            raise forms.ValidationError("Telefonnummer ist zu kurz.")
+        return phone
+
 
 # ---------- Schaden melden: Step 3 ----------
 class InsuranceDetailsForm(forms.Form):
@@ -120,6 +163,12 @@ class InsuranceDetailsForm(forms.Form):
         max_length=64,
         required=False,
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Falls vorhanden"}),
+    )
+    other_insurer = forms.CharField(
+        label="Andere Versicherung",
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Name der Versicherung"}),
     )
     accident_number = forms.CharField(
         label="Schadennummer",
@@ -145,12 +194,50 @@ class InsuranceDetailsForm(forms.Form):
         widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "E-Mail (optional)"}),
     )
 
+    def _active_items(self, items):
+        active = []
+        for item in items or []:
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("label") or item.get("title")
+                if not name:
+                    continue
+                if item.get("active", True):
+                    active.append(name)
+            elif isinstance(item, str):
+                active.append(item)
+        return active
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        settings = None
+        try:
+            from adminportal.models import PortalSettings
+            settings = PortalSettings.objects.first()
+        except Exception:
+            settings = None
+        insurers_raw = list(settings.insurers or []) if settings and settings.insurers else []
+        insurers = self._active_items(insurers_raw)
+        if not insurers:
+            insurers = [label for value, label in INSURER_CHOICES if value not in [INSURER_OTHER, INSURER_NO]]
+            insurers.extend(["Andere", "Ohne Versicherung melden"])
+        insurers = [name for name in insurers if name not in ["Andere", "Ohne Versicherung melden"]]
+        choices = [(name, name) for name in insurers]
+        choices.append((INSURER_OTHER, "Andere"))
+        choices.append((INSURER_NO, "Ohne Versicherung melden"))
+        self.fields["insurer"].choices = choices
+
     def clean(self):
         cleaned = super().clean()
-        # Beispiel-Regel bei „Andere“ – optional:
-        if cleaned.get("insurer") == INSURER_OTHER and not cleaned.get("policy_number"):
-            # hier keine harte Pflicht; lass 'pass' stehen oder ergänze deine gewünschte Validierung
-            pass
+        insurer = cleaned.get("insurer")
+        if insurer == INSURER_OTHER and not cleaned.get("other_insurer"):
+            self.add_error("other_insurer", "Bitte die Versicherung angeben.")
+        phone = (cleaned.get("insurer_contact_phone") or "").strip()
+        if phone:
+            digits = "".join(ch for ch in phone if ch.isdigit())
+            if not (phone.startswith("+41") or phone.startswith("0")):
+                self.add_error("insurer_contact_phone", "Telefonnummer muss mit +41 oder 0 beginnen.")
+            elif len(digits) < 9:
+                self.add_error("insurer_contact_phone", "Telefonnummer ist zu kurz.")
         return cleaned
 
 
@@ -217,15 +304,76 @@ class AccidentDetailsForm(forms.Form):
                 "data-max-files": "5",
             }
         ),
+        allowed_types={"image/jpeg", "image/png", "image/webp"},
+        max_size_mb=5,
     )
+
+    def _active_items(self, items):
+        active = []
+        for item in items or []:
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("label") or item.get("title")
+                if not name:
+                    continue
+                if item.get("active", True):
+                    active.append(name)
+            elif isinstance(item, str):
+                active.append(item)
+        return active
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        settings = None
+        try:
+            from adminportal.models import PortalSettings
+            settings = PortalSettings.objects.first()
+        except Exception:
+            settings = None
+        parts_raw = list(settings.damage_parts or []) if settings and settings.damage_parts else []
+        parts = self._active_items(parts_raw)
+        if not parts:
+            parts = [label for _, label in DAMAGE_PART_CODES]
+        self.fields["damaged_parts"].choices = [(name, name) for name in parts]
+        damage_types_raw = list(settings.damage_types or []) if settings and settings.damage_types else []
+        damage_types = self._active_items(damage_types_raw)
+        if not damage_types:
+            damage_types = [label for label, _ in self.DAMAGE_TYPE_CHOICES]
+        self.fields["damage_type"].choices = [(name, name) for name in damage_types]
+
+    documents = MultipleFileField(
+        label="Dokumente (Polizeibericht/Skizze)",
+        required=False,
+        widget=MultipleFileInput(
+            attrs={
+                "accept": "application/pdf,image/jpeg,image/png,image/webp",
+                "data-max-size": "8",
+                "data-max-files": "5",
+            }
+        ),
+        allowed_types={"application/pdf", "image/jpeg", "image/png", "image/webp"},
+        max_size_mb=8,
+    )
+
+    other_party_involved = forms.BooleanField(label="Unfallgegner vorhanden", required=False)
+    police_involved = forms.BooleanField(label="Polizei involviert", required=False)
+
+    def clean_accident_date(self):
+        accident_date = self.cleaned_data.get("accident_date")
+        if accident_date and accident_date > date.today():
+            raise forms.ValidationError("Unfalldatum darf nicht in der Zukunft liegen.")
+        return accident_date
 
 # ---------- Schaden melden: Step 5 ----------
 class ReviewForm(forms.Form):
-    confirm = forms.BooleanField(label="I confirm the information is correct.", required=False)
+    confirm = forms.BooleanField(label="Ich bestätige, dass die Angaben korrekt sind.", required=True)
 
 
 # ---------- Buchung (Transporter) ----------
 class BookingForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["driver_license_number"].required = True
+
     class Meta:
         model = Booking
         fields = [
@@ -274,6 +422,15 @@ class BookingForm(forms.ModelForm):
             elif slot == "AFTERNOON":
                 if "FULLDAY" in existing:
                     raise forms.ValidationError("Nachmittagsbuchung nicht möglich – ganzer Tag ist gebucht.")
+        phone = (cleaned.get("customer_phone") or "").strip()
+        digits = "".join(ch for ch in phone if ch.isdigit())
+        if not (phone.startswith("+41") or phone.startswith("0")):
+            self.add_error("customer_phone", "Telefonnummer muss mit +41 oder 0 beginnen.")
+        elif len(digits) < 9:
+            self.add_error("customer_phone", "Telefonnummer ist zu kurz.")
+        license_number = (cleaned.get("driver_license_number") or "").strip()
+        if license_number and len(license_number) < 5:
+            self.add_error("driver_license_number", "Führerscheinnummer scheint zu kurz.")
         return cleaned
 
 

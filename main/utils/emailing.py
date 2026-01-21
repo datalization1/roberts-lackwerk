@@ -1,8 +1,11 @@
+import logging
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
+logger = logging.getLogger("schaden")
 
 def apply_smtp_override(portal_settings):
     """
@@ -22,9 +25,21 @@ def apply_smtp_override(portal_settings):
     settings.EMAIL_USE_SSL = portal_settings.smtp_use_ssl
 
 
-def send_templated_mail(subject, template_path, context, recipients, from_email=None, portal_settings=None):
+def send_templated_mail(
+    subject,
+    template_path,
+    context,
+    recipients,
+    from_email=None,
+    portal_settings=None,
+    attachments=None,
+    reply_to=None,
+    cc=None,
+    bcc=None,
+    fail_silently=True,
+):
     if not recipients:
-        return
+        return False
     apply_smtp_override(portal_settings)
     html_body = render_to_string(template_path, context)
     text_body = strip_tags(html_body)
@@ -33,6 +48,31 @@ def send_templated_mail(subject, template_path, context, recipients, from_email=
         body=text_body,
         from_email=from_email or getattr(settings, "DEFAULT_FROM_EMAIL", None),
         to=recipients,
+        cc=cc or [],
+        bcc=bcc or [],
+        reply_to=reply_to or None,
     )
     email.attach_alternative(html_body, "text/html")
-    email.send(fail_silently=True)
+    if attachments:
+        for attachment in attachments:
+            email.attach(*attachment)
+    try:
+        email.send(fail_silently=fail_silently)
+        return True
+    except Exception:
+        logger.exception("E-Mail Versand fehlgeschlagen: %s", subject)
+        return False
+
+
+def resolve_admin_recipients(portal_settings, fallback_email=None):
+    """
+    Resolves admin recipients from PortalSettings, with fallback to CONTACT_EMAIL.
+    """
+    recipients = []
+    if portal_settings and portal_settings.notification_recipients:
+        recipients = [r.strip() for r in portal_settings.notification_recipients.split(",") if r.strip()]
+    if not recipients:
+        fallback = fallback_email or getattr(settings, "CONTACT_EMAIL", None)
+        if fallback:
+            recipients = [fallback]
+    return recipients

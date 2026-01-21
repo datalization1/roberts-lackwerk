@@ -2,105 +2,221 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Rechnungen</h3>
-    <p class="fig-admin__panel-subtitle">Einfaches Rechnungslisting</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Rechnungsverwaltung</h3>
+      <p class="fig-admin__panel-subtitle">Alle Rechnungen im Überblick</p>
+    </div>
+    <div class="fig-invoice-header-actions">
+      <form method="get" class="fig-invoice-search">
+        <i data-lucide="search"></i>
+        <input type="text" name="q" placeholder="Rechnungen suchen..." value="{{ filter.q }}">
+      </form>
+      <button class="fig-btn fig-btn--primary fig-btn--compact js-open-modal" type="button" data-target="invoice-new">
+        <i data-lucide="plus"></i>
+        Neue Rechnung
+      </button>
+    </div>
   </header>
+
   {% if invoice_created %}
     <p class="fig-badge fig-badge--success">Rechnung erfasst.</p>
   {% endif %}
-  <form method="post" class="fig-form">
-    {% csrf_token %}
-    <div class="fig-form__grid">
-      <div>{{ invoice_form.invoice_number.label_tag }} {{ invoice_form.invoice_number }}</div>
-      <div>{{ invoice_form.customer.label_tag }} {{ invoice_form.customer }}</div>
-      <div>{{ invoice_form.amount_chf.label_tag }} {{ invoice_form.amount_chf }}</div>
-      <div>{{ invoice_form.status.label_tag }} {{ invoice_form.status }}</div>
-      <div>{{ invoice_form.issue_date.label_tag }} {{ invoice_form.issue_date }}</div>
-      <div>{{ invoice_form.due_date.label_tag }} {{ invoice_form.due_date }}</div>
-      <div>{{ invoice_form.related_report.label_tag }} {{ invoice_form.related_report }}</div>
-      <div>{{ invoice_form.related_booking.label_tag }} {{ invoice_form.related_booking }}</div>
+
+  <div class="fig-invoice-stats">
+    <div class="fig-invoice-stat">
+      <div class="fig-invoice-stat__value fig-invoice-stat__value--danger">CHF {{ invoice_stats.total_amount|default:"0"|floatformat:0 }}</div>
+      <div class="fig-invoice-stat__label">Gesamtumsatz</div>
     </div>
-    <div class="fig-form__row">
-      {{ invoice_form.description.label_tag }} {{ invoice_form.description }}
+    <div class="fig-invoice-stat">
+      <div class="fig-invoice-stat__value fig-invoice-stat__value--success">CHF {{ invoice_stats.paid_total|default:"0"|floatformat:0 }}</div>
+      <div class="fig-invoice-stat__label">Bezahlt</div>
     </div>
-    <div class="fig-form__actions">
-      <button type="submit" class="fig-btn fig-btn--primary">Rechnung speichern</button>
+    <div class="fig-invoice-stat">
+      <div class="fig-invoice-stat__value fig-invoice-stat__value--info">CHF {{ invoice_stats.open_total|default:"0"|floatformat:0 }}</div>
+      <div class="fig-invoice-stat__label">Ausstehend</div>
     </div>
+    <div class="fig-invoice-stat">
+      <div class="fig-invoice-stat__value fig-invoice-stat__value--danger">CHF {{ invoice_stats.overdue_total|default:"0"|floatformat:0 }}</div>
+      <div class="fig-invoice-stat__label">Überfällig</div>
+    </div>
+  </div>
+
+  <form method="get" class="fig-invoice-filters">
+    <select name="status">
+      <option value="">Alle Status</option>
+      <option value="draft" {% if filter.status == "draft" %}selected{% endif %}>Entwurf</option>
+      <option value="pending" {% if filter.status == "pending" %}selected{% endif %}>Offen</option>
+      <option value="paid" {% if filter.status == "paid" %}selected{% endif %}>Bezahlt</option>
+      <option value="overdue" {% if filter.status == "overdue" %}selected{% endif %}>Überfällig</option>
+      <option value="cancelled" {% if filter.status == "cancelled" %}selected{% endif %}>Storniert</option>
+    </select>
+    <select name="type">
+      <option value="">Alle Typen</option>
+      <option value="damage-report" {% if filter.type == "damage-report" %}selected{% endif %}>Schadenmeldung</option>
+      <option value="rental" {% if filter.type == "rental" %}selected{% endif %}>Vermietung</option>
+      <option value="other" {% if filter.type == "other" %}selected{% endif %}>Sonstiges</option>
+    </select>
+    <input type="hidden" name="q" value="{{ filter.q }}">
+    <button class="fig-btn fig-btn--ghost fig-btn--compact" type="submit">Filtern</button>
   </form>
-  <div class="fig-table">
-    <div class="fig-table__row fig-table__row--head">
-      <div class="fig-table__cell fig-table__cell--id">Nr.</div>
-      <div class="fig-table__cell">Kunde</div>
-      <div class="fig-table__cell">Betrag</div>
-      <div class="fig-table__cell">Status</div>
-      <div class="fig-table__cell">Mahnstufe</div>
-      <div class="fig-table__cell">Zahlung</div>
-      <div class="fig-table__cell">Rechnungsdatum</div>
-      <div class="fig-table__cell">Fällig</div>
-      <div class="fig-table__cell">Historie</div>
-      <div class="fig-table__cell">Aktion</div>
-    </div>
+
+  <div class="fig-invoice-list">
     {% for invoice in invoices %}
-      <div class="fig-table__row">
-        <div class="fig-table__cell fig-table__cell--id">{{ invoice.invoice_number }}</div>
-        <div class="fig-table__cell">
-          {{ invoice.customer }}
-          <div class="fig-table__meta">{{ invoice.customer.email }}</div>
+      <article class="fig-invoice-card">
+        <div class="fig-invoice-card__icon">
+          <i data-lucide="file-text"></i>
         </div>
-        <div class="fig-table__cell">CHF {{ invoice.amount_chf }}</div>
-        <div class="fig-table__cell">
-          {% if invoice.status == "paid" %}
-            <span class="fig-badge fig-badge--success">Bezahlt</span>
-          {% elif invoice.status == "overdue" or invoice.is_overdue %}
-            <span class="fig-badge fig-badge--warning">Überfällig{% if invoice.overdue_days %} ({{ invoice.overdue_days }}T){% endif %}</span>
-          {% elif invoice.status == "pending" %}
-            <span class="fig-badge fig-badge--warning">Offen</span>
-          {% else %}
-            <span class="fig-badge">{{ invoice.get_status_display }}</span>
-          {% endif %}
+        <div class="fig-invoice-card__content">
+          <div class="fig-invoice-card__header">
+            <span class="fig-invoice-card__number">{{ invoice.invoice_number }}</span>
+            {% if invoice.status == "paid" %}
+              <span class="fig-invoice-badge fig-invoice-badge--success">Bezahlt</span>
+            {% elif invoice.status == "overdue" or invoice.is_overdue %}
+              <span class="fig-invoice-badge fig-invoice-badge--danger">Überfällig</span>
+            {% elif invoice.status == "pending" %}
+              <span class="fig-invoice-badge fig-invoice-badge--info">Versendet</span>
+            {% elif invoice.status == "draft" %}
+              <span class="fig-invoice-badge fig-invoice-badge--muted">Entwurf</span>
+            {% else %}
+              <span class="fig-invoice-badge fig-invoice-badge--muted">{{ invoice.get_status_display }}</span>
+            {% endif %}
+
+            {% if invoice.related_report %}
+              <span class="fig-invoice-badge fig-invoice-badge--info">Reparatur</span>
+            {% elif invoice.related_booking %}
+              <span class="fig-invoice-badge fig-invoice-badge--purple">Vermietung</span>
+            {% else %}
+              <span class="fig-invoice-badge fig-invoice-badge--muted">Manuell</span>
+            {% endif %}
+          </div>
+          <div class="fig-invoice-card__meta">
+            <span><i data-lucide="user"></i>{{ invoice.customer }}</span>
+            <span><i data-lucide="calendar"></i>{{ invoice.issue_date|date:"Y-m-d" }}</span>
+            <span class="fig-invoice-card__amount"><i data-lucide="banknote"></i>CHF {{ invoice.amount_chf|floatformat:0 }}</span>
+          </div>
+          <div class="fig-invoice-card__ref">
+            {% if invoice.related_report %}
+              Bezug: SM-{{ invoice.related_report.pk }}
+            {% elif invoice.related_booking %}
+              Bezug: BU-{{ invoice.related_booking.pk }}
+            {% elif invoice.description %}
+              Bezug: {{ invoice.description }}
+            {% else %}
+              Bezug: -
+            {% endif %}
+          </div>
         </div>
-        <div class="fig-table__cell">
-          {% if invoice.reminder_level %}Stufe {{ invoice.reminder_level }}{% else %}-{% endif %}
+        <div class="fig-invoice-card__actions">
+          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" type="button">
+            <i data-lucide="eye"></i>
+            Ansehen
+          </button>
+          <a class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" href="{% url 'portal_invoice_pdf' invoice.pk %}">
+            <i data-lucide="download"></i>
+            PDF
+          </a>
+          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" type="button">
+            <i data-lucide="send"></i>
+            Senden
+          </button>
+          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact fig-btn--danger" type="button">
+            <i data-lucide="trash-2"></i>
+            Löschen
+          </button>
         </div>
-        <div class="fig-table__cell">
-          {% if invoice.payment_date %}{{ invoice.payment_date }}{% else %}-{% endif %}
-        </div>
-        <div class="fig-table__cell">{{ invoice.issue_date }}</div>
-        <div class="fig-table__cell">
-          {% if invoice.due_date %}{{ invoice.due_date }}{% else %}-{% endif %}
-        </div>
-        <div class="fig-table__cell">
-          {% if invoice.payment_events %}
-            <details>
-              <summary>Events ({{ invoice.payment_events|length }})</summary>
-              <ul style="margin:6px 0 0 14px; color:#94a3b8; font-size:13px;">
-                {% for ev in invoice.payment_events|slice:":5" %}
-                  <li>{{ ev.ts|default:ev.ts }} · {{ ev.kind }} — {{ ev.note }}</li>
-                {% endfor %}
-              </ul>
-            </details>
-          {% else %}
-            -
-          {% endif %}
-        </div>
-        <div class="fig-table__cell">
-          <a class="fig-btn fig-btn--ghost" href="{% url 'portal_invoice_pdf' invoice.pk %}">PDF</a>
-          {% if invoice.status != "paid" %}
-            <form method="post" action="{% url 'portal_invoice_mark_paid' invoice.pk %}" style="display:inline-block;">
-              {% csrf_token %}
-              <button class="fig-btn fig-btn--primary" type="submit" style="margin-left:4px;">Als bezahlt markieren</button>
-            </form>
-            <form method="post" action="{% url 'portal_invoice_raise_reminder' invoice.pk %}" style="display:inline-block; margin-left:4px;">
-              {% csrf_token %}
-              <button class="fig-btn fig-btn--ghost" type="submit">Mahnstufe +1</button>
-            </form>
-          {% endif %}
-        </div>
-      </div>
+      </article>
     {% empty %}
-      <p class="fig-empty fig-table__empty">Noch keine Rechnungen erfasst.</p>
+      <p class="fig-empty">Noch keine Rechnungen erfasst.</p>
     {% endfor %}
   </div>
 </section>
+
+<dialog id="modal-invoice-new" class="fig-modal">
+  <article class="fig-modal__content fig-customer-modal">
+    <header class="fig-modal__header">
+      <div class="fig-admin__panel-header-group">
+        <h3>Neue Rechnung</h3>
+        <p class="fig-admin__panel-subtitle">Rechnung manuell erfassen</p>
+      </div>
+      <button type="button" class="fig-modal__close js-close-modal" data-target="invoice-new">×</button>
+    </header>
+    <div class="fig-modal__body">
+      <form method="post" class="fig-customer-form fig-invoice-form">
+        {% csrf_token %}
+        <div class="fig-customer-form__section">
+          <h4>Kunde auswählen</h4>
+          <p class="fig-admin__panel-subtitle">Kunden müssen vorab unter „Kunden“ angelegt werden.</p>
+          <div class="fig-customer-form__grid fig-invoice-form__customer">
+            <div class="fig-customer-form__field fig-customer-form__field--full">
+              {{ invoice_form.customer.label_tag }} {{ invoice_form.customer }}
+              <span class="fig-customer-form__hint">Falls der Kunde fehlt, bitte zuerst in der Kundenverwaltung anlegen.</span>
+              <a class="fig-btn fig-btn--ghost fig-btn--compact" href="{% url 'portal_customers' %}">
+                <i data-lucide="users"></i>
+                Zur Kundenverwaltung
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="fig-customer-form__section fig-invoice-form__details">
+          <h4>Rechnungsdetails</h4>
+          <div class="fig-customer-form__grid">
+            <div class="fig-customer-form__field">{{ invoice_form.invoice_number.label_tag }} {{ invoice_form.invoice_number }}</div>
+            <div class="fig-customer-form__field">{{ invoice_form.amount_chf.label_tag }} {{ invoice_form.amount_chf }}</div>
+            <div class="fig-customer-form__field">{{ invoice_form.status.label_tag }} {{ invoice_form.status }}</div>
+            <div class="fig-customer-form__field">{{ invoice_form.issue_date.label_tag }} {{ invoice_form.issue_date }}</div>
+            <div class="fig-customer-form__field">{{ invoice_form.due_date.label_tag }} {{ invoice_form.due_date }}</div>
+            <div class="fig-customer-form__field fig-customer-form__field--full">{{ invoice_form.related_report.label_tag }} {{ invoice_form.related_report }}</div>
+            <div class="fig-customer-form__field fig-customer-form__field--full">{{ invoice_form.related_booking.label_tag }} {{ invoice_form.related_booking }}</div>
+            <div class="fig-customer-form__field fig-customer-form__field--full">
+              {{ invoice_form.description.label_tag }} {{ invoice_form.description }}
+            </div>
+          </div>
+        </div>
+        <div class="fig-customer-form__actions">
+          <button type="button" class="fig-btn fig-btn--ghost fig-btn--compact js-close-modal" data-target="invoice-new">Abbrechen</button>
+          <button type="submit" class="fig-btn fig-btn--primary fig-btn--compact">
+            <i data-lucide="save"></i>
+            Rechnung speichern
+          </button>
+        </div>
+      </form>
+    </div>
+  </article>
+</dialog>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openButtons = document.querySelectorAll('.js-open-modal');
+    const closeButtons = document.querySelectorAll('.js-close-modal');
+    const openModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+      else if (dlg) dlg.classList.add('is-visible');
+    };
+    const closeModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (!dlg) return;
+      if (typeof dlg.close === 'function') dlg.close();
+      dlg.classList.remove('is-visible');
+    };
+    const updateInvoiceForm = () => {
+      const customerSelect = document.querySelector('.fig-invoice-form select[name="customer"]');
+      const details = document.querySelector('.fig-invoice-form__details');
+      const submit = document.querySelector('.fig-invoice-form button[type="submit"]');
+      if (!customerSelect || !details || !submit) return;
+      const hasCustomer = Boolean(customerSelect.value);
+      details.classList.toggle('is-active', hasCustomer);
+      submit.disabled = !hasCustomer;
+    };
+    openButtons.forEach(btn => btn.addEventListener('click', () => {
+      openModal(btn.dataset.target);
+      updateInvoiceForm();
+    }));
+    closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.target)));
+    const customerSelect = document.querySelector('.fig-invoice-form select[name="customer"]');
+    if (customerSelect) customerSelect.addEventListener('change', updateInvoiceForm);
+    updateInvoiceForm();
+  });
+</script>
 {% endblock %}

@@ -2,78 +2,440 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Einstellungen</h3>
-    <p class="fig-admin__panel-subtitle">Portal-Konfiguration</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Einstellungen</h3>
+      <p class="fig-admin__panel-subtitle">Verwalten Sie Listen und Konfigurationen für das System</p>
+    </div>
   </header>
   {% if settings_saved %}
     <p class="fig-badge fig-badge--success">Einstellungen gespeichert.</p>
   {% endif %}
+
   <form method="post" class="fig-form">
     {% csrf_token %}
-    <div class="fig-admin__panel" style="margin:0 0 16px 0;">
-      <header class="fig-admin__panel-header">
-        <h4>Basis</h4>
-      </header>
-      <div class="fig-form__grid">
-        <div>{{ settings_form.contact_email.label_tag }} {{ settings_form.contact_email }}</div>
-        <div>{{ settings_form.default_currency.label_tag }} {{ settings_form.default_currency }}</div>
-        <div>{{ settings_form.default_daily_price.label_tag }} {{ settings_form.default_daily_price }}</div>
-      </div>
-      <div class="fig-form__row">
-        {{ settings_form.branding_text.label_tag }} {{ settings_form.branding_text }}
-      </div>
-    </div>
 
-    <div class="fig-admin__panel" style="margin:0 0 16px 0;">
-      <header class="fig-admin__panel-header">
-        <h4>Benachrichtigungen</h4>
-      </header>
-      <div class="fig-form__grid">
-        <div class="fig-form__row">
-          <label class="checkbox">
-            {{ settings_form.notify_new_damage }} Schadenmeldungen melden
-          </label>
-        </div>
-        <div class="fig-form__row">
-          <label class="checkbox">
-            {{ settings_form.notify_new_booking }} Buchungen melden
-          </label>
-        </div>
-      </div>
-      <div class="fig-form__row">
-        {{ settings_form.notification_recipients.label_tag }} {{ settings_form.notification_recipients }}
-        <p class="fig-admin__card-meta">Leer lassen = Standard CONTACT_EMAIL</p>
-      </div>
-    </div>
+    <nav class="fig-settings-nav" aria-label="Einstellungen">
+      <button class="fig-settings-tab is-active" type="button" data-tab="parts">
+        <i data-lucide="car"></i>
+        Karrosserieteile
+      </button>
+      <button class="fig-settings-tab" type="button" data-tab="types">
+        <i data-lucide="alert-triangle"></i>
+        Schadensarten
+      </button>
+      <button class="fig-settings-tab" type="button" data-tab="insurers">
+        <i data-lucide="shield"></i>
+        Versicherungen
+      </button>
+      <button class="fig-settings-tab" type="button" data-tab="homepage">
+        <i data-lucide="layout-template"></i>
+        Einstellungen Homepage
+      </button>
+    </nav>
 
-    <div class="fig-admin__panel" style="margin:0 0 16px 0;">
+    <section class="fig-settings-section is-active" data-tab="parts" data-field="damage_parts">
       <header class="fig-admin__panel-header">
-        <h4>SMTP</h4>
+        <h4>Karrosserieteile</h4>
+        <p class="fig-admin__panel-subtitle">Liste der auswählbaren Karrosserieteile im Schadenmeldungsformular</p>
       </header>
-      <div class="fig-form__grid">
-        <div>{{ settings_form.smtp_host.label_tag }} {{ settings_form.smtp_host }}</div>
-        <div>{{ settings_form.smtp_port.label_tag }} {{ settings_form.smtp_port }}</div>
-        <div>{{ settings_form.smtp_user.label_tag }} {{ settings_form.smtp_user }}</div>
-        <div>{{ settings_form.smtp_password.label_tag }} {{ settings_form.smtp_password }}</div>
-      </div>
-      <div class="fig-form__grid">
-        <div class="fig-form__row">
-          <label class="checkbox">
-            {{ settings_form.smtp_use_tls }} TLS verwenden
-          </label>
+      <div class="fig-settings-banner">
+        <div class="fig-settings-banner__icon">
+          <i data-lucide="wrench"></i>
         </div>
-        <div class="fig-form__row">
-          <label class="checkbox">
-            {{ settings_form.smtp_use_ssl }} SSL verwenden
-          </label>
+        <div>
+          <div class="fig-settings-banner__title">Schadenmeldungen</div>
+          <div class="fig-settings-banner__text">Aktive Teile erscheinen in der Schadenmeldung zur Auswahl.</div>
         </div>
       </div>
-    </div>
+      <div class="fig-settings-toolbar">
+        <div class="fig-settings-count">
+          <i data-lucide="list"></i>
+          Einträge (<span data-count>0</span>)
+        </div>
+        <button class="fig-btn fig-btn--primary fig-btn--compact" type="button" data-action="add">
+          <i data-lucide="plus"></i>
+          Hinzufügen
+        </button>
+      </div>
+      <div class="fig-settings-grid"></div>
+      {{ settings_form.damage_parts }}
+    </section>
+
+    <section class="fig-settings-section" data-tab="types" data-field="damage_types">
+      <header class="fig-admin__panel-header">
+        <h4>Schadensarten</h4>
+        <p class="fig-admin__panel-subtitle">Liste der auswählbaren Schadensarten im Schadenmeldungsformular</p>
+      </header>
+      <div class="fig-settings-banner">
+        <div class="fig-settings-banner__icon">
+          <i data-lucide="alert-circle"></i>
+        </div>
+        <div>
+          <div class="fig-settings-banner__title">Schadenkategorien</div>
+          <div class="fig-settings-banner__text">Aktive Schadensarten stehen Kunden im Formular zur Verfügung.</div>
+        </div>
+      </div>
+      <div class="fig-settings-toolbar">
+        <div class="fig-settings-count">
+          <i data-lucide="list"></i>
+          Einträge (<span data-count>0</span>)
+        </div>
+        <button class="fig-btn fig-btn--primary fig-btn--compact" type="button" data-action="add">
+          <i data-lucide="plus"></i>
+          Hinzufügen
+        </button>
+      </div>
+      <div class="fig-settings-grid"></div>
+      {{ settings_form.damage_types }}
+    </section>
+
+    <section class="fig-settings-section" data-tab="insurers" data-field="insurers">
+      <header class="fig-admin__panel-header">
+        <h4>Versicherungen</h4>
+        <p class="fig-admin__panel-subtitle">Liste der Versicherungen im Schadenmeldungsformular</p>
+      </header>
+      <div class="fig-settings-banner">
+        <div class="fig-settings-banner__icon">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <div>
+          <div class="fig-settings-banner__title">Versicherungsauswahl</div>
+          <div class="fig-settings-banner__text">Aktive Versicherungen werden im Formular angezeigt.</div>
+        </div>
+      </div>
+      <div class="fig-settings-toolbar">
+        <div class="fig-settings-count">
+          <i data-lucide="list"></i>
+          Einträge (<span data-count>0</span>)
+        </div>
+        <button class="fig-btn fig-btn--primary fig-btn--compact" type="button" data-action="add">
+          <i data-lucide="plus"></i>
+          Hinzufügen
+        </button>
+      </div>
+      <div class="fig-settings-grid"></div>
+      {{ settings_form.insurers }}
+    </section>
+
+    <section class="fig-settings-section" data-tab="homepage" data-field="homepage_services">
+      <header class="fig-admin__panel-header">
+        <h4>Einstellungen Homepage</h4>
+        <p class="fig-admin__panel-subtitle">Inhalte für die Homepage verwalten</p>
+      </header>
+      <div class="fig-settings-banner">
+        <div class="fig-settings-banner__icon">
+          <i data-lucide="layout-dashboard"></i>
+        </div>
+        <div>
+          <div class="fig-settings-banner__title">Homepage Inhalte</div>
+          <div class="fig-settings-banner__text">Aktive Einträge werden auf der Homepage dargestellt.</div>
+        </div>
+      </div>
+      <div class="fig-settings-toolbar">
+        <div class="fig-settings-count">
+          <i data-lucide="list"></i>
+          Einträge (<span data-count>0</span>)
+        </div>
+        <button class="fig-btn fig-btn--primary fig-btn--compact" type="button" data-action="add">
+          <i data-lucide="plus"></i>
+          Hinzufügen
+        </button>
+      </div>
+      <div class="fig-settings-grid"></div>
+      {{ settings_form.homepage_services }}
+
+      <div class="fig-admin__panel" style="margin:18px 0 16px 0;">
+        <header class="fig-admin__panel-header">
+          <h4>Basis</h4>
+        </header>
+        <div class="fig-settings-banner">
+          <div class="fig-settings-banner__icon">
+            <i data-lucide="sliders"></i>
+          </div>
+          <div>
+            <div class="fig-settings-banner__title">Grundkonfiguration</div>
+            <div class="fig-settings-banner__text">Standardwerte für E-Mail, Währung und Tagespreise.</div>
+          </div>
+        </div>
+        <div class="fig-form__grid">
+          <div>{{ settings_form.contact_email.label_tag }} {{ settings_form.contact_email }}</div>
+          <div>{{ settings_form.default_currency.label_tag }} {{ settings_form.default_currency }}</div>
+          <div>{{ settings_form.default_daily_price.label_tag }} {{ settings_form.default_daily_price }}</div>
+        </div>
+        <div class="fig-form__row">
+          {{ settings_form.branding_text.label_tag }} {{ settings_form.branding_text }}
+        </div>
+      </div>
+
+      <div class="fig-admin__panel" style="margin:0 0 16px 0;">
+        <header class="fig-admin__panel-header">
+          <h4>Benachrichtigungen</h4>
+        </header>
+        <div class="fig-settings-banner">
+          <div class="fig-settings-banner__icon">
+            <i data-lucide="bell"></i>
+          </div>
+          <div>
+            <div class="fig-settings-banner__title">E-Mail Hinweise</div>
+            <div class="fig-settings-banner__text">Steuert, welche Ereignisse per E-Mail gemeldet werden.</div>
+          </div>
+        </div>
+        <div class="fig-form__grid">
+          <div class="fig-form__row">
+            <label class="checkbox">
+              {{ settings_form.notify_new_damage }} Schadenmeldungen melden
+            </label>
+          </div>
+          <div class="fig-form__row">
+            <label class="checkbox">
+              {{ settings_form.notify_new_booking }} Buchungen melden
+            </label>
+          </div>
+          <div class="fig-form__row">
+            <label class="checkbox">
+              {{ settings_form.notify_payment_received }} Zahlungseingänge melden
+            </label>
+          </div>
+        </div>
+        <div class="fig-form__row">
+          {{ settings_form.notification_recipients.label_tag }} {{ settings_form.notification_recipients }}
+          <p class="fig-admin__card-meta">Leer lassen = Standard CONTACT_EMAIL</p>
+        </div>
+      </div>
+
+      <div class="fig-admin__panel" style="margin:0 0 16px 0;">
+        <header class="fig-admin__panel-header">
+          <h4>SMTP</h4>
+        </header>
+        <div class="fig-settings-banner">
+          <div class="fig-settings-banner__icon">
+            <i data-lucide="mail"></i>
+          </div>
+          <div>
+            <div class="fig-settings-banner__title">Versand konfigurieren</div>
+            <div class="fig-settings-banner__text">SMTP Zugangsdaten für ausgehende E-Mails.</div>
+          </div>
+        </div>
+        <div class="fig-form__grid">
+          <div>{{ settings_form.smtp_host.label_tag }} {{ settings_form.smtp_host }}</div>
+          <div>{{ settings_form.smtp_port.label_tag }} {{ settings_form.smtp_port }}</div>
+          <div>{{ settings_form.smtp_user.label_tag }} {{ settings_form.smtp_user }}</div>
+          <div>{{ settings_form.smtp_password.label_tag }} {{ settings_form.smtp_password }}</div>
+        </div>
+        <div class="fig-form__grid">
+          <div class="fig-form__row">
+            <label class="checkbox">
+              {{ settings_form.smtp_use_tls }} TLS verwenden
+            </label>
+          </div>
+          <div class="fig-form__row">
+            <label class="checkbox">
+              {{ settings_form.smtp_use_ssl }} SSL verwenden
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <div class="fig-form__actions">
-      <button class="fig-btn fig-btn--primary" type="submit">Speichern</button>
+      <button class="fig-btn fig-btn--primary" type="submit">
+        <i data-lucide="save"></i>
+        Speichern
+      </button>
     </div>
   </form>
 </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.fig-settings-tab');
+    const sections = document.querySelectorAll('.fig-settings-section');
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('is-active'));
+      sections.forEach(section => section.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      const target = tab.dataset.tab;
+      const section = document.querySelector(`.fig-settings-section[data-tab="${target}"]`);
+      if (section) section.classList.add('is-active');
+    }));
+
+    const normalizeItems = (items) => {
+      if (!Array.isArray(items)) return [];
+      return items.map(item => {
+        if (typeof item === 'string') {
+          return { name: item, active: true };
+        }
+        if (item && typeof item === 'object') {
+          return {
+            name: item.name || item.label || item.title || '',
+            active: item.active !== false,
+          };
+        }
+        return { name: '', active: true };
+      }).filter(item => item.name);
+    };
+
+    document.querySelectorAll('.fig-settings-section[data-field]').forEach(section => {
+      const field = section.dataset.field;
+      const input = section.querySelector(`input[name="${field}"]`);
+      const grid = section.querySelector('.fig-settings-grid');
+      const addButton = section.querySelector('[data-action="add"]');
+      const countEl = section.querySelector('[data-count]');
+
+      let items = [];
+      let editingIndex = null;
+
+      const loadItems = () => {
+        if (!input) return [];
+        try {
+          return normalizeItems(JSON.parse(input.value || '[]'));
+        } catch (err) {
+          return normalizeItems([]);
+        }
+      };
+
+      const persist = () => {
+        if (input) input.value = JSON.stringify(items.map(item => ({ name: item.name, active: item.active })));
+        if (countEl) countEl.textContent = items.length.toString();
+      };
+
+      const render = () => {
+        if (!grid) return;
+        grid.innerHTML = '';
+        items.forEach((item, index) => {
+          const card = document.createElement('div');
+          card.className = 'fig-settings-card';
+          if (editingIndex === index) card.classList.add('is-editing');
+
+          if (editingIndex === index) {
+            card.innerHTML = `
+              <div class="fig-settings-card__edit">
+                <input class="fig-settings-card__input" type="text" value="${item.name}" data-role="name">
+                <label class="fig-settings-card__toggle">
+                  <input type="checkbox" data-index="${index}" ${item.active ? 'checked' : ''}> Aktiv
+                </label>
+                <div class="fig-settings-card__edit-actions">
+                  <button class="fig-btn fig-btn--primary fig-btn--compact" type="button" data-action="save" data-index="${index}">
+                    <i data-lucide="save"></i>Speichern
+                  </button>
+                  <button class="fig-btn fig-btn--ghost fig-btn--compact" type="button" data-action="cancel" data-index="${index}">
+                    <i data-lucide="x"></i>Abbrechen
+                  </button>
+                </div>
+              </div>
+            `;
+          } else {
+            card.innerHTML = `
+              <div class="fig-settings-card__header">
+                <span class="fig-settings-card__title">${item.name}</span>
+                <div class="fig-settings-card__actions">
+                  <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" type="button" data-action="edit" data-index="${index}">
+                    <i data-lucide="pencil"></i>
+                  </button>
+                  <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact fig-btn--danger" type="button" data-action="delete" data-index="${index}">
+                    <i data-lucide="trash-2"></i>
+                  </button>
+                </div>
+              </div>
+              <label class="fig-settings-card__toggle">
+                <input type="checkbox" data-index="${index}" ${item.active ? 'checked' : ''}>
+                <span class="fig-settings-card__switch" aria-hidden="true"></span>
+              </label>
+            `;
+          }
+
+          grid.appendChild(card);
+        });
+        persist();
+        if (window.lucide) lucide.createIcons();
+      };
+
+      const addItem = () => {
+        if (editingIndex !== null) return;
+        items.push({ name: 'Neuer Eintrag', active: true, _new: true });
+        editingIndex = items.length - 1;
+        render();
+        const inputEl = grid.querySelector('.fig-settings-card__input');
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.select();
+        }
+      };
+
+      const startEdit = (index) => {
+        if (editingIndex !== null) return;
+        editingIndex = index;
+        render();
+        const inputEl = grid.querySelector('.fig-settings-card__input');
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.select();
+        }
+      };
+
+      const saveEdit = (index) => {
+        const card = grid.querySelectorAll('.fig-settings-card')[index];
+        const inputEl = card ? card.querySelector('[data-role="name"]') : null;
+        const value = (inputEl && inputEl.value || '').trim();
+        if (!value) {
+          if (items[index] && items[index]._new) {
+            items.splice(index, 1);
+          }
+          editingIndex = null;
+          render();
+          return;
+        }
+        if (items.find((item, idx) => idx !== index && item.name.toLowerCase() === value.toLowerCase())) {
+          editingIndex = null;
+          render();
+          return;
+        }
+        items[index].name = value;
+        delete items[index]._new;
+        editingIndex = null;
+        render();
+      };
+
+      const cancelEdit = (index) => {
+        if (items[index] && items[index]._new) {
+          items.splice(index, 1);
+        }
+        editingIndex = null;
+        render();
+      };
+
+      if (addButton) addButton.addEventListener('click', addItem);
+
+      if (grid) {
+        grid.addEventListener('click', (event) => {
+          const actionBtn = event.target.closest('button[data-action]');
+          if (!actionBtn) return;
+          const action = actionBtn.dataset.action;
+          const index = parseInt(actionBtn.dataset.index || '0', 10);
+          if (Number.isNaN(index)) return;
+          if (action === 'edit') startEdit(index);
+          if (action === 'delete') {
+            items.splice(index, 1);
+            render();
+          }
+          if (action === 'save') saveEdit(index);
+          if (action === 'cancel') cancelEdit(index);
+        });
+
+        grid.addEventListener('change', (event) => {
+          const checkbox = event.target.closest('input[type="checkbox"][data-index]');
+          if (!checkbox) return;
+          const index = parseInt(checkbox.dataset.index || '0', 10);
+          if (Number.isNaN(index) || !items[index]) return;
+          items[index].active = checkbox.checked;
+          persist();
+        });
+      }
+
+      items = loadItems();
+      render();
+    });
+  });
+</script>
 {% endblock %}

@@ -140,6 +140,7 @@ class Invoice(models.Model):
         ("other", "Sonstiges"),
     ]
 
+    invoice_number = models.CharField(max_length=40, unique=True, null=True, blank=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="invoices")
     invoice_date = models.DateField(default=timezone.now)
     due_date = models.DateField(null=True, blank=True)
@@ -159,7 +160,29 @@ class Invoice(models.Model):
     sent_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Rechnung {self.id} ({self.customer})"
+        return f"Rechnung {self.invoice_number or self.id} ({self.customer})"
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = self.generate_invoice_number()
+        if not self.due_date and self.invoice_date:
+            self.due_date = self.invoice_date + timezone.timedelta(days=30)
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def generate_invoice_number(cls):
+        today = timezone.localdate()
+        year = today.year
+        prefix = f"RE-{year}-"
+        last = cls.objects.filter(invoice_number__startswith=prefix).order_by("-invoice_number").first()
+        if last and last.invoice_number:
+            try:
+                last_counter = int(last.invoice_number.split("-")[-1])
+            except Exception:
+                last_counter = 0
+        else:
+            last_counter = 0
+        return f"{prefix}{last_counter + 1:04d}"
 
 
 # … oben bleibt alles
@@ -168,6 +191,7 @@ class DamageReport(models.Model):
         ("pending", "Ausstehend"),
         ("in_progress", "In Bearbeitung"),
         ("completed", "Abgeschlossen"),
+        ("cancelled", "Storniert"),
     ]
 
     customer = models.ForeignKey(
@@ -225,6 +249,20 @@ class DamageReport(models.Model):
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     admin_notes = models.TextField(blank=True)
+    priority = models.CharField(
+        max_length=20,
+        choices=[
+            ("low", "Niedrig"),
+            ("normal", "Normal"),
+            ("high", "Hoch"),
+            ("urgent", "Dringend"),
+        ],
+        default="normal",
+    )
+    estimated_cost_chf = models.DecimalField("Kostenschätzung (CHF)", max_digits=10, decimal_places=2, default=0)
+    repair_start = models.DateField("Reparaturbeginn", null=True, blank=True)
+    repair_end = models.DateField("Reparaturende", null=True, blank=True)
+    assigned_mechanic = models.CharField("Zugewiesener Mechaniker", max_length=120, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -321,6 +359,7 @@ class Booking(models.Model):
     STATUS_CHOICES = [
         ("pending", "Ausstehend"),
         ("confirmed", "Bestätigt"),
+        ("active", "In Vermietung"),
         ("completed", "Abgeschlossen"),
         ("cancelled", "Storniert"),
     ]
@@ -385,8 +424,10 @@ class Booking(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     PAYMENT_METHOD_CHOICES = [
-        ("CARD", "Kreditkarte (Stripe)"),
-        ("CASH", "Barzahlung"),
+        ("STRIPE", "Stripe"),
+        ("INVOICE", "Rechnung"),
+        ("CASH", "Bar"),
+        ("TRANSFER", "Überweisung"),
     ]
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES, default="CASH")
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default="unpaid")

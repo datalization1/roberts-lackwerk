@@ -2,9 +2,11 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Buchung BU-{{ booking.pk }}</h3>
-    <p class="fig-admin__panel-subtitle">{{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Buchung BU-{{ booking.pk }}</h3>
+      <p class="fig-admin__panel-subtitle">{{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}</p>
+    </div>
   </header>
   <div class="fig-admin__cards fig-admin__cards--grid">
     <article class="fig-admin__card">
@@ -28,22 +30,75 @@
   </div>
 
   <div class="fig-admin__panel" style="margin-top:14px;">
-    <header class="fig-admin__panel-header">
-      <h4>Status & Notizen</h4>
+    <header class="fig-admin__panel-header fig-admin__panel-header--split">
+      <div class="fig-admin__panel-header-group">
+        <h4>Buchungsdetails</h4>
+      </div>
     </header>
     <form method="post" class="fig-form">
       {% csrf_token %}
       <div class="fig-form__grid">
         <div>{{ form.status.label_tag }} {{ form.status }}</div>
+        <div>{{ form.transporter.label_tag }} {{ form.transporter }}</div>
+        <div>{{ form.date.label_tag }} {{ form.date }}</div>
+        <div>{{ form.time_slot.label_tag }} {{ form.time_slot }}</div>
+        <div>{{ form.pickup_date.label_tag }} {{ form.pickup_date }}</div>
+        <div>{{ form.pickup_time.label_tag }} {{ form.pickup_time }}</div>
+        <div>{{ form.return_date.label_tag }} {{ form.return_date }}</div>
+        <div>{{ form.return_time.label_tag }} {{ form.return_time }}</div>
+        <div>{{ form.km_package.label_tag }} {{ form.km_package }}</div>
+        <div>{{ form.insurance.label_tag }} {{ form.insurance }}</div>
+      </div>
+      <div class="fig-form__row">
+        {{ form.extras.label_tag }}
+        {{ form.extras }}
+      </div>
+      <div class="fig-form__grid">
+        <div>{{ form.payment_status.label_tag }} {{ form.payment_status }}</div>
+        <div>{{ form.payment_method.label_tag }} {{ form.payment_method }}</div>
+        <div>{{ form.transaction_id.label_tag }} {{ form.transaction_id }}</div>
+        <div>{{ form.total_price.label_tag }} {{ form.total_price }}</div>
+      </div>
+      <div class="fig-form__row">
+        {{ form.additional_notes.label_tag }} {{ form.additional_notes }}
       </div>
       <div class="fig-form__row">
         {{ form.admin_notes.label_tag }} {{ form.admin_notes }}
       </div>
       <div class="fig-form__actions">
-        <button type="submit" class="fig-btn fig-btn--primary">Speichern</button>
+        <button type="submit" class="fig-btn fig-btn--primary">
+          <i data-lucide="save"></i>
+          Speichern
+        </button>
+        <a class="fig-btn fig-btn--ghost" href="{% url 'portal_invoices' %}">
+          <i data-lucide="receipt"></i>
+          Rechnung erstellen
+        </a>
       </div>
     </form>
     <p class="fig-admin__card-meta">Notiz Kunde: {{ booking.additional_notes|default:"-" }}</p>
+  </div>
+
+  <div class="fig-admin__panel" style="margin-top:14px;">
+    <header class="fig-admin__panel-header fig-admin__panel-header--split">
+      <div class="fig-admin__panel-header-group">
+        <h4>Kostenübersicht</h4>
+      </div>
+    </header>
+    <div class="fig-admin__cards fig-admin__cards--grid">
+      <div class="fig-admin__card">
+        <p class="fig-admin__card-label">Fahrzeugmiete</p>
+        <div class="fig-admin__card-value fig-admin__card-value--small">CHF {{ booking.total_price|default:"0" }}</div>
+      </div>
+      <div class="fig-admin__card">
+        <p class="fig-admin__card-label">MwSt. 7.7%</p>
+        <div class="fig-admin__card-value fig-admin__card-value--small">CHF {{ booking.total_price|default:"0" }}</div>
+      </div>
+      <div class="fig-admin__card">
+        <p class="fig-admin__card-label">Gesamt</p>
+        <div class="fig-admin__card-value fig-admin__card-value--small">CHF {{ booking.total_price|default:"0" }}</div>
+      </div>
+    </div>
   </div>
 </section>
 {% endblock %}

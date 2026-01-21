@@ -9,7 +9,7 @@ from .views import (
     TransporterViewSet,
     VehicleViewSet,
 )
-from .viewsets_uploads import DamagePhotoUploadView
+from .viewsets_uploads import DamageDocumentUploadView, DamagePhotoUploadView
 from .meta import MetaOptionsView
 from .auth_views import LoginView, LogoutView, MeView
 from .stripe_views import PaymentIntentCreateView, StripeWebhookView
@@ -25,6 +25,7 @@ router.register(r"invoices", InvoiceViewSet, basename="invoice")
 urlpatterns = [
     path("", include(router.urls)),
     path("damage-reports/<int:pk>/upload-photo/", DamagePhotoUploadView.as_view(), name="damage-report-upload-photo"),
+    path("damage-reports/<int:pk>/upload-document/", DamageDocumentUploadView.as_view(), name="damage-report-upload-document"),
     path("meta/options/", MetaOptionsView.as_view(), name="meta-options"),
     path("auth/login/", LoginView.as_view(), name="auth-login"),
     path("auth/logout/", LogoutView.as_view(), name="auth-logout"),

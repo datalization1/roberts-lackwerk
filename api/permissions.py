@@ -34,3 +34,17 @@ class StaffOrPostOnly(permissions.BasePermission):
                 or request.user.groups.filter(name__in=["admin", "manager", "employee"]).exists()
             )
         )
+
+
+class StaffOnly(permissions.BasePermission):
+    """Allow access to staff or users in admin/manager/employee groups."""
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (
+                request.user.is_staff
+                or request.user.groups.filter(name__in=["admin", "manager", "employee"]).exists()
+            )
+        )

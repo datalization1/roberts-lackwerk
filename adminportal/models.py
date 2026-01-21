@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from main.models import DamageReport, Booking
+from main.models import DamageReport, Booking, DAMAGE_PART_CODES, INSURER_CHOICES, INSURER_OTHER, INSURER_NO
 
 
 class Customer(models.Model):
@@ -105,12 +105,39 @@ class Invoice(models.Model):
 
 
 class PortalSettings(models.Model):
+    def _default_damage_parts():
+        return [{"name": label, "active": True} for _, label in DAMAGE_PART_CODES]
+
+    def _default_damage_types():
+        return [
+            {"name": "Unfallschaden", "active": True},
+            {"name": "Hagelschaden", "active": True},
+            {"name": "Parkschaden", "active": True},
+            {"name": "Wildschaden", "active": True},
+            {"name": "Vandalismus", "active": True},
+            {"name": "Sonstiges", "active": True},
+        ]
+
+    def _default_insurers():
+        base = [label for value, label in INSURER_CHOICES if value not in [INSURER_OTHER, INSURER_NO]]
+        base.extend(["Andere", "Ohne Versicherung melden"])
+        return [{"name": label, "active": True} for label in base]
+
+    def _default_homepage_services():
+        return [
+            {"name": "Karosseriereparatur", "active": True},
+            {"name": "Autolackierung", "active": True},
+            {"name": "Transporter-Vermietung", "active": True},
+            {"name": "Versicherungsabwicklung", "active": True},
+        ]
+
     contact_email = models.EmailField(blank=True, default="")
     branding_text = models.CharField(max_length=200, blank=True, default="Verwaltung von Schadenmeldungen und Buchungen")
     default_daily_price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     default_currency = models.CharField(max_length=8, default="CHF")
     notify_new_damage = models.BooleanField(default=True)
     notify_new_booking = models.BooleanField(default=True)
+    notify_payment_received = models.BooleanField(default=True)
     notification_recipients = models.CharField(max_length=400, blank=True, default="")
     smtp_host = models.CharField(max_length=200, blank=True, default="")
     smtp_port = models.PositiveIntegerField(default=587)
@@ -118,6 +145,10 @@ class PortalSettings(models.Model):
     smtp_password = models.CharField(max_length=200, blank=True, default="")
     smtp_use_tls = models.BooleanField(default=True)
     smtp_use_ssl = models.BooleanField(default=False)
+    damage_parts = models.JSONField(default=_default_damage_parts, blank=True)
+    damage_types = models.JSONField(default=_default_damage_types, blank=True)
+    insurers = models.JSONField(default=_default_insurers, blank=True)
+    homepage_services = models.JSONField(default=_default_homepage_services, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -127,5 +158,17 @@ class PortalSettings(models.Model):
     class Meta:
         verbose_name = "Portal Einstellung"
         verbose_name_plural = "Portal Einstellungen"
+
+
+class AuditLog(models.Model):
+    action = models.CharField(max_length=120)
+    actor = models.ForeignKey("auth.User", null=True, blank=True, on_delete=models.SET_NULL)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=255, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d %H:%M} · {self.action}"
 
 # Create your models here.

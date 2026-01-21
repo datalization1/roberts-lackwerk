@@ -4,6 +4,7 @@
 <section class="section">
   <div class="page-container" style="max-width:480px;margin:0 auto;">
     <header class="section__header" style="text-align:center;margin-bottom:2rem;">
+      <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk" style="height:48px;margin-bottom:12px;">
       <h1 class="section__title">Admin Login</h1>
       <p class="section__subtitle">Interner Bereich für Robert&apos;s Lackwerk</p>
     </header>
@@ -22,12 +23,28 @@
       </div>
       <div class="form-field" style="margin-top:1rem;">
         <label for="{{ form.password.id_for_label }}">Passwort</label>
-        {{ form.password }}
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          {{ form.password }}
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-password">Anzeigen</button>
+        </div>
       </div>
-      <div style="margin-top:1.5rem;display:flex;justify-content:flex-end;">
+      <div style="margin-top:1.5rem;display:flex;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+        <a class="btn btn-outline-secondary" href="{% url 'home' %}">Zurück zur Startseite</a>
         <button type="submit" class="btn btn-primary">Anmelden</button>
       </div>
     </form>
   </div>
 </section>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('toggle-password');
+    const input = document.getElementById('{{ form.password.id_for_label }}');
+    if (!toggle || !input) return;
+    toggle.addEventListener('click', () => {
+      const next = input.type === 'password' ? 'text' : 'password';
+      input.type = next;
+      toggle.textContent = next === 'password' ? 'Anzeigen' : 'Verbergen';
+    });
+  });
+</script>
 {% endblock %}

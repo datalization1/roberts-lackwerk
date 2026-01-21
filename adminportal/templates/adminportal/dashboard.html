@@ -2,27 +2,37 @@
 
 {% block portal_content %}
 <div class="fig-admin__kpis">
-  <article class="fig-admin__card">
-    <p class="fig-admin__card-label">Schadenmeldungen</p>
+  <article class="fig-admin__card fig-admin__card--kpi">
+    <div class="fig-admin__card-top">
+      <p class="fig-admin__card-label">Schadenmeldungen</p>
+      <span class="fig-admin__card-icon"><i data-lucide="file-text"></i></span>
+    </div>
     <div class="fig-admin__card-value">{{ kpi.reports_total }}</div>
-    <p class="fig-admin__card-meta">Neu (7 Tage): {{ kpi.reports_recent }}</p>
     <p class="fig-admin__card-meta">Ausstehend: {{ kpi.reports_pending|default:"0" }}</p>
   </article>
-  <article class="fig-admin__card">
-    <p class="fig-admin__card-label">Buchungen</p>
+  <article class="fig-admin__card fig-admin__card--kpi">
+    <div class="fig-admin__card-top">
+      <p class="fig-admin__card-label">Buchungen</p>
+      <span class="fig-admin__card-icon"><i data-lucide="calendar-check"></i></span>
+    </div>
     <div class="fig-admin__card-value">{{ kpi.bookings_total }}</div>
-    <p class="fig-admin__card-meta">Heute: {{ kpi.bookings_today }}</p>
     <p class="fig-admin__card-meta">Ausstehend: {{ kpi.bookings_pending|default:"0" }}</p>
   </article>
-  <article class="fig-admin__card">
-    <p class="fig-admin__card-label">Anstehend</p>
-    <div class="fig-admin__card-value">{{ kpi.bookings_upcoming }}</div>
-    <p class="fig-admin__card-meta">inkl. bestätigte Slots</p>
+  <article class="fig-admin__card fig-admin__card--kpi">
+    <div class="fig-admin__card-top">
+      <p class="fig-admin__card-label">In Bearbeitung</p>
+      <span class="fig-admin__card-icon"><i data-lucide="clock"></i></span>
+    </div>
+    <div class="fig-admin__card-value">{{ kpi.reports_in_progress|default:"0" }}</div>
+    <p class="fig-admin__card-meta">Reparaturen aktiv</p>
   </article>
-  <article class="fig-admin__card">
-    <p class="fig-admin__card-label">Transporter</p>
-    <div class="fig-admin__card-value">{{ kpi.transporters_total }}</div>
-    <p class="fig-admin__card-meta">Aktiv im Bestand</p>
+  <article class="fig-admin__card fig-admin__card--kpi">
+    <div class="fig-admin__card-top">
+      <p class="fig-admin__card-label">Abgeschlossen</p>
+      <span class="fig-admin__card-icon"><i data-lucide="check-circle"></i></span>
+    </div>
+    <div class="fig-admin__card-value">{{ kpi.reports_completed|default:"0" }}</div>
+    <p class="fig-admin__card-meta">Diesen Monat</p>
   </article>
 </div>
 
@@ -35,15 +45,29 @@
     <div class="fig-list">
       {% for report in recent_reports %}
         <article class="fig-list__item">
-          <div>
-            <div class="fig-list__title">
-              {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
-            </div>
+          <div class="fig-list__body">
+            <div class="fig-list__title">SM-{{ report.pk }}</div>
             <div class="fig-list__meta">
-              {{ report.car_brand }} {{ report.car_model }}{% if report.plate %} · {{ report.plate }}{% endif %}
+              {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
+              · {{ report.car_brand }} {{ report.car_model }}{% if report.plate %} · {{ report.plate }}{% endif %}
             </div>
           </div>
-          <div class="fig-badge fig-badge--warning">Neu</div>
+          <div class="fig-list__right">
+            {% if report.status == "pending" %}
+              <span class="fig-badge fig-badge--warning">Ausstehend</span>
+            {% elif report.status == "in-progress" or report.status == "in_progress" %}
+              <span class="fig-badge fig-badge--info">In Bearbeitung</span>
+            {% elif report.status == "completed" %}
+              <span class="fig-badge fig-badge--success">Abgeschlossen</span>
+            {% elif report.status == "cancelled" %}
+              <span class="fig-badge">Storniert</span>
+            {% else %}
+              <span class="fig-badge fig-badge--warning">Neu</span>
+            {% endif %}
+            <a class="fig-list__action" href="{% url 'portal_damage_report_detail' report.pk %}">
+              <i data-lucide="eye"></i>
+            </a>
+          </div>
         </article>
       {% empty %}
         <p class="fig-empty">Noch keine Schadenmeldungen vorhanden.</p>
@@ -59,13 +83,30 @@
     <div class="fig-list">
       {% for booking in upcoming_bookings %}
         <article class="fig-list__item">
-          <div>
-            <div class="fig-list__title">{{ booking.transporter.name }}</div>
+          <div class="fig-list__body">
+            <div class="fig-list__title">BU-{{ booking.pk }}</div>
             <div class="fig-list__meta">
-              {{ booking.customer_name }} · {{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}
+              {{ booking.customer_name }} · Abholung: {{ booking.date|date:"Y-m-d" }}
             </div>
           </div>
-          <div class="fig-badge fig-badge--success">Bestätigt</div>
+          <div class="fig-list__right">
+            {% if booking.status == "confirmed" %}
+              <span class="fig-badge fig-badge--success">Bestätigt</span>
+            {% elif booking.status == "pending" %}
+              <span class="fig-badge fig-badge--warning">Ausstehend</span>
+            {% elif booking.status == "active" %}
+              <span class="fig-badge fig-badge--info">Aktiv</span>
+            {% elif booking.status == "completed" %}
+              <span class="fig-badge fig-badge--info">Abgeschlossen</span>
+            {% elif booking.status == "cancelled" %}
+              <span class="fig-badge">Storniert</span>
+            {% else %}
+              <span class="fig-badge fig-badge--success">Bestätigt</span>
+            {% endif %}
+            <a class="fig-list__action" href="{% url 'portal_booking_detail' booking.pk %}">
+              <i data-lucide="eye"></i>
+            </a>
+          </div>
         </article>
       {% empty %}
         <p class="fig-empty">Keine zukünftigen Buchungen vorhanden.</p>

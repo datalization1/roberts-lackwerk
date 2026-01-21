@@ -1,38 +1,100 @@
-{% extends "base.html" %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Dashboard · Robert's Lackwerk</title>
+  <link rel="icon" type="image/png" href="{% static 'img/RLicon.png' %}">
+  <link rel="stylesheet" href="{% static 'css/design/variables.css' %}">
+  <link rel="stylesheet" href="{% static 'css/design/layout.css' %}">
+  <link rel="stylesheet" href="{% static 'css/design/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/figma.css' %}">
+</head>
+<body class="page-bg">
+  <main class="page-main">
+    <div class="page-container">
+      <div class="figma-home figma-home--admin">
+        <header class="fig-admin__hero">
+          <div class="fig-admin__hero-left">
+            <a class="fig-admin__back" href="{% url 'home' %}">
+              <i data-lucide="arrow-left"></i>
+              Zurück
+            </a>
+            <h1>Admin Dashboard</h1>
+            <p class="fig-subtitle">
+              {% if portal_settings and portal_settings.branding_text %}
+                {{ portal_settings.branding_text }}
+              {% else %}
+                Verwaltung von Schadenmeldungen und Buchungen
+              {% endif %}
+            </p>
+          </div>
+          <div class="fig-admin__hero-actions">
+            <a class="fig-btn fig-btn--outline" href="{% url 'admin_logout' %}">
+              <i data-lucide="log-out"></i>
+              Abmelden
+            </a>
+            <span class="fig-admin__badge">
+              {% if request.user.is_superuser %}Administrator{% else %}{{ request.user.username }}{% endif %}
+            </span>
+          </div>
+        </header>
 
-{% block content %}
-<div class="figma-home figma-home--admin">
-  <header class="fig-admin__hero">
-    <div>
-      <p class="fig-eyebrow">Interner Bereich</p>
-      <h1>Admin Portal</h1>
-      <p class="fig-subtitle">
-        {% if portal_settings and portal_settings.branding_text %}
-          {{ portal_settings.branding_text }}
-        {% else %}
-          Verwaltung von Schadenmeldungen, Vermietung und CRM
-        {% endif %}
-      </p>
+        <div class="fig-admin__layout">
+          <nav class="fig-admin__sidebar">
+            <a class="fig-admin__tab {% if active_tab == 'dashboard' %}is-active{% endif %}" href="{% url 'portal_dashboard' %}">
+              <i data-lucide="layout-dashboard"></i>
+              Dashboard
+            </a>
+            <a class="fig-admin__tab {% if active_tab == 'damage_reports' %}is-active{% endif %}" href="{% url 'portal_damage_reports' %}">
+              <i data-lucide="file-text"></i>
+              Schadenmeldungen
+            </a>
+            <a class="fig-admin__tab {% if active_tab == 'bookings' %}is-active{% endif %}" href="{% url 'portal_bookings' %}">
+              <i data-lucide="calendar-check"></i>
+              Buchungen
+            </a>
+          <a class="fig-admin__tab {% if active_tab == 'vehicles' %}is-active{% endif %}" href="{% url 'portal_vehicles' %}">
+            <i data-lucide="truck"></i>
+            Mietfahrzeuge
+          </a>
+            <a class="fig-admin__tab {% if active_tab == 'customers' %}is-active{% endif %}" href="{% url 'portal_customers' %}">
+              <i data-lucide="users"></i>
+              Kunden
+            </a>
+            <a class="fig-admin__tab {% if active_tab == 'invoices' %}is-active{% endif %}" href="{% url 'portal_invoices' %}">
+              <i data-lucide="receipt"></i>
+              Rechnungen
+            </a>
+            <a class="fig-admin__tab {% if active_tab == 'schedule' %}is-active{% endif %}" href="{% url 'portal_schedule' %}">
+              <i data-lucide="calendar"></i>
+              Zeitplan
+            </a>
+            <a class="fig-admin__tab {% if active_tab == 'availability' %}is-active{% endif %}" href="{% url 'portal_availability' %}">
+              <i data-lucide="layout-grid"></i>
+              Verfügbarkeit
+            </a>
+            <a class="fig-admin__tab {% if active_tab == 'settings' %}is-active{% endif %}" href="{% url 'portal_settings' %}">
+              <i data-lucide="settings"></i>
+              Einstellungen
+            </a>
+          </nav>
+
+          <div class="fig-admin__content">
+            {% block portal_content %}{% endblock %}
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="fig-admin__hero-actions">
-      <span class="fig-admin__badge">Angemeldet als {{ request.user.username }}</span>
-      <a class="fig-btn fig-btn--ghost" href="{% url 'admin_logout' %}">Logout</a>
-    </div>
-  </header>
-
-  <nav class="fig-admin__tabs">
-    <a class="fig-admin__tab {% if active_tab == 'dashboard' %}is-active{% endif %}" href="{% url 'portal_dashboard' %}">Dashboard</a>
-    <a class="fig-admin__tab {% if active_tab == 'damage_reports' %}is-active{% endif %}" href="{% url 'portal_damage_reports' %}">Schadenmeldungen</a>
-    <a class="fig-admin__tab {% if active_tab == 'bookings' %}is-active{% endif %}" href="{% url 'portal_bookings' %}">Buchungen</a>
-    <a class="fig-admin__tab {% if active_tab == 'vehicles' %}is-active{% endif %}" href="{% url 'portal_vehicles' %}">Fahrzeuge</a>
-    <a class="fig-admin__tab {% if active_tab == 'customers' %}is-active{% endif %}" href="{% url 'portal_customers' %}">Kunden</a>
-    <a class="fig-admin__tab {% if active_tab == 'invoices' %}is-active{% endif %}" href="{% url 'portal_invoices' %}">Rechnungen</a>
-    <a class="fig-admin__tab {% if active_tab == 'schedule' %}is-active{% endif %}" href="{% url 'portal_schedule' %}">Zeitplan</a>
-    <a class="fig-admin__tab {% if active_tab == 'availability' %}is-active{% endif %}" href="{% url 'portal_availability' %}">Verfügbarkeit</a>
-    <a class="fig-admin__tab {% if active_tab == 'settings' %}is-active{% endif %}" href="{% url 'portal_settings' %}">Einstellungen</a>
-  </nav>
-
-  {% block portal_content %}{% endblock %}
-</div>
-{% endblock %}
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>

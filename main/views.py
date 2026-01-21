@@ -3,7 +3,9 @@ from decimal import Decimal
 from django.utils import timezone
 import os
 import logging
+from uuid import uuid4
 from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.mail import send_mail
@@ -14,7 +16,7 @@ from django.db.models import Exists, OuterRef
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
-from .models import Transporter, Booking, DamageReport, DamagePhoto, DAMAGE_PART_CODES
+from .models import Transporter, Booking, DamageReport, DamagePhoto, DAMAGE_PART_CODES, Vehicle
 from api.validators import validate_booking_conflict
 from .forms import (
     BookingForm,
@@ -25,7 +27,10 @@ from .forms import (
     AccidentDetailsForm,
     ReviewForm,
 )
-from .utils.emailing import send_templated_mail
+from adminportal.utils.audit import log_audit
+from .utils.emailing import send_templated_mail, resolve_admin_recipients
+from .utils.security import get_client_ip, is_rate_limited, register_failed_attempt, reset_rate_limit
+from .utils.pdf import render_booking_invoice_pdf
 
 # Admin Seite
 class AdminLoginForm(forms.Form):
@@ -52,7 +57,35 @@ logger = logging.getLogger("schaden")
 # ---------- Statische Seiten ----------
 
 def home(request):
-    return render(request, "home.html")
+    def _active_names(items):
+        names = []
+        for item in items or []:
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("label") or item.get("title")
+                if name and item.get("active", True):
+                    names.append(name)
+            elif isinstance(item, str):
+                names.append(item)
+        return names
+
+    ctx = {}
+    try:
+        from adminportal.models import PortalSettings
+        portal_settings = PortalSettings.objects.first()
+        active_services = _active_names(
+            portal_settings.homepage_services if portal_settings else []
+        )
+        if active_services:
+            ctx["use_homepage_services"] = True
+            ctx["homepage_service_names"] = active_services
+    except Exception:
+        pass
+
+    return render(request, "home.html", ctx)
+
+
+def healthz(request):
+    return HttpResponse("ok", content_type="text/plain")
 
 def dienstleistungen(request):
     return render(request, "dienstleistungen.html")
@@ -165,6 +198,7 @@ class ClaimWizard(SessionWizardView):
 
             insurer         = ins.get("insurer", ""),
             policy_number   = ins.get("policy_number", ""),
+            other_insurer   = ins.get("other_insurer", ""),
             accident_number = ins.get("accident_number", ""),
             insurer_contact = ins.get("insurer_contact", ""),
             insurer_contact_phone = ins.get("insurer_contact_phone", ""),
@@ -175,6 +209,8 @@ class ClaimWizard(SessionWizardView):
             accident_date = accident.get("accident_date"),
             accident_location = accident.get("accident_location", ""),
             damage_type = accident.get("damage_type", ""),
+            other_party_involved = bool(accident.get("other_party_involved")),
+            police_involved = bool(accident.get("police_involved")),
             # car_part lassen wir optional leer (wir haben mehrere parts)
         )
 
@@ -185,6 +221,19 @@ class ClaimWizard(SessionWizardView):
             if photo.image:
                 photo.file_url = photo.image.url
                 photo.save(update_fields=["file_url"])
+
+        documents = accident.get("documents") or []
+        if documents:
+            now = timezone.now()
+            date_path = now.strftime("%Y/%m/%d")
+            stored_urls = []
+            for file_obj in documents:
+                safe_name = f"{uuid4().hex}_{file_obj.name}"
+                storage_path = f"damage_docs/{date_path}/{safe_name}"
+                stored_path = default_storage.save(storage_path, file_obj)
+                stored_urls.append(default_storage.url(stored_path))
+            report.documents = stored_urls
+            report.save(update_fields=["documents"])
 
         # E-Mails via Templates + Settings
         try:
@@ -203,11 +252,7 @@ class ClaimWizard(SessionWizardView):
                 portal_settings=portal_settings,
             )
             if not portal_settings or portal_settings.notify_new_damage:
-                recipients = []
-                if portal_settings and portal_settings.notification_recipients:
-                    recipients = [r.strip() for r in portal_settings.notification_recipients.split(",") if r.strip()]
-                if not recipients:
-                    recipients = [settings.CONTACT_EMAIL]
+                recipients = resolve_admin_recipients(portal_settings, settings.CONTACT_EMAIL)
                 send_templated_mail(
                     subject=f"Neue Schadenmeldung #{report.pk}",
                     template_path="emails/claim_admin.html",
@@ -226,6 +271,7 @@ def schaden_success(request, pk):
 
 # ---------- Transporter / Mietfahrzeuge ----------
 def mietfahrzeuge(request):
+    _sync_transporters_from_vehicles()
     transporters = Transporter.objects.all()
 
     # Step-1-Daten aus Session
@@ -292,6 +338,7 @@ def mietfahrzeuge(request):
 
     total_count = transporters.count()
     available_count = 0
+    vehicle_by_plate = {v.license_plate: v for v in Vehicle.objects.all()}
 
     if selected_date and selected_slot_code:
         for t in transporters:
@@ -300,18 +347,22 @@ def mietfahrzeuge(request):
                 date=selected_date,
                 time_slot=selected_slot_code,
             ).exists()
-            t.is_unavailable = booked
+            vehicle = vehicle_by_plate.get(t.kennzeichen)
+            is_inactive = vehicle and vehicle.status != "available"
+            t.is_unavailable = booked or bool(is_inactive)
 
             # Sehr einfache "nächste Verfügbarkeit": nächster Tag
             t.next_available_date = selected_date + timedelta(days=1) if booked else None
 
-            if not booked:
+            if not t.is_unavailable:
                 available_count += 1
     else:
         for t in transporters:
-            t.is_unavailable = False
+            vehicle = vehicle_by_plate.get(t.kennzeichen)
+            t.is_unavailable = bool(vehicle and vehicle.status != "available")
             t.next_available_date = None
-        available_count = total_count
+            if not t.is_unavailable:
+                available_count += 1
 
     has_filter = bool(selected_date and selected_slot_code)
     all_available = has_filter and available_count == total_count
@@ -328,8 +379,33 @@ def mietfahrzeuge(request):
     }
     return render(request, "mietfahrzeuge.html", context)
 
+def _sync_transporters_from_vehicles():
+    for vehicle in Vehicle.objects.all():
+        defaults = {
+            "name": f"{vehicle.brand} {vehicle.model}".strip() or vehicle.license_plate,
+            "preis_chf": vehicle.daily_rate or 0,
+            "verfuegbar_ab": timezone.localdate(),
+        }
+        transporter, created = Transporter.objects.get_or_create(
+            kennzeichen=vehicle.license_plate,
+            defaults=defaults,
+        )
+        updates = {}
+        name = f"{vehicle.brand} {vehicle.model}".strip() or vehicle.license_plate
+        if transporter.name != name:
+            updates["name"] = name
+        if transporter.preis_chf != vehicle.daily_rate:
+            updates["preis_chf"] = vehicle.daily_rate or 0
+        if vehicle.photo and transporter.bild != vehicle.photo:
+            updates["bild"] = vehicle.photo
+        if updates:
+            for key, value in updates.items():
+                setattr(transporter, key, value)
+            transporter.save(update_fields=list(updates.keys()))
+
 def transporter_list(request):
     # Falls separat verlinkt – identisch zu 'mietfahrzeuge'
+    _sync_transporters_from_vehicles()
     transporters = Transporter.objects.all()
     return render(request, "mietfahrzeuge.html", {"transporters": transporters})
 
@@ -440,6 +516,7 @@ def available_transporters(request):
       - MORNING kollidiert mit MORNING oder FULLDAY
       - AFTERNOON kollidiert mit AFTERNOON oder FULLDAY
     """
+    _sync_transporters_from_vehicles()
     form = AvailabilitySearchForm(request.GET or None)
     transporters = []
     chosen_date = None
@@ -525,10 +602,13 @@ def booking_review(request):
     if booking.tie_down_straps:
         extras.append(("Spannsets (4 Stk.)", 8))
 
-    extras_total = sum(price for _, price in extras) if extras else 0
+    extras_total = sum(Decimal(str(price)) for _, price in extras) if extras else Decimal("0.00")
 
     # ❗ Gesamt = Fahrzeug + Extras
-    total_price = (base_price or 0) + extras_total if (base_price is not None or extras_total) else None
+    net_total = (base_price or Decimal("0.00")) + extras_total
+    vat_rate = Decimal("0.077")
+    vat_amount = (net_total * vat_rate).quantize(Decimal("0.01"))
+    total_price = (net_total + vat_amount).quantize(Decimal("0.01"))
 
     context = {
         "booking": booking,
@@ -536,6 +616,8 @@ def booking_review(request):
         "rental_days": rental_days,
         "extras": extras,
         "extras_total": extras_total,
+        "net_total": net_total,
+        "vat_amount": vat_amount,
         "total_price": total_price,
     }
 
@@ -552,7 +634,10 @@ def booking_payment(request):
     booking = get_object_or_404(Booking, pk=booking_id)
 
     daily_price = booking.transporter.preis_chf
-    rental_days = 1
+    if booking.pickup_date and booking.return_date:
+        rental_days = (booking.return_date - booking.pickup_date).days + 1
+    else:
+        rental_days = 1
     base_price = daily_price * rental_days if daily_price else None
 
     extras_total = Decimal("0.00")
@@ -565,11 +650,15 @@ def booking_payment(request):
     if booking.tie_down_straps:
         extras_total += Decimal("8")
 
-    total_price = (base_price or Decimal("0.00")) + extras_total if (base_price is not None or extras_total) else None
+    net_total = (base_price or Decimal("0.00")) + extras_total
+    vat_amount = (net_total * Decimal("0.077")).quantize(Decimal("0.01"))
+    total_price = (net_total + vat_amount).quantize(Decimal("0.01"))
 
     if request.method == "POST":
         method = request.POST.get("payment_method", "CARD")
         booking.payment_method = "CARD" if method == "CARD" else "CASH"
+        booking.payment_status = "paid" if method == "CARD" else "unpaid"
+        booking.total_price = total_price
         booking.save()
 
         try:
@@ -586,16 +675,36 @@ def booking_payment(request):
                 recipients=[booking.customer_email],
                 from_email=settings.CONTACT_EMAIL,
                 portal_settings=portal_settings,
+                attachments=[
+                    (
+                        f"rechnung-bu-{booking.id}.pdf",
+                        render_booking_invoice_pdf(
+                            booking,
+                            rental_days=rental_days,
+                            base_price=base_price,
+                            extras_total=extras_total,
+                            vat_amount=vat_amount,
+                            total_price=total_price,
+                        ),
+                        "application/pdf",
+                    )
+                ],
             )
             if not portal_settings or portal_settings.notify_new_booking:
-                recipients = []
-                if portal_settings and portal_settings.notification_recipients:
-                    recipients = [r.strip() for r in portal_settings.notification_recipients.split(",") if r.strip()]
-                if not recipients:
-                    recipients = [settings.CONTACT_EMAIL]
+                recipients = resolve_admin_recipients(portal_settings, settings.CONTACT_EMAIL)
                 send_templated_mail(
                     subject=f"Neue Buchung BU-{booking.id}",
                     template_path="emails/booking_admin.html",
+                    context={"booking": booking},
+                    recipients=recipients,
+                    from_email=settings.CONTACT_EMAIL,
+                    portal_settings=portal_settings,
+                )
+            if booking.payment_status == "paid" and (not portal_settings or portal_settings.notify_payment_received):
+                recipients = resolve_admin_recipients(portal_settings, settings.CONTACT_EMAIL)
+                send_templated_mail(
+                    subject=f"Zahlung eingegangen BU-{booking.id}",
+                    template_path="emails/payment_admin.html",
                     context={"booking": booking},
                     recipients=recipients,
                     from_email=settings.CONTACT_EMAIL,
@@ -627,12 +736,22 @@ def admin_login_view(request):
         if form.is_valid():
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]
+            ip = get_client_ip(request)
+            rate_key = f"admin_login:{ip}:{username}"
+            if is_rate_limited(rate_key):
+                error_message = "Zu viele Versuche. Bitte später erneut versuchen."
+                log_audit("admin_login_rate_limited", request=request, metadata={"username": username})
+                return render(request, "admin/admin_login.html", {"form": form, "error_message": error_message})
             user = authenticate(request, username=username, password=password)
             if user is not None and user.is_staff:
+                reset_rate_limit(rate_key)
                 login(request, user)
+                log_audit("admin_login_success", request=request, actor=user)
                 next_url = request.GET.get("next") or reverse("admin_dashboard")
                 return redirect(next_url)
             else:
+                register_failed_attempt(rate_key)
+                log_audit("admin_login_failed", request=request, metadata={"username": username})
                 error_message = "Ungültige Zugangsdaten oder keine Admin-Berechtigung."
     else:
         form = AdminLoginForm()
@@ -646,6 +765,7 @@ def admin_login_view(request):
 
 @login_required
 def admin_logout_view(request):
+    log_audit("admin_logout", request=request, actor=request.user)
     logout(request)
     return redirect("admin_login")
 
@@ -653,91 +773,4 @@ def admin_logout_view(request):
 @login_required
 @user_passes_test(is_staff_user)
 def admin_dashboard_view(request):
-    tab = request.GET.get("tab", "dashboard")
-
-    # Filter helpers
-    def parse_date(param):
-        try:
-            return datetime.strptime(param, "%Y-%m-%d").date()
-        except Exception:
-            return None
-
-    report_status = request.GET.get("report_status")
-    report_from = parse_date(request.GET.get("report_from", ""))
-    report_to = parse_date(request.GET.get("report_to", ""))
-
-    booking_status = request.GET.get("booking_status")
-    booking_from = parse_date(request.GET.get("booking_from", ""))
-    booking_to = parse_date(request.GET.get("booking_to", ""))
-
-    today = timezone.localdate()
-    seven_days_ago = today - timedelta(days=7)
-
-    # KPIs
-    total_reports = DamageReport.objects.count()
-    recent_reports_count = DamageReport.objects.filter(
-        created_at__gte=seven_days_ago
-    ).count()
-
-    total_bookings = Booking.objects.count()
-    bookings_today = Booking.objects.filter(date=today).count()
-    upcoming_bookings = Booking.objects.filter(date__gte=today).count()
-
-    transporter_count = Transporter.objects.count()
-
-    # Listen für Dashboard
-    recent_reports = DamageReport.objects.order_by("-created_at")[:5]
-    upcoming_booking_list = (
-        Booking.objects.filter(date__gte=today)
-        .order_by("date", "time_slot")[:5]
-    )
-
-    # Tabellen für CRM-Ansichten mit Filtern
-    reports_qs = DamageReport.objects.order_by("-created_at")
-    if report_status and report_status != "all":
-        reports_qs = reports_qs.filter(status=report_status)
-    if report_from:
-        reports_qs = reports_qs.filter(created_at__date__gte=report_from)
-    if report_to:
-        reports_qs = reports_qs.filter(created_at__date__lte=report_to)
-    reports_list = reports_qs[:100]
-
-    bookings_qs = Booking.objects.select_related("transporter").order_by("-date", "-created_at")
-    if booking_status and booking_status != "all":
-        bookings_qs = bookings_qs.filter(status=booking_status)
-    if booking_from:
-        bookings_qs = bookings_qs.filter(date__gte=booking_from)
-    if booking_to:
-        bookings_qs = bookings_qs.filter(date__lte=booking_to)
-    bookings_list = bookings_qs[:100]
-
-    # Timeline/Calendar Light
-    bookings_timeline = (
-        Booking.objects.filter(date__gte=today)
-        .select_related("transporter")
-        .order_by("date", "time_slot")[:120]
-    )
-    transporters = Transporter.objects.all().order_by("name")
-
-    context = {
-        "active_tab": tab,
-        "total_reports": total_reports,
-        "recent_reports_count": recent_reports_count,
-        "total_bookings": total_bookings,
-        "bookings_today": bookings_today,
-        "upcoming_bookings": upcoming_bookings,
-        "transporter_count": transporter_count,
-        "recent_reports": recent_reports,
-        "upcoming_booking_list": upcoming_booking_list,
-        "reports_list": reports_list,
-        "bookings_list": bookings_list,
-        "bookings_timeline": bookings_timeline,
-        "report_status": report_status or "all",
-        "report_from": report_from,
-        "report_to": report_to,
-        "booking_status": booking_status or "all",
-        "booking_from": booking_from,
-        "booking_to": booking_to,
-        "transporters": transporters,
-    }
-    return render(request, "admin/admin_dashboard.html", context)
+    return redirect("portal_dashboard")

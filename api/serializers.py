@@ -1,3 +1,5 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -17,6 +19,7 @@ from .validators import (
     validate_pickup_return,
     validate_required_booking_fields,
     validate_booking_conflict,
+    validate_booking_range_conflict,
 )
 from .pricing import calculate_total_price
 
@@ -75,6 +78,8 @@ class DamageReportSerializer(serializers.ModelSerializer):
             "car_brand",
             "car_model",
             "vin",
+            "type_certificate_number",
+            "registration_document",
             "first_registration",
             "mileage",
             "car_part",
@@ -92,6 +97,8 @@ class DamageReportSerializer(serializers.ModelSerializer):
             "policy_number",
             "accident_number",
             "insurer_contact",
+            "insurer_contact_phone",
+            "insurer_contact_email",
             "other_party_involved",
             "police_involved",
             "documents",
@@ -100,7 +107,7 @@ class DamageReportSerializer(serializers.ModelSerializer):
             "created_at",
             "photos",
         ]
-        read_only_fields = ["id", "status", "admin_notes", "created_at", "photos"]
+        read_only_fields = ["id", "admin_notes", "created_at", "photos"]
 
     def validate(self, attrs):
         # Minimal required fields for public submission
@@ -240,6 +247,13 @@ class BookingSerializer(serializers.ModelSerializer):
             time_slot=attrs.get("time_slot") or getattr(self.instance, "time_slot", None),
             instance_id=getattr(self.instance, "id", None),
         )
+        validate_booking_range_conflict(
+            transporter=attrs.get("transporter") or getattr(self.instance, "transporter", None),
+            vehicle=attrs.get("vehicle") or getattr(self.instance, "vehicle", None),
+            pickup_date=pickup_date or getattr(self.instance, "pickup_date", None),
+            return_date=return_date or getattr(self.instance, "return_date", None),
+            instance_id=getattr(self.instance, "id", None),
+        )
         return attrs
 
     def create(self, validated_data):
@@ -270,10 +284,63 @@ class BookingSerializer(serializers.ModelSerializer):
 class InvoiceSerializer(serializers.ModelSerializer):
     customer_detail = CustomerSerializer(source="customer", read_only=True)
 
+    def _to_decimal(self, value, field_name):
+        try:
+            return Decimal(str(value))
+        except Exception as exc:
+            raise ValidationError({field_name: "Ungültiger Zahlenwert."}) from exc
+
+    def _normalize_items(self, items):
+        normalized = []
+        subtotal = Decimal("0.00")
+        vat_amount = Decimal("0.00")
+        for item in items or []:
+            quantity = self._to_decimal(item.get("quantity", 0), "items.quantity")
+            unit_price = self._to_decimal(item.get("unitPrice", item.get("unit_price", 0)), "items.unitPrice")
+            vat_rate = self._to_decimal(item.get("vatRate", item.get("vat_rate", 0)), "items.vatRate")
+            line_total = self._to_decimal(item.get("total", quantity * unit_price), "items.total")
+
+            if quantity < 0 or unit_price < 0 or vat_rate < 0 or line_total < 0:
+                raise ValidationError("Rechnungspositionen dürfen keine negativen Werte enthalten.")
+
+            subtotal += line_total
+            vat_amount += (line_total * vat_rate / Decimal("100"))
+
+            normalized.append(
+                {
+                    **item,
+                    "quantity": float(quantity),
+                    "unitPrice": float(unit_price),
+                    "vatRate": float(vat_rate),
+                    "total": float(line_total),
+                }
+            )
+
+        subtotal = subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        vat_amount = vat_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return normalized, subtotal, vat_amount
+
+    def _apply_totals(self, attrs):
+        items = attrs.get("items")
+        if items is None:
+            return attrs
+        normalized, subtotal, vat_amount = self._normalize_items(items)
+        discount = self._to_decimal(attrs.get("discount") or 0, "discount")
+        if discount < 0:
+            raise ValidationError({"discount": "Rabatt darf nicht negativ sein."})
+        total = (subtotal - discount + vat_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        attrs["items"] = normalized
+        attrs["subtotal"] = subtotal
+        attrs["vat_amount"] = vat_amount
+        attrs["total_amount"] = total
+        return attrs
+
     class Meta:
         model = Invoice
         fields = [
             "id",
+            "invoice_number",
             "customer",
             "customer_detail",
             "invoice_date",
@@ -293,4 +360,16 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "created_at",
             "sent_at",
         ]
-        read_only_fields = ["id", "created_at", "sent_at"]
+        read_only_fields = ["id", "invoice_number", "created_at", "sent_at"]
+
+    def validate(self, attrs):
+        attrs = self._apply_totals(attrs)
+        return attrs
+
+    def create(self, validated_data):
+        validated_data = self._apply_totals(validated_data)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data = self._apply_totals(validated_data)
+        return super().update(instance, validated_data)

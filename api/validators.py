@@ -1,4 +1,6 @@
 from datetime import date
+
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 from main.models import Booking
 
@@ -38,13 +40,13 @@ def validate_date_not_future(d: date, label: str):
         raise ValidationError(f"{label} darf nicht in der Zukunft liegen.")
 
 
-def validate_booking_conflict(transporter, booking_date, time_slot, instance_id=None):
+def booking_slot_conflict_exists(transporter, booking_date, time_slot, instance_id=None):
     """
     Prüft Überschneidungen mit bestehenden Buchungen.
     FULLDAY blockiert alle, MORNING/AFTERNOON blockieren sich gegenseitig und FULLDAY.
     """
     if not (transporter and booking_date and time_slot):
-        return
+        return False
     if time_slot == "FULLDAY":
         conflict_slots = ["MORNING", "AFTERNOON", "FULLDAY"]
     elif time_slot == "MORNING":
@@ -55,5 +57,42 @@ def validate_booking_conflict(transporter, booking_date, time_slot, instance_id=
     qs = Booking.objects.filter(transporter=transporter, date=booking_date, time_slot__in=conflict_slots)
     if instance_id:
         qs = qs.exclude(pk=instance_id)
-    if qs.exists():
+    return qs.exists()
+
+
+def booking_range_conflict_exists(transporter, pickup_date, return_date, vehicle=None, instance_id=None):
+    """
+    Prüft Überschneidungen über Datumsbereiche (pickup/return).
+    Konflikte werden für Transporter und/oder Vehicle geprüft.
+    """
+    if not pickup_date or not return_date:
+        return False
+    if pickup_date > return_date:
+        raise ValidationError("Abholdatum darf nicht nach dem Rückgabedatum liegen.")
+
+    overlap_filter = (
+        Q(pickup_date__isnull=False, return_date__isnull=False, pickup_date__lte=return_date, return_date__gte=pickup_date)
+        | Q(date__range=(pickup_date, return_date))
+    )
+
+    def _overlap_exists(qs):
+        if instance_id:
+            qs = qs.exclude(pk=instance_id)
+        return qs.filter(overlap_filter).exists()
+
+    conflict = False
+    if transporter:
+        conflict = conflict or _overlap_exists(Booking.objects.filter(transporter=transporter))
+    if vehicle:
+        conflict = conflict or _overlap_exists(Booking.objects.filter(vehicle=vehicle))
+    return conflict
+
+
+def validate_booking_conflict(transporter, booking_date, time_slot, instance_id=None):
+    if booking_slot_conflict_exists(transporter, booking_date, time_slot, instance_id=instance_id):
+        raise ValidationError("Buchung kollidiert mit bestehender Reservierung.")
+
+
+def validate_booking_range_conflict(transporter, pickup_date, return_date, vehicle=None, instance_id=None):
+    if booking_range_conflict_exists(transporter, pickup_date, return_date, vehicle=vehicle, instance_id=instance_id):
         raise ValidationError("Buchung kollidiert mit bestehender Reservierung.")

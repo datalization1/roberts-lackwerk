@@ -31,5 +31,6 @@ class MetaOptionsView(views.APIView):
                         "premium": "Premium (SB 0, Glas/Unterboden inkl.)",
                     },
                 },
+                "roles": ["admin", "manager", "employee"],
             }
         )

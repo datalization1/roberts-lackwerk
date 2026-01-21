@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Zahlung eingegangen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{margin:0;padding:0;background:#0f172a;font-family:Arial,Helvetica,sans-serif;color:#e2e8f0;}
+    .wrap{max-width:680px;margin:0 auto;padding:24px;}
+    .card{background:#111827;border-radius:12px;padding:22px;border:1px solid #1f2937;}
+    h1{font-size:18px;margin:0 0 8px;}
+    .table{width:100%;border-collapse:collapse;font-size:14px;}
+    .table th,.table td{padding:10px 12px;vertical-align:top;border-bottom:1px solid #1f2937;}
+    .table th{width:36%;text-align:left;color:#94a3b8;background:#0b1220;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Zahlung eingegangen</h1>
+      {% if booking %}
+        <p>BU-{{ booking.id }} · {{ booking.customer_name }}</p>
+        <table class="table" role="presentation">
+          <tr><th>Buchung</th><td>{{ booking.transporter.name }} · {{ booking.date|date:"d.m.Y" }}</td></tr>
+          <tr><th>Betrag</th><td>{{ booking.total_price|default:"-" }} CHF</td></tr>
+          <tr><th>Zahlungsart</th><td>{{ booking.payment_method }}</td></tr>
+        </table>
+      {% elif invoice %}
+        <p>Rechnung {{ invoice.invoice_number }}</p>
+        <table class="table" role="presentation">
+          <tr><th>Kunde</th><td>{{ invoice.customer }}</td></tr>
+          <tr><th>Betrag</th><td>{{ invoice.amount_chf }} CHF</td></tr>
+          <tr><th>Zahlungsdatum</th><td>{{ invoice.payment_date|default:"-" }}</td></tr>
+        </table>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

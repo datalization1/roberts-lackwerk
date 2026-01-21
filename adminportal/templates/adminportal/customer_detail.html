@@ -1,0 +1,217 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide fig-customer-detail">
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Kundendetails</h3>
+      <p class="fig-admin__panel-subtitle">Vollständige Informationen zu {% if customer.company %}{{ customer.company }}{% else %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}</p>
+    </div>
+    <a class="fig-btn fig-btn--ghost fig-btn--compact" href="{% url 'portal_customers' %}">
+      <i data-lucide="arrow-left"></i>
+      Zurück zur Liste
+    </a>
+  </header>
+
+  <div class="fig-detail-tabs">
+    <button class="fig-detail-tab is-active" type="button" data-tab="info">
+      <i data-lucide="user"></i>
+      Informationen
+    </button>
+    <button class="fig-detail-tab" type="button" data-tab="orders">
+      <i data-lucide="file-text"></i>
+      Aufträge ({{ stats.reports|add:stats.bookings|add:stats.invoices }})
+    </button>
+  </div>
+
+  <div class="fig-detail-panel is-active" id="tab-info">
+    <article class="fig-detail-card">
+      <div class="fig-detail-card__header">
+        <div class="fig-detail-card__identity">
+          <div class="fig-detail-card__avatar">
+            <i data-lucide="user"></i>
+          </div>
+          <div>
+            <div class="fig-detail-card__name">{% if customer.company %}{{ customer.company }}{% else %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}</div>
+            <div class="fig-detail-card__id">CUST-{{ customer.pk }}</div>
+          </div>
+        </div>
+        <div class="fig-detail-card__actions">
+          <button class="fig-btn fig-btn--ghost fig-btn--compact" type="button">
+            <i data-lucide="pencil"></i>
+            Bearbeiten
+          </button>
+          <a class="fig-btn fig-btn--primary fig-btn--compact" href="{% url 'portal_invoices' %}">
+            <i data-lucide="receipt"></i>
+            Rechnung erstellen
+          </a>
+          <form method="post" action="{% url 'portal_customer_delete' customer.pk %}">
+            {% csrf_token %}
+            <button class="fig-btn fig-btn--ghost fig-btn--compact fig-btn--danger" type="submit">
+              <i data-lucide="trash-2"></i>
+              Löschen
+            </button>
+          </form>
+        </div>
+      </div>
+      <div class="fig-detail-card__grid">
+        <div class="fig-detail-card__block">
+          <div class="fig-detail-card__label">Quelle</div>
+          {% if customer.source == "damage-report" %}
+            <span class="fig-customer-badge fig-customer-badge--info">Schadenmeldung</span>
+          {% elif customer.source == "rental" %}
+            <span class="fig-customer-badge fig-customer-badge--purple">Vermietung</span>
+          {% elif customer.source == "both" %}
+            <span class="fig-customer-badge fig-customer-badge--danger">Beide</span>
+          {% else %}
+            <span class="fig-customer-badge fig-customer-badge--muted">Manuell</span>
+          {% endif %}
+          <div class="fig-detail-card__item">
+            <i data-lucide="mail"></i>
+            <div>
+              <div class="fig-detail-card__label">E-Mail</div>
+              <div class="fig-detail-card__value">{{ customer.email|default:"-" }}</div>
+            </div>
+          </div>
+          <div class="fig-detail-card__item">
+            <i data-lucide="phone"></i>
+            <div>
+              <div class="fig-detail-card__label">Telefon</div>
+              <div class="fig-detail-card__value">{{ customer.phone|default:"-" }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="fig-detail-card__block">
+          <div class="fig-detail-card__item">
+            <i data-lucide="map-pin"></i>
+            <div>
+              <div class="fig-detail-card__label">Adresse</div>
+              <div class="fig-detail-card__value">
+                {% if customer.address %}{{ customer.address }}<br>{% endif %}
+                {{ customer.postal_code }} {{ customer.city }}
+              </div>
+            </div>
+          </div>
+          <div class="fig-detail-card__item">
+            <i data-lucide="calendar"></i>
+            <div>
+              <div class="fig-detail-card__label">Kunde seit</div>
+              <div class="fig-detail-card__value">{{ customer.created_at|date:"d.m.Y" }}</div>
+            </div>
+          </div>
+          <div class="fig-detail-card__item">
+            <i data-lucide="banknote"></i>
+            <div>
+              <div class="fig-detail-card__label">Gesamtumsatz</div>
+              <div class="fig-detail-card__value fig-detail-card__value--accent">CHF {{ stats.revenue|default_if_none:"0"|floatformat:0 }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fig-detail-card__notes">
+        <div class="fig-detail-card__label">Notizen</div>
+        <div class="fig-detail-card__notes-body">{{ customer.notes|default:"-" }}</div>
+      </div>
+    </article>
+  </div>
+
+  <div class="fig-detail-panel" id="tab-orders">
+    <div class="fig-admin__panel" style="margin-top:16px;">
+      <header class="fig-admin__panel-header fig-admin__panel-header--split">
+        <div class="fig-admin__panel-header-group">
+          <h4>Schadenmeldungen</h4>
+          <p class="fig-admin__panel-subtitle">Historie des Kunden</p>
+        </div>
+      </header>
+      <div class="fig-table">
+        {% for report in reports %}
+          <div class="fig-table__row">
+            <div class="fig-table__cell fig-table__cell--id">SM-{{ report.pk }}</div>
+            <div class="fig-table__cell">{{ report.created_at|date:"d.m.Y" }}</div>
+            <div class="fig-table__cell">{{ report.car_brand }} {{ report.car_model }}</div>
+            <div class="fig-table__cell">{{ report.damage_type|default:"-" }}</div>
+            <div class="fig-table__cell">CHF {{ report.estimated_cost_chf|default:"0" }}</div>
+            <div class="fig-table__cell">
+              <a class="fig-btn fig-btn--ghost fig-btn--icon" href="{% url 'portal_damage_report_detail' report.pk %}">
+                <i data-lucide="eye"></i>
+                Details
+              </a>
+            </div>
+          </div>
+        {% empty %}
+          <p class="fig-empty fig-table__empty">Keine Schadenmeldungen vorhanden.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="fig-admin__panel" style="margin-top:16px;">
+      <header class="fig-admin__panel-header fig-admin__panel-header--split">
+        <div class="fig-admin__panel-header-group">
+          <h4>Buchungen</h4>
+          <p class="fig-admin__panel-subtitle">Transporter-Vermietungen</p>
+        </div>
+      </header>
+      <div class="fig-table">
+        {% for booking in bookings %}
+          <div class="fig-table__row">
+            <div class="fig-table__cell fig-table__cell--id">BU-{{ booking.pk }}</div>
+            <div class="fig-table__cell">{{ booking.created_at|date:"d.m.Y" }}</div>
+            <div class="fig-table__cell">{{ booking.transporter.name }}</div>
+            <div class="fig-table__cell">{{ booking.date|date:"d.m.Y" }}</div>
+            <div class="fig-table__cell">CHF {{ booking.total_price }}</div>
+            <div class="fig-table__cell">
+              <a class="fig-btn fig-btn--ghost fig-btn--icon" href="{% url 'portal_booking_detail' booking.pk %}">
+                <i data-lucide="eye"></i>
+                Details
+              </a>
+            </div>
+          </div>
+        {% empty %}
+          <p class="fig-empty fig-table__empty">Keine Buchungen vorhanden.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="fig-admin__panel" style="margin-top:16px;">
+      <header class="fig-admin__panel-header fig-admin__panel-header--split">
+        <div class="fig-admin__panel-header-group">
+          <h4>Rechnungen</h4>
+          <p class="fig-admin__panel-subtitle">Abrechnung &amp; Zahlungen</p>
+        </div>
+      </header>
+      <div class="fig-table">
+        {% for invoice in invoices %}
+          <div class="fig-table__row">
+            <div class="fig-table__cell fig-table__cell--id">{{ invoice.invoice_number }}</div>
+            <div class="fig-table__cell">{{ invoice.issue_date }}</div>
+            <div class="fig-table__cell">{{ invoice.description|default:"-" }}</div>
+            <div class="fig-table__cell">CHF {{ invoice.amount_chf }}</div>
+            <div class="fig-table__cell">
+              <a class="fig-btn fig-btn--ghost fig-btn--icon" href="{% url 'portal_invoice_pdf' invoice.pk %}">
+                <i data-lucide="file-text"></i>
+                PDF
+              </a>
+            </div>
+          </div>
+        {% empty %}
+          <p class="fig-empty fig-table__empty">Keine Rechnungen vorhanden.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.fig-detail-tab');
+    const panels = document.querySelectorAll('.fig-detail-panel');
+    tabs.forEach(tab => tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('is-active'));
+      panels.forEach(p => p.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      const panel = document.getElementById(`tab-${tab.dataset.tab}`);
+      if (panel) panel.classList.add('is-active');
+    }));
+  });
+</script>
+{% endblock %}

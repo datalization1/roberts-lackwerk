@@ -1,10 +1,15 @@
-from django.test import TestCase, Client
+from decimal import Decimal
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core import mail
 
-from main.models import Transporter, Booking
+from main.models import Transporter, Booking, DamageReport
 from api.validators import validate_booking_conflict
+from main.utils.emailing import send_templated_mail
+from main.utils.pdf import render_booking_invoice_pdf
+from adminportal.models import PortalSettings, Invoice as PortalInvoice, Customer as PortalCustomer
 
 
 class MietfahrzeugeViewTests(TestCase):
@@ -81,3 +86,98 @@ class BookingConflictTests(TestCase):
             )
         except ValidationError:
             self.fail("validate_booking_conflict raised for non-overlapping slot")
+
+
+class DamageReportEmailTests(TestCase):
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_damage_report_confirmation_email(self):
+        report = DamageReport.objects.create(
+            first_name="Max",
+            last_name="Muster",
+            email="max@example.com",
+            phone="+41 44 123 45 67",
+            car_brand="VW",
+            car_model="Golf",
+            damage_type="Unfallschaden",
+            message="Frontschaden an der Stossstange.",
+            accident_date=timezone.localdate(),
+            accident_location="Zuerich",
+        )
+        ok = send_templated_mail(
+            subject=f"Bestätigung Ihrer Schadenmeldung #{report.pk}",
+            template_path="emails/claim_customer.html",
+            context={"report": report},
+            recipients=[report.email],
+            fail_silently=False,
+        )
+        self.assertTrue(ok)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Schadenmeldung", mail.outbox[0].subject)
+
+
+class BookingEmailTests(TestCase):
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_booking_email_attaches_pdf(self):
+        transporter = Transporter.objects.create(
+            name="Test Van",
+            kennzeichen="ZH-77777",
+            verfuegbar_ab=timezone.localdate(),
+            preis_chf=100,
+        )
+        booking = Booking.objects.create(
+            transporter=transporter,
+            date=timezone.localdate(),
+            pickup_date=timezone.localdate(),
+            return_date=timezone.localdate(),
+            customer_name="Max Muster",
+            customer_email="max@example.com",
+            customer_phone="+41 44 123 45 67",
+            customer_address="Strasse 1",
+            driver_license_number="ABC123",
+        )
+        pdf = render_booking_invoice_pdf(
+            booking,
+            rental_days=1,
+            base_price=Decimal("100.00"),
+            extras_total=Decimal("0.00"),
+            vat_amount=Decimal("7.70"),
+            total_price=Decimal("107.70"),
+        )
+        ok = send_templated_mail(
+            subject=f"Buchungsbestätigung BU-{booking.id}",
+            template_path="emails/booking_customer.html",
+            context={"booking": booking},
+            recipients=[booking.customer_email],
+            attachments=[(f"rechnung-bu-{booking.id}.pdf", pdf, "application/pdf")],
+            fail_silently=False,
+        )
+        self.assertTrue(ok)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox[0].attachments), 1)
+
+
+class AdminNotificationTests(TestCase):
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_admin_payment_notification_uses_recipients(self):
+        portal_settings = PortalSettings.objects.create(
+            notify_payment_received=True,
+            notification_recipients="admin1@example.com, admin2@example.com",
+        )
+        customer = PortalCustomer.objects.create(first_name="Test", last_name="Kunde", email="kunde@example.com")
+        invoice = PortalInvoice.objects.create(
+            invoice_number="RE-2025-0001",
+            customer=customer,
+            amount_chf=Decimal("100.00"),
+            status="paid",
+            payment_date=timezone.localdate(),
+        )
+        ok = send_templated_mail(
+            subject=f"Zahlung eingegangen {invoice.invoice_number}",
+            template_path="emails/payment_admin.html",
+            context={"invoice": invoice},
+            recipients=portal_settings.notification_recipients.split(","),
+            portal_settings=portal_settings,
+            fail_silently=False,
+        )
+        self.assertTrue(ok)
+        self.assertEqual(len(mail.outbox), 1)

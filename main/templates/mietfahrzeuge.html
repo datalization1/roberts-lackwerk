@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}page-gold{% endblock %}
+
 {% block content %}
 <section class="rl-wizard-page">
 
@@ -49,22 +51,35 @@
           {% if form_error %}
             <div class="rl-alert rl-alert--error">{{ form_error }}</div>
           {% endif %}
-          <!-- Abholdatum -->
-          <div class="rl-wizard-field-group rl-field-group--date">
-            <label class="rl-field-label" for="pickup_date">Abholdatum <span class="rl-field-required">*</span></label>
+          <div class="rl-date-row">
+            <!-- Abholdatum -->
+            <div class="rl-wizard-field-group rl-field-group--date">
+              <label class="rl-field-label" for="pickup_date">Abholdatum <span class="rl-field-required">*</span></label>
 
-            <div class="rl-input-wrapper">
-              <input id="pickup_date"
-                name="pickup_date"
+              <div class="rl-input-wrapper">
+                <input id="pickup_date"
+                  name="pickup_date"
+                  type="date"
+                  class="rl-input rl-input--date"
+                  placeholder="tt.mm.jjjj"
+                  value="{{ step1.date|default:'' }}">
+
+                <span class="rl-input-hint"
+                      {% if step1.date %}style="display:none"{% endif %}>
+                  Wählen Sie zuerst das Datum, um verfügbare Fahrzeuge zu sehen.
+                </span>
+              </div>
+            </div>
+
+            <!-- Rückgabedatum -->
+            <div id="return_date_group" class="rl-wizard-field-group{% if step1.timeblock != 'fullday' and step1.time_slot != 'FULLDAY' %} is-hidden{% endif %}">
+              <label class="rl-field-label" for="return_date">Rückgabedatum</label>
+              <input id="return_date"
+                name="return_date"
                 type="date"
                 class="rl-input rl-input--date"
-                placeholder="tt.mm.jjjj"
-                value="{{ step1.date|default:'' }}">
-
-              <span class="rl-input-hint"
-                    {% if step1.date %}style="display:none"{% endif %}>
-                Wählen Sie zuerst das Datum, um verfügbare Fahrzeuge zu sehen.
-              </span>
+                value="{{ step1.return_date|default:'' }}">
+              <p class="rl-help-text">Nur bei Ganztags-Mieten erforderlich.</p>
             </div>
           </div>
 
@@ -126,17 +141,6 @@
                 </div>
               </label>
             </div>
-          </div>
-
-          <!-- Rückgabedatum -->
-          <div id="return_date_group" class="rl-wizard-field-group{% if step1.timeblock != 'fullday' and step1.time_slot != 'FULLDAY' %} is-hidden{% endif %}">
-            <label class="rl-field-label" for="return_date">Rückgabedatum</label>
-            <input id="return_date"
-              name="return_date"
-              type="date"
-              class="rl-input rl-input--date"
-              value="{{ step1.return_date|default:'' }}">
-            <p class="rl-help-text">Nur bei Ganztags-Mieten erforderlich.</p>
           </div>
 
           <!-- Verfügbarkeits-Banner + Modelle -->

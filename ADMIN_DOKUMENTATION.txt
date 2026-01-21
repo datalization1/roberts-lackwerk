@@ -1,0 +1,2365 @@
+================================================================================
+              AUTOREPAIR PRO - ADMIN-BEREICH DOKUMENTATION
+================================================================================
+
+Projekt: Admin-Dashboard für Autowerkstatt
+Technologie: React/TypeScript, Tailwind CSS
+Design: Dunkles Theme mit roten Akzenten
+Sprache: Deutsch (Schweiz)
+Stand: Januar 2025
+
+================================================================================
+                            ÜBERSICHT ADMIN-BEREICH
+================================================================================
+
+Der Admin-Bereich ist ein vollständiges Verwaltungssystem für:
+- Schadenmeldungen
+- Transporter-Buchungen
+- Fahrzeugflotte
+- Kundenverwaltung (CRM)
+- Rechnungswesen
+- Zeitplanung & Verfügbarkeit
+- System-Einstellungen
+
+ZUGANG:
+- URL: /admin-login
+- Standard-Zugangsdaten:
+  * Benutzername: admin
+  * Passwort: admin123
+- Nach Login: Weiterleitung zum Dashboard
+
+NAVIGATION:
+- 9 Haupt-Tabs (horizontal scrollbar auf Mobile)
+- Zurück-Button (Startseite)
+- Logout-Button (oben rechts)
+
+
+================================================================================
+                    TAB 1: DASHBOARD (ÜBERSICHT)
+================================================================================
+
+Datei: /components/AdminPage.tsx → TabsContent "dashboard"
+
+BESCHREIBUNG:
+Zentrale Übersichtsseite mit Statistiken und neuesten Aktivitäten.
+
+────────────────────────────────────────────────────────────────────────────
+STATISTIK-KARTEN (4 Spalten, responsive)
+────────────────────────────────────────────────────────────────────────────
+
+KARTE 1: SCHADENMELDUNGEN
+- Icon: FileText
+- Anzahl: Gesamt Schadenmeldungen
+- Details: "X ausstehend"
+- Farbe: Standard
+
+KARTE 2: BUCHUNGEN
+- Icon: Truck
+- Anzahl: Gesamt Buchungen
+- Details: "X ausstehend"
+- Farbe: Standard
+
+KARTE 3: IN BEARBEITUNG
+- Icon: Clock
+- Anzahl: Reparaturen in Bearbeitung
+- Details: "Reparaturen aktiv"
+- Farbe: Standard
+
+KARTE 4: ABGESCHLOSSEN
+- Icon: CheckCircle
+- Anzahl: Abgeschlossene Reparaturen
+- Details: "Diesen Monat"
+- Farbe: Standard
+
+────────────────────────────────────────────────────────────────────────────
+AKTIVITÄTEN (2 Spalten, responsive)
+────────────────────────────────────────────────────────────────────────────
+
+SEKTION 1: NEUESTE SCHADENMELDUNGEN
+- Zeigt die 3 neuesten Schadenmeldungen
+- Pro Eintrag:
+  * Schadenmeldungs-ID (SM-2025-XXX)
+  * Status-Badge (Ausstehend/In Bearbeitung/Abgeschlossen)
+  * Kundenname
+  * Fahrzeug (Marke, Kennzeichen)
+  * "Details"-Button (Eye-Icon) → Öffnet Bearbeitungsformular
+
+SEKTION 2: ANSTEHENDE BUCHUNGEN
+- Zeigt die 3 nächsten Buchungen
+- Pro Eintrag:
+  * Buchungs-ID (BU-2025-XXX)
+  * Status-Badge (Ausstehend/Bestätigt/Abgeschlossen)
+  * Kundenname
+  * Abholung-Datum
+  * "Details"-Button (Eye-Icon) → Öffnet Buchungsdetails
+
+FUNKTIONEN:
+- Schneller Überblick über aktuelle Aktivitäten
+- Direkter Zugriff auf Bearbeitungsfunktionen
+- Echtzeit-Statistiken (bei Backend-Integration)
+
+
+================================================================================
+               TAB 2: SCHADENMELDUNGEN (DAMAGE REPORTS)
+================================================================================
+
+Datei: /components/AdminPage.tsx → TabsContent "damage-reports"
+Bearbeitungs-Formular: /components/admin/EditDamageReportForm.tsx
+
+BESCHREIBUNG:
+Vollständige Verwaltung aller Schadenmeldungen.
+
+────────────────────────────────────────────────────────────────────────────
+HEADER-BEREICH
+────────────────────────────────────────────────────────────────────────────
+
+TITEL & BESCHREIBUNG:
+- "Schadenmeldungen"
+- "Übersicht aller eingereichten Schadenmeldungen"
+
+SUCHFUNKTION:
+- Suchfeld mit Search-Icon
+- Placeholder: "Suchen..."
+- Durchsucht: ID, Kunde, Fahrzeug, Versicherung
+- Live-Suche (bei Eingabe)
+
+FILTER-BUTTON:
+- Icon: Filter
+- Öffnet Filter-Dialog (bereit für Implementierung)
+- Geplante Filter:
+  * Nach Status
+  * Nach Datum
+  * Nach Versicherung
+  * Nach Schadensart
+
+────────────────────────────────────────────────────────────────────────────
+SCHADENMELDUNGEN-LISTE
+────────────────────────────────────────────────────────────────────────────
+
+DARSTELLUNG:
+- Card-basierte Liste
+- Ein Eintrag pro Schadenmeldung
+- Hover-Effekt: Border wird rot
+
+PRO EINTRAG ANGEZEIGT:
+
+ZEILE 1 (Header):
+- Schadenmeldungs-ID (fett, z.B. "SM-2025-001")
+- Status-Badge:
+  * Ausstehend (pending) → Gelb
+  * In Bearbeitung (in-progress) → Blau
+  * Abgeschlossen (completed) → Grün
+- Datum (z.B. "2025-11-25")
+
+ZEILE 2 (Details Grid, 4 Spalten):
+- Kunde: [Name]
+- Fahrzeug: [Marke Modell, Kennzeichen]
+- Versicherung: [Versicherungsname]
+- Schätzung: [CHF Betrag] (in Rot)
+
+ZEILE 3:
+- Schadensart (z.B. "Unfallschaden vorne")
+
+AKTIONS-BUTTONS (rechts):
+- "Details" (outline) → Eye-Icon
+- "Bearbeiten" (primary) → CheckCircle-Icon
+
+BEIDE BUTTONS → Öffnen EditDamageReportForm
+
+────────────────────────────────────────────────────────────────────────────
+SCHADENMELDUNG BEARBEITEN (EditDamageReportForm)
+────────────────────────────────────────────────────────────────────────────
+
+Datei: /components/admin/EditDamageReportForm.tsx
+
+ANSICHT:
+Vollbildmodus mit eigenem Layout
+
+HEADER:
+- "Zurück"-Button → Zurück zur Liste
+- "Schadenmeldung bearbeiten: [ID]"
+- Beschreibung mit Kundennamen
+
+FORMULAR-BEREICHE:
+
+1. STATUS & PRIORITÄT
+   ┌─────────────────────────────────────────┐
+   │ Status:          [Dropdown]             │
+   │ ○ Ausstehend                            │
+   │ ○ In Bearbeitung                        │
+   │ ○ Abgeschlossen                         │
+   │ ○ Storniert                             │
+   │                                         │
+   │ Priorität:       [Dropdown]             │
+   │ ○ Niedrig                               │
+   │ ○ Normal                                │
+   │ ○ Hoch                                  │
+   │ ○ Dringend                              │
+   └─────────────────────────────────────────┘
+
+2. FAHRZEUGDATEN (Read-Only Anzeige)
+   - Marke: [z.B. VW]
+   - Modell: [z.B. Golf]
+   - Kennzeichen: [z.B. ZH 12345]
+   - VIN: [Fahrgestellnummer]
+
+3. KUNDENDATEN (Read-Only Anzeige)
+   - Name: [Vorname Nachname]
+   - E-Mail: [E-Mail-Adresse]
+   - Telefon: [Telefonnummer]
+   - Adresse: [Vollständige Adresse]
+
+4. VERSICHERUNGSDATEN (Read-Only Anzeige)
+   - Versicherung: [Name der Versicherung]
+   - Versicherungsnummer: [Policennummer]
+   - Schadennummer: [Falls vorhanden]
+
+5. UNFALLDETAILS (Read-Only Anzeige)
+   - Unfalldatum: [Datum]
+   - Unfallort: [Ort]
+   - Schadensart: [Art des Schadens]
+   - Betroffene Teile: [Liste der Fahrzeugteile]
+   - Beschreibung: [Detaillierte Beschreibung]
+
+6. REPARATURPLANUNG (Bearbeitbar)
+   ┌─────────────────────────────────────────┐
+   │ Kostenschätzung:  [Input CHF]          │
+   │ Reparaturbeginn:  [Datepicker]         │
+   │ Reparaturende:    [Datepicker]         │
+   │ Zugewiesener      [Dropdown]           │
+   │ Mechaniker:                            │
+   └─────────────────────────────────────────┘
+
+7. INTERNE NOTIZEN (Bearbeitbar)
+   ┌─────────────────────────────────────────┐
+   │ [Textarea für interne Notizen]         │
+   │                                         │
+   │ - Nur für Admin sichtbar               │
+   │ - Nicht in Kundenkommunikation         │
+   └─────────────────────────────────────────┘
+
+AKTIONEN (unten):
+- "Abbrechen" (outline) → Zurück ohne Speichern
+- "Änderungen speichern" (primary) → Speichert und zeigt Toast
+
+ÄNDERUNGS-TRACKING:
+- Speichern-Button nur aktiv bei Änderungen
+- Toast-Benachrichtigung bei Erfolg
+- Warnung bei Abbruch mit ungespeicherten Änderungen (geplant)
+
+ZUSATZ-FUNKTIONEN:
+- "Rechnung erstellen"-Button
+  → Öffnet DamageReportInvoice-Komponente
+  → Vorausgefüllte Rechnung basierend auf Schadenmeldung
+- "E-Mail an Kunde senden"-Button (vorbereitet)
+
+
+================================================================================
+                   TAB 3: BUCHUNGEN (BOOKINGS)
+================================================================================
+
+Datei: /components/AdminPage.tsx → TabsContent "bookings"
+Sub-Komponenten:
+- /components/admin/EditBookingForm.tsx
+- /components/admin/BookingCalendar.tsx
+
+BESCHREIBUNG:
+Verwaltung aller Transporter-Buchungen mit Kalenderansicht.
+
+────────────────────────────────────────────────────────────────────────────
+BUCHUNGSLISTE
+────────────────────────────────────────────────────────────────────────────
+
+HEADER:
+- "Transporter-Buchungen"
+- "Übersicht aller Fahrzeugvermietungen"
+- Suchfeld (Search-Icon)
+- Filter-Button
+
+LISTE PRO BUCHUNG:
+
+ZEILE 1 (Header):
+- Buchungs-ID (z.B. "BU-2025-101")
+- Status-Badge:
+  * Ausstehend (pending) → Gelb
+  * Bestätigt (confirmed) → Grün
+  * Aktiv (active) → Blau
+  * Abgeschlossen (completed) → Grau
+  * Storniert (cancelled) → Rot
+- Buchungsdatum
+
+ZEILE 2 (Details Grid, 4 Spalten):
+- Kunde: [Name]
+- Fahrzeug: [Transporter-Typ]
+- Abholung: [Datum]
+- Gesamt: [CHF Betrag] (in Rot)
+
+ZEILE 3:
+- Dauer: [Ganztag/Vormittag/Nachmittag]
+
+AKTIONS-BUTTONS:
+- "Details" (outline) → Eye-Icon
+- "Bearbeiten" (primary) → CheckCircle-Icon
+
+────────────────────────────────────────────────────────────────────────────
+BUCHUNG BEARBEITEN (EditBookingForm)
+────────────────────────────────────────────────────────────────────────────
+
+Datei: /components/admin/EditBookingForm.tsx
+
+VOLLBILD-FORMULAR mit Tabs:
+
+TAB 1: BUCHUNGSDETAILS
+   ┌─────────────────────────────────────────┐
+   │ Buchungs-ID:     [Read-Only]           │
+   │ Status:          [Dropdown]            │
+   │                  ○ Ausstehend          │
+   │                  ○ Bestätigt           │
+   │                  ○ Aktiv               │
+   │                  ○ Abgeschlossen       │
+   │                  ○ Storniert           │
+   │                                         │
+   │ Fahrzeugtyp:     [Dropdown]            │
+   │                  ○ Sprinter Klein      │
+   │                  ○ Sprinter Mittel     │
+   │                  ○ Sprinter Groß       │
+   │                                         │
+   │ Abholdatum:      [Datepicker]          │
+   │ Abholzeit:       [Time Select]         │
+   │                                         │
+   │ Rückgabedatum:   [Datepicker]          │
+   │ Rückgabezeit:    [Time Select]         │
+   │                                         │
+   │ Kilometerpaket:  [Dropdown]            │
+   │                  ○ 100 km              │
+   │                  ○ 200 km              │
+   │                  ○ Unbegrenzt          │
+   └─────────────────────────────────────────┘
+
+TAB 2: KUNDENDATEN (Read-Only Anzeige)
+   - Name: [Vollständiger Name]
+   - E-Mail: [E-Mail-Adresse]
+   - Telefon: [Telefonnummer]
+   - Adresse: [Vollständige Adresse]
+   - Führerschein-Nr.: [Nummer]
+
+TAB 3: EXTRAS & VERSICHERUNG
+   ┌─────────────────────────────────────────┐
+   │ Extras:                                 │
+   │ ☐ Möbeldecken (CHF 15)                 │
+   │ ☐ Sackkarre (CHF 10)                   │
+   │ ☐ Zurrgurte (CHF 8)                    │
+   │ ☐ Navigationsgerät (CHF 12)            │
+   │ ☐ Zusatzfahrer (CHF 20)                │
+   │ ☐ Winterreifen (CHF 25)                │
+   │                                         │
+   │ Versicherung:                           │
+   │ ○ Basis-Versicherung (Inklusive)      │
+   │ ○ Vollkasko (+ CHF 25/Tag)            │
+   │ ○ Premium (+ CHF 45/Tag)              │
+   └─────────────────────────────────────────┘
+
+TAB 4: ZAHLUNG
+   ┌─────────────────────────────────────────┐
+   │ Zahlungsstatus:  [Dropdown]            │
+   │                  ○ Ausstehend          │
+   │                  ○ Bezahlt             │
+   │                  ○ Rückerstattet       │
+   │                                         │
+   │ Zahlungsmethode: [Dropdown]            │
+   │                  ○ Stripe              │
+   │                  ○ Rechnung            │
+   │                  ○ Bar                 │
+   │                  ○ Überweisung         │
+   │                                         │
+   │ Transaktions-ID: [Input]               │
+   │                                         │
+   │ KOSTENÜBERSICHT:                       │
+   │ ────────────────────────────────────   │
+   │ Fahrzeugmiete:     CHF XXX.XX         │
+   │ Kilometerpaket:    CHF XXX.XX         │
+   │ Extras:            CHF XXX.XX         │
+   │ Versicherung:      CHF XXX.XX         │
+   │ ────────────────────────────────────   │
+   │ Zwischensumme:     CHF XXX.XX         │
+   │ MwSt. (7.7%):     CHF XXX.XX         │
+   │ ════════════════════════════════════   │
+   │ GESAMT:            CHF XXX.XX         │
+   └─────────────────────────────────────────┘
+
+TAB 5: NOTIZEN
+   ┌─────────────────────────────────────────┐
+   │ Kundennotizen:                          │
+   │ [Textarea - vom Kunden]                │
+   │                                         │
+   │ Interne Notizen:                        │
+   │ [Textarea - nur Admin]                 │
+   └─────────────────────────────────────────┘
+
+AKTIONEN (unten):
+- "Abbrechen" → Zurück ohne Speichern
+- "Rechnung erstellen" → Öffnet InvoiceGenerator
+- "Speichern" → Speichert Änderungen
+
+LIVE-PREISBERECHNUNG:
+- Automatische Neuberechnung bei Änderungen
+- Berücksichtigt:
+  * Anzahl Miettage
+  * Fahrzeugtyp
+  * Kilometerpaket
+  * Extras (einmalig oder täglich)
+  * Versicherung (täglich)
+  * MwSt. 7.7%
+
+────────────────────────────────────────────────────────────────────────────
+BUCHUNGSKALENDER (BookingCalendar)
+────────────────────────────────────────────────────────────────────────────
+
+Datei: /components/admin/BookingCalendar.tsx
+
+ANSICHT:
+- Vollständiger Monatskalender
+- Farb-kodierte Buchungen
+- Drag & Drop (geplant)
+
+KALENDER-HEADER:
+┌─────────────────────────────────────────────────────┐
+│  « Januar 2025 »                [Heute] [+ Buchung] │
+└─────────────────────────────────────────────────────┘
+
+NAVIGATION:
+- Pfeil links: Vorheriger Monat
+- Pfeil rechts: Nächster Monat
+- "Heute"-Button: Springt zu aktuellem Datum
+- "+ Neue Buchung"-Button: Erstellt neue Buchung
+
+KALENDER-GRID:
+
+WOCHENTAGE-HEADER:
+┌────┬────┬────┬────┬────┬────┬────┐
+│ Mo │ Di │ Mi │ Do │ Fr │ Sa │ So │
+├────┼────┼────┼────┼────┼────┼────┤
+
+TAGE MIT BUCHUNGEN:
+Jeder Tag zeigt:
+- Tagesnummer (oben links)
+- Buchungs-Badges (farbig):
+  * 🔴 Transporter Rot
+  * ⚪ Transporter Weiss 1
+  * ⚪ Transporter Weiss 2
+
+Beispiel:
+┌────┐
+│ 15 │
+│🔴  │ ← Transporter Rot gebucht
+│⚪  │ ← Transporter Weiss 1 gebucht
+└────┘
+
+FARB-KODIERUNG:
+- Rot: Sprinter Rot
+- Weiß/Grau: Sprinter Weiß 1 & 2
+- Badge-Farben nach Status:
+  * Grün: Bestätigt
+  * Gelb: Ausstehend
+  * Blau: Aktiv (gerade in Vermietung)
+  * Grau: Abgeschlossen
+
+CLICK AUF BUCHUNG:
+→ Öffnet Buchungsdetails in Modal oder EditBookingForm
+
+CLICK AUF LEEREN TAG:
+→ Öffnet "Neue Buchung"-Dialog mit vorgewähltem Datum
+
+LEGENDE (unten):
+- 🟢 Bestätigt & Bezahlt
+- 🟡 Ausstehend
+- 🔵 Aktiv (in Vermietung)
+- ⚫ Abgeschlossen
+
+FUNKTIONEN:
+- Schneller Überblick über Auslastung
+- Doppelbuchungen vermeiden
+- Verfügbarkeits-Check
+- Direkte Buchungserstellung
+
+NEUE BUCHUNG ERSTELLEN:
+1. Click auf "+ Neue Buchung"
+2. Öffnet CustomerSearchDialog
+3. Kunde auswählen oder neu anlegen
+4. Buchungsformular ausfüllen
+5. Speichern → Buchung im Kalender sichtbar
+
+
+================================================================================
+                   TAB 4: FAHRZEUGE (VEHICLES)
+================================================================================
+
+Datei: /components/admin/VehicleManagement.tsx
+
+BESCHREIBUNG:
+Verwaltung der Transporter-Flotte mit Status-Tracking.
+
+────────────────────────────────────────────────────────────────────────────
+FAHRZEUG-ÜBERSICHT
+────────────────────────────────────────────────────────────────────────────
+
+HEADER:
+- "Fahrzeugverwaltung"
+- "Verwaltung der Transporter-Flotte"
+- "+ Neues Fahrzeug hinzufügen"-Button (oben rechts)
+
+DARSTELLUNG:
+Grid-Layout (3 Spalten auf Desktop, responsive)
+
+PRO FAHRZEUG-KARTE:
+┌─────────────────────────────────────────┐
+│ 🚐 [Fahrzeugname]                       │
+│                                         │
+│ Kennzeichen:    ZH-12345               │
+│ Typ:            Sprinter Klein         │
+│ Status:         ✅ Verfügbar           │
+│                                         │
+│ Technische Daten:                       │
+│ • Baujahr: 2022                        │
+│ • Kilometerstand: 45'000 km           │
+│ • Ladevolumen: 10 m³                  │
+│ • Nutzlast: 1'000 kg                  │
+│                                         │
+│ Preis: CHF 89/Tag                      │
+│                                         │
+│ Nächster Service: 15.02.2025          │
+│                                         │
+│ [Details] [Bearbeiten] [Löschen]      │
+└─────────────────────────────────────────┘
+
+STATUS-OPTIONEN:
+- ✅ Verfügbar (available) → Grün
+- 🚗 In Vermietung (rented) → Blau
+- 🔧 In Wartung (maintenance) → Orange
+- ❌ Außer Betrieb (out-of-service) → Rot
+
+FAHRZEUG-TYPEN:
+1. Sprinter Klein
+   - Ladevolumen: 10 m³
+   - Nutzlast: 1'000 kg
+   - Tagespreis: CHF 89
+   - Features: Klima, Radio, Rückfahrkamera
+
+2. Sprinter Mittel
+   - Ladevolumen: 14 m³
+   - Nutzlast: 1'200 kg
+   - Tagespreis: CHF 109
+   - Features: Klima, Radio, Rückfahrkamera, Bluetooth
+
+3. Sprinter Groß
+   - Ladevolumen: 18 m³
+   - Nutzlast: 1'500 kg
+   - Tagespreis: CHF 139
+   - Features: Klima, Radio, Rückfahrkamera, Bluetooth, Tempomat
+
+────────────────────────────────────────────────────────────────────────────
+FAHRZEUG HINZUFÜGEN / BEARBEITEN
+────────────────────────────────────────────────────────────────────────────
+
+DIALOG / MODAL:
+
+GRUNDDATEN:
+┌─────────────────────────────────────────┐
+│ Fahrzeugtyp*:      [Dropdown]          │
+│                    ○ Sprinter Klein    │
+│                    ○ Sprinter Mittel   │
+│                    ○ Sprinter Groß     │
+│                                         │
+│ Kennzeichen*:      [Input]             │
+│ Interner Name:     [Input]             │
+│ (z.B. "Transporter Rot")               │
+└─────────────────────────────────────────┘
+
+TECHNISCHE DATEN:
+┌─────────────────────────────────────────┐
+│ Marke:            [Input]               │
+│ Modell:           [Input]               │
+│ Baujahr*:         [Number Input]        │
+│ Kilometerstand*:  [Number Input] km     │
+│ Ladevolumen*:     [Number Input] m³     │
+│ Nutzlast*:        [Number Input] kg     │
+│ VIN:              [Input]               │
+└─────────────────────────────────────────┘
+
+AUSSTATTUNG:
+┌─────────────────────────────────────────┐
+│ Features: (Mehrfachauswahl)             │
+│ ☐ Klimaanlage                          │
+│ ☐ Radio                                │
+│ ☐ Bluetooth                            │
+│ ☐ Rückfahrkamera                       │
+│ ☐ Tempomat                             │
+│ ☐ Navigationssystem                    │
+│ ☐ Ladebordwand                         │
+└─────────────────────────────────────────┘
+
+PREISE & VERFÜGBARKEIT:
+┌─────────────────────────────────────────┐
+│ Tagespreis*:      [Number] CHF         │
+│                                         │
+│ Status:           [Dropdown]           │
+│                   ○ Verfügbar          │
+│                   ○ In Vermietung      │
+│                   ○ In Wartung         │
+│                   ○ Außer Betrieb      │
+└─────────────────────────────────────────┘
+
+WARTUNG:
+┌─────────────────────────────────────────┐
+│ Nächster Service: [Datepicker]         │
+│ Versicherung bis: [Datepicker]         │
+│ TÜV gültig bis:   [Datepicker]         │
+│                                         │
+│ Versicherungs-Nr: [Input]              │
+└─────────────────────────────────────────┘
+
+FOTO (optional):
+┌─────────────────────────────────────────┐
+│ Fahrzeugfoto:     [Datei-Upload]       │
+│ [Vorschau des Bildes]                  │
+└─────────────────────────────────────────┘
+
+AKTIONEN:
+- "Abbrechen" → Schließt Dialog
+- "Speichern" → Erstellt/Aktualisiert Fahrzeug
+
+VALIDIERUNG:
+- Kennzeichen-Format prüfen
+- Pflichtfelder markiert mit *
+- Numerische Werte validieren
+- Duplikat-Kennzeichen verhindern
+
+────────────────────────────────────────────────────────────────────────────
+WARTUNGSPLANUNG
+────────────────────────────────────────────────────────────────────────────
+
+WARTUNGSHISTORIE (pro Fahrzeug):
+- Liste aller durchgeführten Wartungen
+- Datum, Art, Kosten, Mechaniker
+- "Neue Wartung hinzufügen"-Button
+
+WARTUNGSEINTRAG ERSTELLEN:
+┌─────────────────────────────────────────┐
+│ Datum*:           [Datepicker]         │
+│ Wartungsart*:     [Dropdown]           │
+│                   ○ Ölwechsel          │
+│                   ○ Inspektion         │
+│                   ○ TÜV                │
+│                   ○ Reifenwechsel      │
+│                   ○ Reparatur          │
+│                   ○ Sonstiges          │
+│                                         │
+│ Kosten:           [Number] CHF         │
+│ Kilometerstand:   [Number] km          │
+│ Durchgeführt von: [Input]              │
+│ Beschreibung:     [Textarea]           │
+│                                         │
+│ Nächste Wartung:  [Datepicker]         │
+│ in X km:          [Number] km          │
+└─────────────────────────────────────────┘
+
+AUTOMATISCHE ERINNERUNGEN:
+- E-Mail-Benachrichtigung X Tage vor Wartung
+- Dashboard-Warnung bei überfälligen Wartungen
+- Status automatisch auf "Wartung" setzen
+
+
+================================================================================
+                   TAB 5: KUNDEN (CUSTOMERS)
+================================================================================
+
+Datei: /components/admin/CustomerManagement.tsx
+
+BESCHREIBUNG:
+Vollständiges CRM-System mit Kundenverwaltung und Transaktionshistorie.
+
+────────────────────────────────────────────────────────────────────────────
+KUNDEN-ÜBERSICHT
+────────────────────────────────────────────────────────────────────────────
+
+HEADER:
+- "Kundenverwaltung"
+- "CRM-System für alle Kunden"
+- "+ Neuer Kunde"-Button (oben rechts)
+
+FILTER-LEISTE:
+┌─────────────────────────────────────────┐
+│ [Suchfeld mit Search-Icon]             │
+│                                         │
+│ Quelle filtern:  [Dropdown]            │
+│                  ○ Alle                │
+│                  ○ Schadenmeldung      │
+│                  ○ Vermietung          │
+│                  ○ Manuell angelegt    │
+│                  ○ Beides              │
+│                                         │
+│ Sortieren nach:  [Dropdown]            │
+│                  ○ Name (A-Z)          │
+│                  ○ Name (Z-A)          │
+│                  ○ Neueste zuerst      │
+│                  ○ Älteste zuerst      │
+└─────────────────────────────────────────┘
+
+KUNDEN-TABELLE / LISTE:
+
+PRO KUNDE (Responsive Card):
+┌─────────────────────────────────────────┐
+│ 👤 CUST-001                   📍 Zürich │
+│                                         │
+│ Max Müller                              │
+│ max.mueller@email.ch                   │
+│ +41 79 123 45 67                       │
+│                                         │
+│ Kunde seit: 15.03.2023                 │
+│ Quelle: [Badge: Schadenmeldung]        │
+│                                         │
+│ Transaktionen:                          │
+│ • 2 Schadenmeldungen                   │
+│ • 1 Buchung                            │
+│ • Umsatz: CHF 5'234                    │
+│                                         │
+│ [Details] [Bearbeiten] [Löschen]      │
+└─────────────────────────────────────────┘
+
+QUELLE-BADGES:
+- Schadenmeldung → Orange Badge
+- Vermietung → Blau Badge
+- Manuell angelegt → Grau Badge
+- Beides → Lila Badge
+
+────────────────────────────────────────────────────────────────────────────
+KUNDE HINZUFÜGEN / BEARBEITEN
+────────────────────────────────────────────────────────────────────────────
+
+MODAL / DIALOG:
+
+PERSÖNLICHE DATEN:
+┌─────────────────────────────────────────┐
+│ Vorname*:         [Input]              │
+│ Nachname*:        [Input]              │
+│ Firma:            [Input]              │
+│ (optional)                              │
+└─────────────────────────────────────────┘
+
+KONTAKTDATEN:
+┌─────────────────────────────────────────┐
+│ E-Mail*:          [Input]              │
+│                   (mit Validierung)     │
+│                                         │
+│ Telefon*:         [Input]              │
+│                   Format: +41 XX XXX XX│
+└─────────────────────────────────────────┘
+
+ADRESSE:
+┌─────────────────────────────────────────┐
+│ Strasse &         [Input]              │
+│ Hausnummer*:                            │
+│                                         │
+│ PLZ*:             [Input] (4-stellig)  │
+│ Ort*:             [Input]              │
+└─────────────────────────────────────────┘
+
+ZUSATZINFORMATIONEN:
+┌─────────────────────────────────────────┐
+│ Kunde seit:       [Datepicker]         │
+│                   (beim Erstellen:     │
+│                    automatisch heute)   │
+│                                         │
+│ Quelle:           [Dropdown]           │
+│                   ○ Schadenmeldung     │
+│                   ○ Vermietung         │
+│                   ○ Manuell angelegt   │
+│                   ○ Beides             │
+│                   (beim Erstellen:     │
+│                    auto auf "manual")   │
+│                                         │
+│ Notizen:          [Textarea]           │
+│ (Kundenspezifische Hinweise)           │
+└─────────────────────────────────────────┘
+
+BEIM ERSTELLEN:
+- Kunden-ID: Automatisch generiert (CUST-XXX)
+- createdDate: Automatisch heutiges Datum
+- customerSince: Automatisch heutiges Datum (kann korrigiert werden)
+- source: Automatisch "manual"
+
+BEIM BEARBEITEN:
+- "Kunde seit" kann angepasst werden
+- Quelle kann geändert werden
+- Alle Felder bearbeitbar
+
+VALIDIERUNG:
+- E-Mail-Format prüfen
+- Telefon-Format (+41) prüfen
+- PLZ 4-stellig (Schweiz)
+- Duplikat-E-Mail verhindern
+- Pflichtfelder markiert mit *
+
+AKTIONEN:
+- "Abbrechen" → Schließt Dialog
+- "Speichern" → Erstellt/Aktualisiert Kunde
+- Toast-Benachrichtigung bei Erfolg
+
+────────────────────────────────────────────────────────────────────────────
+KUNDENDETAILS-ANSICHT
+────────────────────────────────────────────────────────────────────────────
+
+VOLLBILD-ANSICHT mit Tabs:
+
+HEADER:
+- Kunde: [Vollständiger Name]
+- Kunden-ID: [CUST-XXX]
+- Quelle-Badge
+- "Zurück"-Button
+
+STAMMDATEN (Always visible):
+┌─────────────────────────────────────────┐
+│ 👤 PERSÖNLICHE DATEN                    │
+│ ────────────────────────────────────    │
+│ Name:     Max Müller                    │
+│ Firma:    -                            │
+│ E-Mail:   max.mueller@email.ch         │
+│           [E-Mail senden]-Icon          │
+│ Telefon:  +41 79 123 45 67             │
+│           [Anrufen]-Icon                │
+│                                         │
+│ 📍 ADRESSE                              │
+│ ────────────────────────────────────    │
+│ Bahnhofstrasse 123                      │
+│ 8001 Zürich                            │
+│ Schweiz                                 │
+│                                         │
+│ 📅 KUNDENDATEN                          │
+│ ────────────────────────────────────    │
+│ Kunde seit: 15.03.2023                 │
+│ Quelle:     Schadenmeldung             │
+│                                         │
+│ 📝 NOTIZEN                              │
+│ ────────────────────────────────────    │
+│ Stammkunde, bevorzugt Direktkontakt    │
+│ per Telefon                             │
+└─────────────────────────────────────────┘
+
+TAB-NAVIGATION:
+- Schadenmeldungen
+- Buchungen
+- Rechnungen
+- Aktivitäten
+
+TAB 1: SCHADENMELDUNGEN
+Liste aller Schadenmeldungen des Kunden:
+┌─────────────────────────────────────────┐
+│ SM-2025-001        [Abgeschlossen]     │
+│ 25.11.2025                              │
+│ VW Golf, ZH 12345                      │
+│ Unfallschaden vorne                     │
+│ CHF 3'500                              │
+│ [Details ansehen]                       │
+│ ────────────────────────────────────    │
+│ SM-2024-045        [Abgeschlossen]     │
+│ 12.05.2024                              │
+│ VW Golf, ZH 12345                      │
+│ Lackschaden                             │
+│ CHF 850                                │
+│ [Details ansehen]                       │
+└─────────────────────────────────────────┘
+
+TAB 2: BUCHUNGEN
+Liste aller Transporter-Buchungen:
+┌─────────────────────────────────────────┐
+│ BU-2025-042        [Abgeschlossen]     │
+│ Gebucht: 10.01.2025                    │
+│ Abholung: 15.01.2025                   │
+│ Sprinter Klein                          │
+│ CHF 267                                │
+│ [Details ansehen]                       │
+└─────────────────────────────────────────┘
+
+TAB 3: RECHNUNGEN
+Liste aller Rechnungen:
+┌─────────────────────────────────────────┐
+│ RE-2025-015        [Bezahlt]           │
+│ 25.11.2025  Fällig: 25.12.2025        │
+│ Karosseriereparatur                     │
+│ CHF 3'500                              │
+│ [PDF Download] [Ansehen]               │
+│ ────────────────────────────────────    │
+│ RE-2024-123        [Bezahlt]           │
+│ 12.05.2024  Fällig: 12.06.2024        │
+│ Lackierung                              │
+│ CHF 850                                │
+│ [PDF Download] [Ansehen]               │
+└─────────────────────────────────────────┘
+
+TAB 4: AKTIVITÄTEN (Timeline)
+Chronologische Liste aller Interaktionen:
+┌─────────────────────────────────────────┐
+│ 🔵 25.11.2025  10:30                   │
+│ Schadenmeldung SM-2025-001 eingereicht │
+│                                         │
+│ 🔵 25.11.2025  14:15                   │
+│ Status geändert: In Bearbeitung        │
+│ von: Admin                              │
+│                                         │
+│ 📧 26.11.2025  09:00                   │
+│ E-Mail gesendet: Kostenvoranschlag     │
+│                                         │
+│ ✅ 28.11.2025  16:45                   │
+│ Reparatur abgeschlossen                │
+│                                         │
+│ 💰 28.11.2025  17:00                   │
+│ Rechnung RE-2025-015 erstellt          │
+│                                         │
+│ 💳 30.11.2025  10:23                   │
+│ Zahlung eingegangen (CHF 3'500)        │
+└─────────────────────────────────────────┘
+
+STATISTIKEN (Sidebar):
+┌─────────────────────────────────────────┐
+│ 📊 KUNDENSTATISTIK                      │
+│ ────────────────────────────────────    │
+│ Schadenmeldungen:     2                 │
+│ Buchungen:            1                 │
+│ Rechnungen:           3                 │
+│                                         │
+│ Gesamtumsatz:    CHF 5'234             │
+│ Offene Beträge:  CHF 0                 │
+│                                         │
+│ ⭐ Kundenwert:   Stammkunde            │
+│ Zahlungsmoral:   Sehr gut              │
+└─────────────────────────────────────────┘
+
+SCHNELLAKTIONEN (oben rechts):
+- "Bearbeiten"-Button → Öffnet Bearbeitungs-Dialog
+- "Neue Buchung erstellen"-Button
+- "Neue Rechnung erstellen"-Button
+- "E-Mail senden"-Button
+- "Anrufen"-Button (Mobile)
+- "Löschen"-Button (mit Bestätigung)
+
+DSGVO-FUNKTIONEN:
+- "Datenauskunft generieren"-Button
+  → Erstellt PDF mit allen gespeicherten Daten
+- "Kunde anonymisieren"-Button
+  → Löscht personenbezogene Daten, behält Transaktionen
+- "Kunde löschen"-Button
+  → Komplette Löschung (mit Warnung & Bestätigung)
+
+
+================================================================================
+                   TAB 6: RECHNUNGEN (INVOICES)
+================================================================================
+
+Datei: /components/admin/InvoiceManagement.tsx
+Generator: /components/admin/InvoiceGenerator.tsx
+
+BESCHREIBUNG:
+Vollständiges Rechnungsmanagement-System mit Generator.
+
+────────────────────────────────────────────────────────────────────────────
+RECHNUNGS-ÜBERSICHT
+────────────────────────────────────────────────────────────────────────────
+
+HEADER:
+- "Rechnungsverwaltung"
+- "Verwaltung aller Rechnungen"
+- "+ Neue Rechnung"-Button (oben rechts)
+
+FILTER-LEISTE:
+┌─────────────────────────────────────────┐
+│ [Suchfeld]                              │
+│                                         │
+│ Status:          [Dropdown]            │
+│                  ○ Alle                │
+│                  ○ Offen               │
+│                  ○ Bezahlt             │
+│                  ○ Überfällig          │
+│                  ○ Storniert           │
+│                                         │
+│ Typ:             [Dropdown]            │
+│                  ○ Alle                │
+│                  ○ Schadenmeldung      │
+│                  ○ Vermietung          │
+│                  ○ Sonstige            │
+│                                         │
+│ Zeitraum:        [Date Range Picker]   │
+└─────────────────────────────────────────┘
+
+RECHNUNGS-TABELLE:
+
+SPALTEN (Desktop):
+┌──────────────┬──────────┬────────────┬─────────────┬──────────┬─────────┬──────────┐
+│ Rechnung-Nr. │ Datum    │ Kunde      │ Beschreibung│ Betrag   │ Status  │ Aktionen │
+├──────────────┼──────────┼────────────┼─────────────┼──────────┼─────────┼──────────┤
+│ RE-2025-001  │ 25.11.25 │ Max Müller │ Reparatur   │ CHF 3'500│ Bezahlt │ 👁 📄 📧 │
+│ RE-2025-002  │ 26.11.25 │ Anna Meier │ Vermietung  │ CHF  267 │ Offen   │ 👁 📄 📧 │
+│ RE-2025-003  │ 27.11.25 │ P. Weber   │ Lackierung  │ CHF 1'850│Überfällig│ 👁 📄 📧│
+└──────────────┴──────────┴────────────┴─────────────┴──────────┴─────────┴──────────┘
+
+STATUS-BADGES:
+- Offen (unpaid) → Orange
+  + Fälligkeitsdatum anzeigen
+- Bezahlt (paid) → Grün
+  + Zahlungsdatum anzeigen
+- Überfällig (overdue) → Rot
+  + "X Tage überfällig"
+- Storniert (cancelled) → Grau
+
+CARD-VIEW (Mobile):
+┌─────────────────────────────────────────┐
+│ RE-2025-001        [Bezahlt ✓]         │
+│ 25.11.2025                              │
+│ Kunde: Max Müller                       │
+│ Reparatur - Unfallschaden              │
+│ CHF 3'500                              │
+│ Bezahlt am: 30.11.2025                 │
+│                                         │
+│ [👁 Ansehen] [📄 PDF] [📧 Senden]     │
+└─────────────────────────────────────────┘
+
+AKTIONS-ICONS:
+- 👁 Ansehen → Öffnet Rechnungsdetails
+- 📄 PDF → Download als PDF
+- 📧 Senden → E-Mail-Dialog
+- ✏️ Bearbeiten → Bearbeitungsmodus (nur Offen/Überfällig)
+- 🗑 Löschen → Mit Bestätigung
+
+SORTIERUNG:
+- Nach Datum (Neueste / Älteste)
+- Nach Betrag (Höchste / Niedrigste)
+- Nach Status
+- Nach Kunde (A-Z)
+
+STATISTIKEN (oben in Cards):
+┌──────────────┬──────────────┬──────────────┬──────────────┐
+│ Offene       │ Überfällige  │ Diesen Monat │ Gesamt      │
+│ Forderungen  │ Rechnungen   │ bezahlt      │ Umsatz      │
+│              │              │              │              │
+│ CHF 12'450   │      3       │  CHF 45'230  │ CHF 234'567 │
+└──────────────┴──────────────┴──────────────┴──────────────┘
+
+────────────────────────────────────────────────────────────────────────────
+RECHNUNGS-GENERATOR (InvoiceGenerator)
+────────────────────────────────────────────────────────────────────────────
+
+Datei: /components/admin/InvoiceGenerator.tsx
+
+3-SCHRITT-PROZESS:
+
+SCHRITT 1: KUNDE AUSWÄHLEN
+┌─────────────────────────────────────────┐
+│ Kunde suchen:                           │
+│ [Suchfeld mit Autocomplete]            │
+│                                         │
+│ Oder:                                   │
+│ [+ Neuen Kunden anlegen]               │
+│                                         │
+│ Ausgewählter Kunde:                     │
+│ ┌───────────────────────────────────┐  │
+│ │ Max Müller                        │  │
+│ │ max.mueller@email.ch              │  │
+│ │ +41 79 123 45 67                  │  │
+│ │ Bahnhofstrasse 123, 8001 Zürich   │  │
+│ └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+
+SCHRITT 2: RECHNUNGSDETAILS
+
+KOPFDATEN:
+┌─────────────────────────────────────────┐
+│ Rechnungsnummer:  RE-2025-XXX          │
+│                   (automatisch)         │
+│                                         │
+│ Rechnungsdatum:   [Datepicker]         │
+│                   (Standard: Heute)     │
+│                                         │
+│ Fälligkeitsdatum: [Datepicker]         │
+│                   (Standard: +30 Tage)  │
+│                                         │
+│ Zahlungsziel:     [Number] Tage        │
+│                   (Standard: 30)        │
+│                                         │
+│ Rechnungstyp:     [Dropdown]           │
+│                   ○ Standard           │
+│                   ○ Schadenmeldung     │
+│                   ○ Vermietung         │
+│                   ○ Gutschrift         │
+└─────────────────────────────────────────┘
+
+POSITIONEN:
+┌─────────────────────────────────────────┐
+│ Position 1:                             │
+│ ────────────────────────────────────    │
+│ Beschreibung*:    [Textarea]           │
+│                                         │
+│ Menge*:           [Number]             │
+│ Einheit:          [Dropdown]           │
+│                   ○ Stunden (Std.)     │
+│                   ○ Stück (Stk.)       │
+│                   ○ Pauschal           │
+│                   ○ Tage               │
+│                                         │
+│ Einzelpreis*:     [Number] CHF         │
+│                                         │
+│ MwSt.-Satz:       [Dropdown]           │
+│                   ○ 0.0%               │
+│                   ○ 2.5%               │
+│                   ○ 7.7%               │
+│                   ○ 8.1%               │
+│                                         │
+│ Zwischensumme:    CHF XXX.XX           │
+│                   (automatisch)         │
+│                                         │
+│ [Position entfernen ×]                 │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│ [+ Position hinzufügen]                │
+└─────────────────────────────────────────┘
+
+RABATT (optional):
+┌─────────────────────────────────────────┐
+│ Rabatt:           [Number]             │
+│                   ○ % (Prozent)        │
+│                   ○ CHF (Betrag)       │
+└─────────────────────────────────────────┘
+
+BERECHNUNG (rechts, immer sichtbar):
+┌─────────────────────────────────────────┐
+│ RECHNUNGSSUMME                          │
+│ ════════════════════════════════════    │
+│                                         │
+│ Positionen:                             │
+│ 1. Karosseriereparatur  CHF 2'800.00   │
+│ 2. Lackierung           CHF 1'500.00   │
+│ 3. Material             CHF   450.00   │
+│ ────────────────────────────────────    │
+│ Zwischensumme:          CHF 4'750.00   │
+│                                         │
+│ Rabatt (5%):          - CHF   237.50   │
+│ ────────────────────────────────────    │
+│ Netto:                  CHF 4'512.50   │
+│                                         │
+│ MwSt. 7.7%:             CHF   347.46   │
+│ ════════════════════════════════════    │
+│ GESAMTBETRAG:          CHF 4'859.96   │
+│ ════════════════════════════════════    │
+└─────────────────────────────────────────┘
+
+ZAHLUNGSINFORMATIONEN:
+┌─────────────────────────────────────────┐
+│ Zahlungsmethode:  [Dropdown]           │
+│                   ○ Überweisung        │
+│                   ○ Rechnung           │
+│                   ○ Kreditkarte        │
+│                   ○ Bar                │
+│                   ○ TWINT              │
+│                                         │
+│ Zahlungsstatus:   [Dropdown]           │
+│                   ○ Offen              │
+│                   ○ Bezahlt            │
+│                   ○ Teilweise bezahlt  │
+│                                         │
+│ Zahlungsdatum:    [Datepicker]         │
+│ (nur wenn bezahlt)                      │
+└─────────────────────────────────────────┘
+
+NOTIZEN:
+┌─────────────────────────────────────────┐
+│ Öffentliche Notizen:                    │
+│ [Textarea]                              │
+│ (erscheint auf der Rechnung)            │
+│                                         │
+│ Interne Notizen:                        │
+│ [Textarea]                              │
+│ (nur für Admin sichtbar)                │
+│                                         │
+│ Zahlungsbedingungen:                    │
+│ [Textarea mit Standardtext]            │
+│ "Zahlbar innerhalb von 30 Tagen..."    │
+└─────────────────────────────────────────┘
+
+BUTTONS:
+- "Zurück" → Zu Schritt 1
+- "Vorschau" → Zu Schritt 3
+- "Speichern als Entwurf"
+
+SCHRITT 3: VORSCHAU & VERSAND
+
+PDF-VORSCHAU:
+┌─────────────────────────────────────────┐
+│                                         │
+│  [Live-Vorschau der Rechnung im        │
+│   PDF-Format]                           │
+│                                         │
+│  - Firmenkopf mit Logo                 │
+│  - Rechnungsempfänger                   │
+│  - Rechnungsnummer & Datum             │
+│  - Positionen-Tabelle                   │
+│  - Summen & MwSt.                      │
+│  - Zahlungsinformationen               │
+│  - Fußzeile                             │
+│                                         │
+└─────────────────────────────────────────┘
+
+VERSANDOPTIONEN:
+┌─────────────────────────────────────────┐
+│ ☐ Per E-Mail an Kunde senden           │
+│   E-Mail: [kunde@email.ch]             │
+│                                         │
+│   Betreff:                              │
+│   "Rechnung RE-2025-XXX"               │
+│                                         │
+│   Nachricht:                            │
+│   [Textarea mit Standardtext]          │
+│                                         │
+│ ☐ Kopie an mich senden                 │
+│                                         │
+│ ☐ In Buchhaltungssystem exportieren    │
+└─────────────────────────────────────────┘
+
+AKTIONEN:
+- "Zurück zur Bearbeitung"
+- "PDF herunterladen"
+- "Drucken"
+- "Rechnung erstellen & senden"
+
+NACH ERSTELLUNG:
+- Rechnung erscheint in Rechnungsliste
+- Status: Offen (oder Bezahlt, je nach Auswahl)
+- E-Mail wird versendet (falls gewählt)
+- PDF wird generiert und gespeichert
+- Toast-Benachrichtigung: "Rechnung erfolgreich erstellt"
+
+────────────────────────────────────────────────────────────────────────────
+MAHNWESEN (Automatisch)
+────────────────────────────────────────────────────────────────────────────
+
+MAHNUNGS-STUFEN:
+
+1. ZAHLUNGSERINNERUNG
+   - Trigger: 3 Tage vor Fälligkeit
+   - Ton: Freundlich
+   - Gebühr: Keine
+   - "Freundliche Erinnerung..."
+
+2. ERSTE MAHNUNG
+   - Trigger: 7 Tage nach Fälligkeit
+   - Ton: Neutral
+   - Gebühr: CHF 0 (optional CHF 20)
+   - "1. Mahnung..."
+
+3. ZWEITE MAHNUNG
+   - Trigger: 14 Tage nach Fälligkeit
+   - Ton: Bestimmt
+   - Gebühr: CHF 20
+   - "2. Mahnung..."
+
+4. LETZTE MAHNUNG
+   - Trigger: 21 Tage nach Fälligkeit
+   - Ton: Dringend
+   - Gebühr: CHF 40
+   - "Letzte Mahnung vor rechtlichen Schritten..."
+
+MAHNUNGS-TRACKING:
+- Alle Mahnungen werden gespeichert
+- Historie pro Rechnung sichtbar
+- Automatischer Versand (konfigurierbar)
+- Manuelles Überschreiben möglich
+
+────────────────────────────────────────────────────────────────────────────
+RECHNUNGSDETAILS ANSEHEN
+────────────────────────────────────────────────────────────────────────────
+
+MODAL / VOLLBILD:
+
+HEADER:
+- Rechnung: [RE-2025-XXX]
+- Status-Badge
+- Kunde: [Name]
+
+TABS:
+
+TAB 1: RECHNUNGSDATEN
+   - Alle Positionen
+   - Summen
+   - Zahlungsinformationen
+   - Notizen
+   - Erstellungsdatum
+   - Erstellt von: [Admin-Name]
+
+TAB 2: ZAHLUNGSHISTORIE
+   ┌──────────────┬───────────┬──────────┐
+   │ Datum        │ Betrag    │ Methode  │
+   ├──────────────┼───────────┼──────────┤
+   │ 30.11.2025   │ CHF 3'500 │ Überweis.│
+   └──────────────┴───────────┴──────────┘
+
+TAB 3: VERSANDHISTORIE
+   ┌──────────────┬───────────────────────┐
+   │ 25.11.2025   │ Rechnung per E-Mail   │
+   │ 10:30        │ gesendet an           │
+   │              │ kunde@email.ch        │
+   │              │                       │
+   │ 02.12.2025   │ 1. Mahnung per E-Mail │
+   │ 09:15        │ gesendet              │
+   └──────────────┴───────────────────────┘
+
+TAB 4: MAHNUNGEN
+   - Liste aller Mahnungen
+   - Status
+   - Versanddatum
+   - Mahngebühren
+
+AKTIONEN:
+- "Bearbeiten" (nur Offen/Überfällig)
+- "Als bezahlt markieren"
+- "Teilzahlung erfassen"
+- "Mahnung senden"
+- "PDF herunterladen"
+- "Per E-Mail versenden"
+- "Drucken"
+- "Duplizieren" (Neue Rechnung basierend auf dieser)
+- "Gutschrift erstellen"
+- "Stornieren" (mit Bestätigung)
+
+SCHNELLAKTIONEN:
+- Click auf Status → Status ändern
+- Click auf E-Mail → E-Mail senden
+- Click auf PDF-Icon → Download
+
+────────────────────────────────────────────────────────────────────────────
+EXPORT-FUNKTIONEN
+────────────────────────────────────────────────────────────────────────────
+
+EXPORT-BUTTON (oben rechts):
+┌─────────────────────────────────────────┐
+│ Exportieren als:                        │
+│ ────────────────────────────────────    │
+│ • CSV (Buchhaltung)                     │
+│ • Excel                                 │
+│ • DATEV-Format                          │
+│ • PDF-Sammelexport                      │
+│                                         │
+│ Zeitraum: [Date Range Picker]          │
+│                                         │
+│ [Exportieren]                           │
+└─────────────────────────────────────────┘
+
+
+================================================================================
+                   TAB 7: ZEITPLAN (SCHEDULE)
+================================================================================
+
+Datei: /components/admin/BookingScheduleView.tsx
+
+BESCHREIBUNG:
+Zeitstrahl-Ansicht aller Buchungen (Gantt-Chart-Style).
+
+────────────────────────────────────────────────────────────────────────────
+ANSICHT
+────────────────────────────────────────────────────────────────────────────
+
+HEADER:
+- "Buchungszeitplan"
+- "Zeitstrahl-Ansicht aller Transporter-Buchungen"
+
+FILTER:
+┌─────────────────────────────────────────┐
+│ Zeitraum:         [Dropdown]           │
+│                   ○ Heute              │
+│                   ○ Diese Woche        │
+│                   ○ Dieser Monat       │
+│                   ○ Benutzerdefiniert  │
+│                                         │
+│ Fahrzeug:         [Dropdown]           │
+│                   ○ Alle anzeigen      │
+│                   ○ Sprinter Rot       │
+│                   ○ Sprinter Weiss 1   │
+│                   ○ Sprinter Weiss 2   │
+└─────────────────────────────────────────┘
+
+ZEITSTRAHL (Horizontal Scroll):
+
+AUFBAU:
+┌─────────────────────────────────────────────────────────────────────────┐
+│           │ Mo 06│ Di 07│ Mi 08│ Do 09│ Fr 10│ Sa 11│ So 12│ Mo 13│...│
+├───────────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼───┤
+│ Sprinter  │      │████████████│      │      │      │      │      │   │
+│ Rot       │      │BU-2025-101 │      │      │      │      │      │   │
+│           │      │Thomas K.   │      │      │      │      │      │   │
+├───────────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼───┤
+│ Sprinter  │      │      │      │      │████████████████████│      │   │
+│ Weiss 1   │      │      │      │      │BU-2025-102         │      │   │
+│           │      │      │      │      │Sandra H.           │      │   │
+├───────────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼───┤
+│ Sprinter  │██████████████████████████│      │      │      │      │   │
+│ Weiss 2   │BU-2025-099           │      │      │      │      │   │
+│           │Marco B.              │      │      │      │      │   │
+└───────────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴───┘
+
+LEGENDE:
+Vertikal: Fahrzeuge (eine Zeile pro Fahrzeug)
+Horizontal: Zeitachse (Tage)
+
+BUCHUNGS-BALKEN:
+- Länge = Mietdauer
+- Farbe nach Status:
+  * Grün: Bestätigt & bezahlt
+  * Orange: Ausstehend
+  * Blau: Aktiv (in Vermietung)
+  * Grau: Abgeschlossen
+- Label: Buchungs-ID + Kundenname
+
+FUNKTIONEN:
+- Hover über Balken → Tooltip mit Details:
+  * Buchungs-ID
+  * Kunde
+  * Abhol- & Rückgabedatum
+  * Status
+  * Gesamtpreis
+- Click auf Balken → Öffnet Buchungsdetails
+- Scroll horizontal für mehr Tage
+- Heute-Markierung (vertikale Linie)
+
+ÜBERLAPPUNGS-ERKENNUNG:
+- Visuelle Warnung bei Doppelbuchungen
+- Rot umrandete Balken
+- Alert-Icon
+
+DRAG & DROP (geplant):
+- Buchung verschieben
+- Dauer ändern durch Ziehen
+- Automatische Neuberechnung
+
+VORTEILE:
+- Schneller Überblick über Auslastung
+- Freie Zeiträume sofort erkennbar
+- Buchungskonflikte vermeiden
+- Ressourcenplanung
+
+
+================================================================================
+                   TAB 8: VERFÜGBARKEIT (AVAILABILITY)
+================================================================================
+
+Datei: /components/admin/VehicleAvailabilityView.tsx
+
+BESCHREIBUNG:
+Kalenderbasierte Verfügbarkeitsübersicht aller Fahrzeuge.
+
+────────────────────────────────────────────────────────────────────────────
+ANSICHT
+────────────────────────────────────────────────────────────────────────────
+
+HEADER:
+- "Fahrzeugverfügbarkeit"
+- "Kalenderansicht der Fahrzeugverfügbarkeit"
+
+LAYOUT:
+3 Kalender nebeneinander (Desktop) / untereinander (Mobile)
+
+┌─────────────────────────────────────────┐
+│  SPRINTER ROT                           │
+│  ──────────────────────────────────     │
+│  Januar 2025                            │
+│  « Heute »                              │
+│                                         │
+│  Mo Di Mi Do Fr Sa So                  │
+│              1  2  3  4  5             │
+│   6  7  8  9 10 11 12                  │
+│  13 14 15 16 17 18 19                  │
+│  20 21 22 23 24 25 26                  │
+│  27 28 29 30 31                        │
+│                                         │
+│  Legende:                               │
+│  🟢 Verfügbar                          │
+│  🔴 Gebucht                            │
+│  🟠 In Wartung                         │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  SPRINTER WEISS 1                       │
+│  [Kalender analog]                      │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  SPRINTER WEISS 2                       │
+│  [Kalender analog]                      │
+└─────────────────────────────────────────┘
+
+FARB-KODIERUNG PRO TAG:
+
+VERFÜGBAR (Grün):
+- Keine Buchung
+- Kein Wartungstermin
+- Fahrzeug einsatzbereit
+
+GEBUCHT (Rot):
+- Tag ist gebucht
+- Hover → Buchungsdetails:
+  * Buchungs-ID
+  * Kunde
+  * Zeitraum
+  * Status
+
+IN WARTUNG (Orange):
+- Wartungstermin
+- Hover → Wartungsdetails:
+  * Art der Wartung
+  * Dauer
+  * Mechaniker
+
+AUSSER BETRIEB (Grau):
+- Fahrzeug nicht verfügbar
+- Hover → Grund
+
+FUNKTIONEN:
+- Click auf Tag → Zeigt Details
+- Click auf freien Tag → "Buchung erstellen"
+- Synchronisation mit Buchungskalender
+- Monats-Navigation (Pfeile)
+- "Heute"-Button
+
+STATISTIK (oben):
+┌─────────────────────────────────────────┐
+│ Gesamtauslastung Januar 2025:          │
+│                                         │
+│ Sprinter Rot:      67% (21/31 Tage)   │
+│ Sprinter Weiss 1:  45% (14/31 Tage)   │
+│ Sprinter Weiss 2:  52% (16/31 Tage)   │
+│                                         │
+│ Durchschnitt:      54.7%               │
+└─────────────────────────────────────────┘
+
+VERWENDUNG:
+- Schnelle Verfügbarkeitsprüfung
+- Auslastungsplanung
+- Wartungstermine koordinieren
+- Freie Kapazitäten erkennen
+
+
+================================================================================
+                   TAB 9: EINSTELLUNGEN (SETTINGS)
+================================================================================
+
+Datei: /components/admin/Settings.tsx
+
+BESCHREIBUNG:
+Systemweite Einstellungen und Konfiguration.
+
+────────────────────────────────────────────────────────────────────────────
+HAUPT-TABS
+────────────────────────────────────────────────────────────────────────────
+
+Nested Tabs:
+1. Listen verwalten
+2. Firmenangaben
+3. Preise
+4. E-Mail
+5. Benachrichtigungen
+6. System
+
+────────────────────────────────────────────────────────────────────────────
+TAB 1: LISTEN VERWALTEN
+────────────────────────────────────────────────────────────────────────────
+
+BESCHREIBUNG:
+Verwaltung der Dropdown-Listen im Schadenmeldungsformular.
+
+4 LISTEN:
+
+LISTE 1: KAROSSERIETEILE
+┌─────────────────────────────────────────┐
+│ Karosserieteile                         │
+│ ────────────────────────────────────    │
+│ [+ Neues Teil hinzufügen]              │
+│                                         │
+│ • Frontbereich          [✏️] [🗑]      │
+│ • Heckbereich           [✏️] [🗑]      │
+│ • Linke Seite           [✏️] [🗑]      │
+│ • Rechte Seite          [✏️] [🗑]      │
+│ • Dach                  [✏️] [🗑]      │
+│ • Motorhaube            [✏️] [🗑]      │
+│ • Kofferraum            [✏️] [🗑]      │
+│ • Scheiben              [✏️] [🗑]      │
+│ • Scheinwerfer          [✏️] [🗑]      │
+│ • Rücklichter           [✏️] [🗑]      │
+│ • Spiegel               [✏️] [🗑]      │
+│ • Radkästen             [✏️] [🗑]      │
+│ • Stoßstangen           [✏️] [🗑]      │
+└─────────────────────────────────────────┘
+
+LISTE 2: SCHADENSARTEN
+┌─────────────────────────────────────────┐
+│ Schadensarten                           │
+│ ────────────────────────────────────    │
+│ [+ Neue Schadensart hinzufügen]        │
+│                                         │
+│ • Unfallschaden         [✏️] [🗑]      │
+│ • Hagelschaden          [✏️] [🗑]      │
+│ • Parkschaden           [✏️] [🗑]      │
+│ • Wildschaden           [✏️] [🗑]      │
+│ • Vandalismus           [✏️] [🗑]      │
+│ • Steinschlag           [✏️] [🗑]      │
+│ • Lackschaden           [✏️] [🗑]      │
+│ • Dellenreparatur       [✏️] [🗑]      │
+│ • Sonstiges             [✏️] [🗑]      │
+└─────────────────────────────────────────┘
+
+LISTE 3: VERSICHERUNGEN
+┌─────────────────────────────────────────┐
+│ Versicherungsgesellschaften             │
+│ ────────────────────────────────────    │
+│ [+ Neue Versicherung hinzufügen]       │
+│                                         │
+│ • AXA Versicherung      [✏️] [🗑]      │
+│ • Allianz Suisse        [✏️] [🗑]      │
+│ • Helvetia Versicherung [✏️] [🗑]      │
+│ • Mobiliar              [✏️] [🗑]      │
+│ • Zurich Versicherung   [✏️] [🗑]      │
+│ • Generali              [✏️] [🗑]      │
+│ • Die Schweizerische    [✏️] [🗑]      │
+│ • Baloise               [✏️] [🗑]      │
+│ • CSS Versicherung      [✏️] [🗑]      │
+│ • Andere                [✏️] [🗑]      │
+└─────────────────────────────────────────┘
+
+LISTE 4: FAHRZEUGMARKEN
+┌─────────────────────────────────────────┐
+│ Fahrzeugmarken                          │
+│ ────────────────────────────────────    │
+│ [+ Neue Marke hinzufügen]              │
+│                                         │
+│ • Audi                  [✏️] [🗑]      │
+│ • BMW                   [✏️] [🗑]      │
+│ • Mercedes-Benz         [✏️] [🗑]      │
+│ • Volkswagen            [✏️] [🗑]      │
+│ • Opel                  [✏️] [🗑]      │
+│ • Ford                  [✏️] [🗑]      │
+│ • Renault               [✏️] [🗑]      │
+│ • Peugeot               [✏️] [🗑]      │
+│ • Toyota                [✏️] [🗑]      │
+│ • Skoda                 [✏️] [🗑]      │
+│ • ... (weitere)         [✏️] [🗑]      │
+└─────────────────────────────────────────┘
+
+AKTIONEN PRO EINTRAG:
+- ✏️ Bearbeiten → Inline-Bearbeitung
+- 🗑 Löschen → Mit Bestätigung
+
+HINZUFÜGEN:
+- Click auf "+ Neu..."
+- Inline-Eingabefeld erscheint
+- Enter zum Speichern
+- ESC zum Abbrechen
+
+SORTIERUNG:
+- Drag & Drop zum Sortieren (geplant)
+- Alphabetische Sortierung
+- Manuelle Reihenfolge
+
+VERWENDUNG:
+- Diese Listen werden in Formularen verwendet
+- Änderungen sofort wirksam
+- Keine Hardcoded-Werte
+
+────────────────────────────────────────────────────────────────────────────
+TAB 2: FIRMENANGABEN
+────────────────────────────────────────────────────────────────────────────
+
+┌─────────────────────────────────────────┐
+│ FIRMENDATEN                             │
+│ ────────────────────────────────────    │
+│ Firmenname*:      [Input]              │
+│                   AutoRepair Pro        │
+│                                         │
+│ Strasse*:         [Input]              │
+│                   Musterstrasse 123     │
+│                                         │
+│ PLZ*:             [Input]              │
+│                   8000                  │
+│                                         │
+│ Ort*:             [Input]              │
+│                   Zürich                │
+│                                         │
+│ Land:             [Dropdown]           │
+│                   Schweiz              │
+│                                         │
+│ Telefon*:         [Input]              │
+│                   +41 44 123 45 67     │
+│                                         │
+│ E-Mail*:          [Input]              │
+│                   info@autorepair.ch   │
+│                                         │
+│ Website:          [Input]              │
+│                   www.autorepair.ch    │
+│                                         │
+│ Steuernummer:     [Input]              │
+│ (UID/MwSt.-Nr.)   CHE-123.456.789 MWST │
+│                                         │
+│ Handelsregister:  [Input]              │
+│                   CHE-123.456.789      │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│ LOGO & BRANDING                         │
+│ ────────────────────────────────────    │
+│ Firmen-Logo:      [Datei-Upload]       │
+│ (für Rechnungen,  [Vorschau]           │
+│  E-Mails, etc.)                         │
+│                                         │
+│ Empfohlen: PNG, 500x200px              │
+│                                         │
+│ Primärfarbe:      [Color Picker]       │
+│                   #DC2626 (Rot)        │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│ BANKVERBINDUNG                          │
+│ ────────────────────────────────────    │
+│ Bank:             [Input]              │
+│                   PostFinance          │
+│                                         │
+│ IBAN:             [Input]              │
+│                   CH93 0076...         │
+│                                         │
+│ BIC/SWIFT:        [Input]              │
+│                   POFICHBEXXX          │
+│                                         │
+│ (erscheint auf Rechnungen)              │
+└─────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────
+TAB 3: PREISE
+────────────────────────────────────────────────────────────────────────────
+
+TRANSPORTER-PREISE:
+┌─────────────────────────────────────────┐
+│ Grundpreise pro Tag                     │
+│ ────────────────────────────────────    │
+│ Sprinter Klein:   [Input] CHF          │
+│                   89.00                 │
+│                                         │
+│ Sprinter Mittel:  [Input] CHF          │
+│                   109.00                │
+│                                         │
+│ Sprinter Groß:    [Input] CHF          │
+│                   139.00                │
+└─────────────────────────────────────────┘
+
+KILOMETERPAKET-PREISE:
+┌─────────────────────────────────────────┐
+│ 100 km:           [Input] CHF          │
+│                   0.00 (inklusive)      │
+│                                         │
+│ 200 km:           [Input] CHF          │
+│                   25.00                 │
+│                                         │
+│ Unbegrenzt:       [Input] CHF          │
+│                   60.00                 │
+│                                         │
+│ Preis pro         [Input] CHF/km       │
+│ Mehrkilometer:    0.50                  │
+└─────────────────────────────────────────┘
+
+EXTRAS-PREISE:
+┌─────────────────────────────────────────┐
+│ Möbeldecken       [Input] CHF          │
+│ (10 Stück):       15.00                 │
+│                                         │
+│ Sackkarre:        [Input] CHF          │
+│                   10.00                 │
+│                                         │
+│ Zurrgurte         [Input] CHF          │
+│ (4 Stück):        8.00                  │
+│                                         │
+│ Navigationsgerät: [Input] CHF          │
+│                   12.00                 │
+│                                         │
+│ Zusatzfahrer:     [Input] CHF          │
+│                   20.00                 │
+│                                         │
+│ Winterreifen:     [Input] CHF          │
+│ (saisonal)        25.00                 │
+└─────────────────────────────────────────┘
+
+VERSICHERUNGS-PREISE (pro Tag):
+┌─────────────────────────────────────────┐
+│ Basis-Versicherung:  Inklusive         │
+│ Selbstbehalt:        CHF 1'000         │
+│                                         │
+│ Vollkasko:           [Input] CHF       │
+│                      25.00              │
+│ Selbstbehalt:        CHF 500           │
+│                                         │
+│ Premium:             [Input] CHF       │
+│                      45.00              │
+│ Selbstbehalt:        CHF 0             │
+└─────────────────────────────────────────┘
+
+REPARATUR-STUNDENSÄTZE:
+┌─────────────────────────────────────────┐
+│ Karosserie:       [Input] CHF/Std     │
+│                   120.00                │
+│                                         │
+│ Lackierung:       [Input] CHF/Std     │
+│                   110.00                │
+│                                         │
+│ Mechanik:         [Input] CHF/Std     │
+│                   95.00                 │
+└─────────────────────────────────────────┘
+
+MEHRWERTSTEUER:
+┌─────────────────────────────────────────┐
+│ MwSt.-Satz:       [Input] %            │
+│                   7.7                   │
+│                                         │
+│ MwSt.-pflichtig:  ☑ Ja  ☐ Nein       │
+└─────────────────────────────────────────┘
+
+BUTTONS:
+- "Standard wiederherstellen"
+- "Preise exportieren" (CSV)
+- "Änderungen speichern"
+
+────────────────────────────────────────────────────────────────────────────
+TAB 4: E-MAIL
+────────────────────────────────────────────────────────────────────────────
+
+(Vorbereitet für zukünftige Implementierung)
+
+SMTP-KONFIGURATION:
+┌─────────────────────────────────────────┐
+│ SMTP-Server:      [Input]              │
+│                   smtp.example.com      │
+│                                         │
+│ Port:             [Number]             │
+│                   587                   │
+│                                         │
+│ Verschlüsselung:  [Dropdown]           │
+│                   ○ TLS                │
+│                   ○ SSL                │
+│                   ○ Keine              │
+│                                         │
+│ Benutzername:     [Input]              │
+│                                         │
+│ Passwort:         [Password]           │
+│                                         │
+│ [Verbindung testen]                     │
+└─────────────────────────────────────────┘
+
+ABSENDER-EINSTELLUNGEN:
+┌─────────────────────────────────────────┐
+│ Absender-Name:    [Input]              │
+│                   AutoRepair Pro        │
+│                                         │
+│ Absender-E-Mail:  [Input]              │
+│                   info@autorepair.ch   │
+│                                         │
+│ Antwort-an:       [Input]              │
+│                   info@autorepair.ch   │
+└─────────────────────────────────────────┘
+
+E-MAIL-VORLAGEN:
+(Noch nicht implementiert)
+
+────────────────────────────────────────────────────────────────────────────
+TAB 5: BENACHRICHTIGUNGEN
+────────────────────────────────────────────────────────────────────────────
+
+(Vorbereitet für zukünftige Implementierung)
+
+────────────────────────────────────────────────────────────────────────────
+TAB 6: SYSTEM
+────────────────────────────────────────────────────────────────────────────
+
+SPRACHE & REGION:
+┌─────────────────────────────────────────┐
+│ Systemsprache:    [Dropdown]           │
+│                   ○ Deutsch (CH)       │
+│                   ○ Französisch (CH)   │
+│                   ○ Italienisch (CH)   │
+│                   ○ Englisch           │
+│                                         │
+│ Währung:          CHF                  │
+│                                         │
+│ Datumsformat:     DD.MM.YYYY           ��
+│                                         │
+│ Zeitformat:       24h                  │
+└─────────────────────────────────────────┘
+
+DATENBANK-INFORMATIONEN:
+┌─────────────────────────────────────────┐
+│ Datenbank:        In-Memory (Mock)     │
+│ Status:           ✅ Aktiv             │
+│ Einträge:         127                  │
+│                                         │
+│ (Bei Backend-Integration:               │
+│  PostgreSQL/MySQL Details)              │
+└─────────────────────────────────────────┘
+
+VERSION:
+┌─────────────────────────────────────────┐
+│ Version:          1.0.0                │
+│ Build:            2025-01-20           │
+│ Umgebung:         Development          │
+└─────────────────────────────────────────┘
+
+
+================================================================================
+                    ZUSÄTZLICHE ADMIN-KOMPONENTEN
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────
+CUSTOMERSEARCHDIALOG (Kundensuch-Dialog)
+────────────────────────────────────────────────────────────────────────────
+
+Datei: /components/admin/CustomerSearchDialog.tsx
+
+VERWENDUNG:
+- Wird aufgerufen beim Erstellen neuer Buchungen
+- Wird aufgerufen beim Erstellen neuer Rechnungen
+
+DIALOG-ANSICHT:
+┌─────────────────────────────────────────┐
+│ Kunde auswählen oder erstellen         │
+│ ════════════════════════════════════    │
+│                                         │
+│ Kunde suchen:                           │
+│ [Suchfeld mit Live-Suche]              │
+│                                         │
+│ Suchergebnisse:                         │
+│ ┌───────────────────────────────────┐  │
+│ │ 👤 Max Müller (CUST-001)         │  │
+│ │    max.mueller@email.ch           │  │
+│ │    +41 79 123 45 67               │  │
+│ │    [Auswählen]                    │  │
+│ ├───────────────────────────────────┤  │
+│ │ 👤 Anna Schmidt (CUST-002)        │  │
+│ │    anna.schmidt@email.ch          │  │
+│ │    +41 79 234 56 78               │  │
+│ │    [Auswählen]                    │  │
+│ └───────────────────────────────────┘  │
+│                                         │
+│ ────── oder ──────                     │
+│                                         │
+│ [+ Neuen Kunden anlegen]               │
+│                                         │
+│ [Abbrechen]                             │
+└─────────────────────────────────────────┘
+
+NEUEN KUNDEN ANLEGEN:
+Öffnet Schnellformular (identisch mit "Kunde hinzufügen")
+
+NACH AUSWAHL:
+- Dialog schließt
+- Kunde wird übergeben an:
+  * Buchungsformular, oder
+  * Rechnungs-Generator
+
+────────────────────────────────────────────────────────────────────────────
+DAMAGEREPORTINVOICE (Schadenmeldungs-Rechnung)
+────────────────────────────────────────────────────────────────────────────
+
+Datei: /components/admin/DamageReportInvoice.tsx
+
+VERWENDUNG:
+- Wird aufgerufen aus EditDamageReportForm
+- Erstellt Rechnung basierend auf Schadenmeldung
+
+BESONDERHEITEN:
+- Vorausgefüllte Positionen basierend auf:
+  * Schadensart
+  * Betroffene Fahrzeugteile
+  * Kostenschätzung
+- Automatische Beschreibung
+- Kunde vorausgewählt
+- Typ: "Schadenmeldung"
+
+WORKFLOW:
+1. Admin öffnet Schadenmeldung
+2. Click auf "Rechnung erstellen"
+3. DamageReportInvoice öffnet sich
+4. Positionen vorausgefüllt (bearbeitbar)
+5. Rechnung erstellen
+6. Verknüpfung zur Schadenmeldung
+
+────────────────────────────────────────────────────────────────────────────
+CUSTOMERDATABASE (erweiterte Kundenansicht)
+────────────────────────────────────────────────────────────────────────────
+
+Datei: /components/admin/CustomerDatabase.tsx
+
+BESCHREIBUNG:
+Alternative/Erweiterte Ansicht der Kundenverwaltung
+(Momentan nicht in Tabs integriert, vorbereitet für Zukunft)
+
+FUNKTIONEN:
+- Erweiterte Suchfilter
+- Kundensegmentierung
+- Duplikate-Erkennung
+- Merge-Funktion
+- Import/Export
+- Datenbereinigung
+
+
+================================================================================
+                            MOCK-DATEN
+================================================================================
+
+AKTUELL VERWENDETE MOCK-DATEN:
+
+SCHADENMELDUNGEN (4 Einträge):
+- SM-2025-001: Max Müller, VW Golf, Ausstehend
+- SM-2025-002: Anna Schmidt, BMW 3er, In Bearbeitung
+- SM-2025-003: Peter Weber, Audi A4, Abgeschlossen
+- SM-2025-004: Lisa Meier, Mercedes C-Klasse, Ausstehend
+
+BUCHUNGEN (3 Einträge):
+- BU-2025-101: Thomas Keller, Transporter Rot, Bestätigt
+- BU-2025-102: Sandra Huber, Transporter Weiss 1, Ausstehend
+- BU-2025-103: Marco Bianchi, Transporter Weiss 2, Abgeschlossen
+
+KUNDEN (Beispiele):
+- CUST-001: Max Müller (Schadenmeldung)
+- CUST-002: Anna Schmidt (Schadenmeldung)
+- CUST-003: Thomas Keller (Vermietung)
+
+FAHRZEUGE (3 Transporter):
+- Sprinter Rot (Klein)
+- Sprinter Weiss 1 (Mittel)
+- Sprinter Weiss 2 (Groß)
+
+RECHNUNGEN (Beispiele):
+- RE-2025-001: Max Müller, CHF 3'500, Bezahlt
+- RE-2025-002: Anna Meier, CHF 267, Offen
+- RE-2025-003: Peter Weber, CHF 1'850, Überfällig
+
+BEI BACKEND-INTEGRATION:
+- Alle Mock-Daten durch API-Calls ersetzen
+- CRUD-Operationen implementieren
+- Echtzeit-Updates
+- Pagination
+- Filtering & Sorting serverseitig
+
+
+================================================================================
+                            FUNKTIONS-MATRIX
+================================================================================
+
+ÜBERSICHT: WELCHE FUNKTIONEN SIND WO VERFÜGBAR?
+
+┌──────────────────────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┐
+│ FUNKTION             │ Dash │ Schad│ Buch │ Fahr │ Kund │ Rechn│ Zeitp│ Verf │ Einst│
+├──────────────────────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ Ansehen              │  ✓   │  ✓   │  ✓   │  ✓   │  ✓   │  ✓   │  ✓   │  ✓   │  -   │
+│ Erstellen            │  -   │  -   │  ✓   │  ✓   │  ✓   │  ✓   │  -   │  -   │  -   │
+│ Bearbeiten           │  -   │  ✓   │  ✓   │  ✓   │  ✓   │  ✓   │  -   │  -   │  ✓   │
+│ Löschen              │  -   │  -   │  -   │  ✓   │  ✓   │  ✓   │  -   │  -   │  -   │
+│ Suchen               │  -   │  ✓   │  ✓   │  -   │  ✓   │  ✓   │  -   │  -   │  -   │
+│ Filtern              │  -   │  ✓   │  ✓   │  -   │  ✓   │  ✓   │  ✓   │  -   │  -   │
+│ Sortieren            │  -   │  -   │  -   │  -   │  ✓   │  ✓   │  -   │  -   │  -   │
+│ Exportieren          │  -   │  -   │  -   │  -   │  ✓   │  ✓   │  -   │  -   │  -   │
+│ PDF generieren       │  -   │  -   │  -   │  -   │  -   │  ✓   │  -   │  -   │  -   │
+│ E-Mail senden        │  -   │  -   │  -   │  -   │  ✓   │  ✓   │  -   │  -   │  -   │
+│ Rechnung erstellen   │  -   │  ✓   │  ✓   │  -   │  ✓   │  ✓   │  -   │  -   │  -   │
+│ Status ändern        │  -   │  ✓   │  ✓   │  ✓   │  -   │  ✓   │  -   │  -   │  -   │
+│ Kalenderansicht      │  -   │  -   │  ✓   │  -   │  -   │  -   │  ✓   │  ✓   │  -   │
+│ Statistiken          │  ✓   │  -   │  -   │  -   │  ✓   │  ✓   │  -   │  ✓   │  -   │
+└──────────────────────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+
+
+================================================================================
+                            BENUTZER-ROLLEN
+================================================================================
+
+AKTUELL:
+- Nur eine Admin-Rolle
+- Voller Zugriff auf alle Funktionen
+
+GEPLANT (für zukünftige Versionen):
+
+SUPER-ADMIN:
+- Alle Funktionen
+- Benutzerverwaltung
+- System-Einstellungen
+- Zugriff auf alle Daten
+
+ADMIN:
+- Alle Funktionen außer:
+  * Benutzerverwaltung
+  * System-Einstellungen
+
+MANAGER:
+- Schadenmeldungen verwalten
+- Buchungen verwalten
+- Kunden verwalten
+- Rechnungen erstellen
+- Keine Löschungen
+- Keine Einstellungen
+
+MITARBEITER:
+- Nur Ansehen
+- Status ändern
+- Notizen hinzufügen
+- Keine Löschungen
+- Keine Bearbeitung von Preisen
+
+MECHANIKER:
+- Nur Schadenmeldungen
+- Status aktualisieren
+- Notizen hinzufügen
+- Fotos hochladen
+
+
+================================================================================
+                            WORKFLOW-BEISPIELE
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────
+WORKFLOW 1: NEUE SCHADENMELDUNG BEARBEITEN
+────────────────────────────────────────────────────────────────────────────
+
+1. Kunde reicht Schadenmeldung ein (Frontend)
+2. Admin erhält Benachrichtigung (geplant)
+3. Admin öffnet Dashboard
+4. Neue Schadenmeldung sichtbar in "Neueste Schadenmeldungen"
+5. Admin klickt auf "Details"
+6. EditDamageReportForm öffnet sich
+7. Admin prüft alle Daten
+8. Admin setzt Status auf "In Bearbeitung"
+9. Admin fügt Kostenschätzung hinzu: CHF 3'500
+10. Admin setzt Reparaturbeginn: 27.11.2025
+11. Admin speichert Änderungen
+12. Admin klickt auf "Rechnung erstellen"
+13. DamageReportInvoice öffnet sich mit vorausgefüllten Daten
+14. Admin überprüft Positionen
+15. Admin erstellt Rechnung
+16. Rechnung wird per E-Mail an Kunde gesendet (geplant)
+17. Admin kehrt zurück zur Schadenmeldungsliste
+18. Status ist nun "In Bearbeitung"
+
+────────────────────────────────────────────────────────────────────────────
+WORKFLOW 2: NEUE BUCHUNG MANUELL ERSTELLEN
+────────────────────────────────────────────────────────────────────────────
+
+1. Admin öffnet Tab "Buchungen"
+2. Admin klickt auf Buchungskalender
+3. Admin klickt auf "+ Neue Buchung"
+4. CustomerSearchDialog öffnet sich
+5. Admin sucht nach Kunde: "Müller"
+6. Admin wählt "Max Müller" aus Liste
+7. Buchungsformular öffnet sich mit vorausgefüllten Kundendaten
+8. Admin wählt Fahrzeug: Sprinter Klein
+9. Admin wählt Datum: 15.01.2025 - 17.01.2025
+10. Admin wählt Kilometerpaket: 200 km
+11. Admin wählt Extras: Möbeldecken, Sackkarre
+12. Admin wählt Versicherung: Vollkasko
+13. Gesamtpreis wird berechnet: CHF 367
+14. Admin überprüft alle Daten
+15. Admin speichert Buchung
+16. Buchung erscheint im Kalender
+17. Bestätigungs-E-Mail wird versendet (geplant)
+18. Status: Bestätigt
+
+────────────────────────────────────────────────────────────────────────────
+WORKFLOW 3: RECHNUNG ERSTELLEN UND VERSENDEN
+────────────────────────────────────────────────────────────────────────────
+
+1. Admin öffnet Tab "Rechnungen"
+2. Admin klickt auf "+ Neue Rechnung"
+3. InvoiceGenerator öffnet sich
+4. Admin sucht Kunde: "Schmidt"
+5. Admin wählt "Anna Schmidt"
+6. Admin fügt Positionen hinzu:
+   - Karosseriereparatur: 8 Std × CHF 120 = CHF 960
+   - Lackierung: 6 Std × CHF 110 = CHF 660
+   - Material: 1 Pauschal × CHF 430 = CHF 430
+7. Zwischensumme: CHF 2'050
+8. Admin gibt Rabatt: 5%
+9. Netto: CHF 1'947.50
+10. MwSt. 7.7%: CHF 150
+11. Gesamt: CHF 2'097.50
+12. Admin wählt Zahlungsmethode: Rechnung
+13. Admin setzt Fälligkeitsdatum: +30 Tage
+14. Admin geht zu Vorschau
+15. Admin überprüft PDF
+16. Admin wählt "Per E-Mail senden"
+17. Admin erstellt Rechnung
+18. Rechnung erscheint in Liste
+19. E-Mail wird versendet (geplant)
+20. Status: Offen
+
+────────────────────────────────────────────────────────────────────────────
+WORKFLOW 4: FAHRZEUGVERFÜGBARKEIT PRÜFEN
+────────────────────────────────────────────────────────────────────────────
+
+1. Kunde ruft an: "Ist Transporter verfügbar 20.-22.01?"
+2. Admin öffnet Tab "Verfügbarkeit"
+3. Admin navigiert zu Januar 2025
+4. Admin prüft alle 3 Kalender
+5. Sprinter Rot: 20.-22.01 → Rot (gebucht)
+6. Sprinter Weiss 1: 20.-22.01 → Grün (verfügbar)
+7. Sprinter Weiss 2: 20.-22.01 → Orange (Wartung)
+8. Admin informiert Kunde: "Sprinter Weiss 1 verfügbar"
+9. Admin wechselt zu Tab "Buchungen"
+10. Admin erstellt neue Buchung (siehe Workflow 2)
+
+
+================================================================================
+                            BEKANNTE LIMITIERUNGEN
+================================================================================
+
+AKTUELL OHNE BACKEND:
+- Keine Datenpersistenz (Daten gehen bei Reload verloren)
+- Keine E-Mail-Funktionalität
+- Keine Datei-Uploads (Fotos bleiben lokal)
+- Keine Benutzer-Authentifizierung (nur Login-Maske)
+- Keine Echtzeit-Updates
+
+GEPLANTE VERBESSERUNGEN:
+1. Backend-Integration (REST API oder Supabase)
+2. Datenbank (PostgreSQL/MySQL)
+3. E-Mail-Service (SMTP oder SendGrid)
+4. File-Storage (S3, Cloudinary)
+5. Authentifizierung (JWT, Sessions)
+6. Websockets für Live-Updates
+7. PDF-Generierung serverseitig
+8. Zahlungs-Integration (Stripe Webhooks)
+
+
+================================================================================
+                            TECHNISCHE DETAILS
+================================================================================
+
+STATE-MANAGEMENT:
+- Lokaler React State (useState)
+- State-Lifting für Daten zwischen Tabs
+- Props-Drilling für Komponenten-Kommunikation
+
+DATENSTRUKTUREN:
+Siehe Hauptdokumentation (ANWENDUNGSDOKUMENTATION.txt)
+
+KOMPONENTEN-HIERARCHIE:
+
+AdminPage (Hauptkomponente)
+├── Header (Zurück, Logout)
+├── Statistik-Karten
+└── Tabs
+    ├── Dashboard
+    │   ├── Statistik-Karten
+    │   └── Aktivitäts-Listen
+    ├── Schadenmeldungen
+    │   ├── Suchleiste
+    │   └── Schadenmeldungs-Liste
+    │       └── → EditDamageReportForm
+    │           └── → DamageReportInvoice
+    ├── Buchungen
+    │   ├── Buchungs-Liste
+    │   │   └── → EditBookingForm
+    │   └── BookingCalendar
+    │       └── → CustomerSearchDialog
+    ├── Fahrzeuge
+    │   └── VehicleManagement
+    │       ├── Fahrzeug-Grid
+    │       └── Add/Edit Dialog
+    ├── Kunden
+    │   └── CustomerManagement
+    │       ├── Kunden-Liste
+    │       ├── Kunden-Details
+    │       └── Add/Edit Dialog
+    ├── Rechnungen
+    │   └── InvoiceManagement
+    │       ├── Rechnungs-Liste
+    │       └── InvoiceGenerator
+    │           └── → CustomerSearchDialog
+    ├── Zeitplan
+    │   └── BookingScheduleView
+    ├── Verfügbarkeit
+    │   └── VehicleAvailabilityView
+    └── Einstellungen
+        └── Settings
+            ├── Listen verwalten
+            ├── Firmenangaben
+            ├── Preise
+            ├── E-Mail
+            ├── Benachrichtigungen
+            └── System
+
+RESPONSIVE DESIGN:
+- Mobile: Tabs scrollen horizontal
+- Mobile: Cards statt Tabellen
+- Mobile: Gestapelte Layouts
+- Desktop: Grid-Layouts, Tabs nebeneinander
+
+
+================================================================================
+                            SUPPORT & HILFE
+================================================================================
+
+HÄUFIGE FRAGEN:
+
+F: Wo finde ich eine bestimmte Schadenmeldung?
+A: Tab "Schadenmeldungen" → Suchfeld oben rechts
+
+F: Wie erstelle ich eine Rechnung für eine Schadenmeldung?
+A: Schadenmeldung öffnen → "Rechnung erstellen"-Button
+
+F: Wie sehe ich die Auslastung der Transporter?
+A: Tab "Verfügbarkeit" oder "Zeitplan"
+
+F: Wie ändere ich Preise?
+A: Tab "Einstellungen" → "Preise"
+
+F: Kann ich Kunden zusammenführen (Duplikate)?
+A: Aktuell nicht implementiert, geplant für zukünftige Version
+
+F: Wo finde ich alle Rechnungen eines Kunden?
+A: Tab "Kunden" → Kunde auswählen → Tab "Rechnungen"
+
+
+================================================================================
+                            CHANGELOG
+================================================================================
+
+VERSION 1.0.0 (Januar 2025):
+- Initiale Implementation
+- 9 Tabs vollständig funktional
+- CRUD-Operationen für alle Entitäten
+- Mock-Daten für Demonstration
+- Responsive Design
+- Dunkles Theme mit roten Akzenten
+- Admin-Login
+- Einstellungen-Tab mit Listenverwaltung
+- Automatisches "Kunde seit"-Datum
+- Fortschrittsbalken mit Schritt-Titeln (Schadenmeldung & Buchung)
+
+GEPLANT FÜR VERSION 1.1.0:
+- Backend-Integration
+- E-Mail-Funktionalität
+- Datei-Upload für Schadensfotos
+- PDF-Generierung
+- Erweiterte Filter
+- Export-Funktionen
+
+
+================================================================================
+                            DOKUMENT-ENDE
+================================================================================
+
+Erstellt: Januar 2025
+Version: 1.0
+Letzte Aktualisierung: 20.01.2025
+
+Dieses Dokument beschreibt den vollständigen Admin-Bereich der
+AutoRepair Pro Anwendung mit allen implementierten Funktionen.
+
+Für die Kundenseite siehe: ANWENDUNGSDOKUMENTATION.txt
+
+================================================================================

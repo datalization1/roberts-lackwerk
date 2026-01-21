@@ -1,0 +1,71 @@
+<div id="cookie-banner" class="rl-cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie Hinweis" hidden>
+  <div class="rl-cookie-banner__content">
+    <strong>Cookie-Hinweis</strong>
+    <p>Wir verwenden technisch notwendige Cookies. Analytische Cookies werden nur mit Ihrer Zustimmung geladen.</p>
+  </div>
+  <div class="rl-cookie-banner__actions">
+    <button type="button" class="btn rl-btn-secondary" id="cookie-reject">Ablehnen</button>
+    <button type="button" class="btn rl-btn-primary" id="cookie-accept">Akzeptieren</button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const key = 'rl_cookie_consent';
+    const banner = document.getElementById('cookie-banner');
+    const consent = localStorage.getItem(key);
+    if (!banner) return;
+    if (!consent) {
+      banner.hidden = false;
+    }
+    const acceptBtn = document.getElementById('cookie-accept');
+    const rejectBtn = document.getElementById('cookie-reject');
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', function () {
+        localStorage.setItem(key, 'accepted');
+        banner.hidden = true;
+        location.reload();
+      });
+    }
+    if (rejectBtn) {
+      rejectBtn.addEventListener('click', function () {
+        localStorage.setItem(key, 'rejected');
+        banner.hidden = true;
+      });
+    }
+  })();
+</script>
+
+<style>
+  .rl-cookie-banner {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    background: #0f172a;
+    color: #e2e8f0;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 9999;
+  }
+  .rl-cookie-banner__content p {
+    margin: 4px 0 0;
+    font-size: 13px;
+  }
+  .rl-cookie-banner__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  @media (max-width: 640px) {
+    .rl-cookie-banner {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

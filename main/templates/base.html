@@ -24,11 +24,11 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 </script>
-<body class="page-bg">
+<body class="page-bg {% block body_class %}{% endblock %}" data-ga-id="{{ GA_MEASUREMENT_ID }}">
     <nav class="navbar navbar-expand-lg navbar-dark rl-nav">
       <div class="container-fluid rl-nav-inner">
         <a class="navbar-brand rl-nav__brand" href="{% url 'home' %}">
-          <img src="{% static 'img/RL_logo.png' %}" alt="Robert's Lackwerk" class="rl-nav__logo">
+          <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk" class="rl-nav__logo" decoding="async">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded',function(){
     </main>
 
      {% include "partials/footer.html" %} 
+     {% include "partials/cookie_banner.html" %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -87,6 +88,23 @@ document.addEventListener('DOMContentLoaded',function(){
       });
     });
   });
+</script>
+<script>
+  (function () {
+    const key = 'rl_cookie_consent';
+    const consent = localStorage.getItem(key);
+    const gaId = document.body.getAttribute('data-ga-id');
+    if (consent === 'accepted' && gaId) {
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+      document.head.appendChild(script);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    }
+  })();
 </script>
   </body>
 </html>

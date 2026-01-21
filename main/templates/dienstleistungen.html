@@ -2,51 +2,68 @@
 {% load static %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="bg-dark text-white text-center p-5 mb-5"
-     style="background: url('{% static "main/hero_services.jpg" %}') center/cover no-repeat; border-radius: 10px;">
-    <div class="bg-dark bg-opacity-50 p-5 rounded">
-        <h1 class="display-4 fw-bold">Unsere Dienstleistungen</h1>
-        <p class="lead">Lackierungen, Reparaturen und mehr – alles aus einer Hand</p>
+<div class="figma-home">
+  <section class="fig-hero">
+    <div class="fig-hero__bg"></div>
+    <div class="fig-hero__inner">
+      <p class="fig-eyebrow">Robert&apos;s Lackwerk</p>
+      <h1>Unsere Dienstleistungen</h1>
+      <p class="fig-subtitle">Lackierungen, Reparaturen und Vermietung – alles aus einer Hand, mit Schweizer Qualitätsanspruch.</p>
+      <div class="fig-hero__actions">
+        <a class="fig-btn fig-btn--primary" href="{% url 'schaden_melden' %}">Schaden melden</a>
+        <a class="fig-btn fig-btn--ghost" href="{% url 'mietfahrzeuge' %}">Transporter mieten</a>
+      </div>
     </div>
-</div>
+  </section>
 
-<!-- Services Section -->
-<div class="row g-4">
-    <div class="col-md-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Autolackierungen</h5>
-                <p class="card-text">Komplette Lackierungen und Spot-Repair in Herstellerqualität – damit Ihr Fahrzeug wieder wie neu aussieht.</p>
-            </div>
-        </div>
+  <section class="fig-section">
+    <header class="fig-section__head">
+      <h2>Serviceportfolio</h2>
+      <p>Professionelle Karosserie- und Lackierarbeiten, ergänzt durch Transporter-Services.</p>
+    </header>
+    <div class="fig-grid fig-grid--3">
+      <article class="fig-card">
+        <div class="fig-icon"><i data-lucide="car"></i></div>
+        <h3>Karosseriereparaturen</h3>
+        <p>Von kleinen Dellen bis zu Unfallschäden – wir stellen die ursprüngliche Form Ihres Fahrzeugs wieder her.</p>
+      </article>
+      <article class="fig-card">
+        <div class="fig-icon"><i data-lucide="paintbrush"></i></div>
+        <h3>Autolackierungen</h3>
+        <p>Komplette Lackierungen und Spot-Repair in Herstellerqualität – damit Ihr Fahrzeug wieder wie neu aussieht.</p>
+      </article>
+      <article class="fig-card">
+        <div class="fig-icon"><i data-lucide="sparkles"></i></div>
+        <h3>Spot-Repair</h3>
+        <p>Schnelle und kostengünstige Beseitigung kleiner Kratzer und Lackschäden, ohne das gesamte Bauteil zu lackieren.</p>
+      </article>
+      <article class="fig-card">
+        <div class="fig-icon"><i data-lucide="droplets"></i></div>
+        <h3>Fahrzeugaufbereitung</h3>
+        <p>Professionelle Innen- und Außenreinigung, Politur und Schutzbeschichtungen für ein perfektes Finish.</p>
+      </article>
+      <article class="fig-card">
+        <div class="fig-icon"><i data-lucide="truck"></i></div>
+        <h3>Transporter-Vermietung</h3>
+        <p>Flexible Mietdauer, moderne Fahrzeuge und transparente Kilometerpakete für Ihren Umzug oder Transport.</p>
+      </article>
+      <article class="fig-card">
+        <div class="fig-icon"><i data-lucide="shield-check"></i></div>
+        <h3>Versicherungsabwicklung</h3>
+        <p>Direktabrechnung, Schadengutachten und dokumentierte Prozesse nach Schweizer Standards.</p>
+      </article>
     </div>
+  </section>
 
-    <div class="col-md-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Karosseriereparaturen</h5>
-                <p class="card-text">Von kleinen Dellen bis zu größeren Unfallschäden – wir stellen die ursprüngliche Form Ihres Fahrzeugs wieder her.</p>
-            </div>
-        </div>
+  <section class="fig-cta">
+    <div class="fig-cta__inner">
+      <h2>Bereit für den nächsten Schritt?</h2>
+      <p>Starten Sie eine Schadenmeldung oder reservieren Sie direkt einen Transporter.</p>
+      <div class="fig-hero__actions">
+        <a class="fig-btn fig-btn--primary" href="{% url 'schaden_melden' %}">Schadenmeldung starten</a>
+        <a class="fig-btn fig-btn--ghost" href="{% url 'mietfahrzeuge' %}">Transporter buchen</a>
+      </div>
     </div>
-
-    <div class="col-md-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Spot-Repair</h5>
-                <p class="card-text">Schnelle und kostengünstige Beseitigung kleiner Kratzer und Lackschäden, ohne das gesamte Bauteil zu lackieren.</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title">Fahrzeugaufbereitung</h5>
-                <p class="card-text">Professionelle Innen- und Außenreinigung, Politur und Schutzbeschichtungen für ein perfektes Finish.</p>
-            </div>
-        </div>
-    </div>
+  </section>
 </div>
 {% endblock %}

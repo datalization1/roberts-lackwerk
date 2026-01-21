@@ -2,17 +2,47 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Verfügbarkeit</h3>
-    <p class="fig-admin__panel-subtitle">Transporter und nächste Verfügbarkeiten</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Verfügbarkeit</h3>
+      <p class="fig-admin__panel-subtitle">Transporter und nächste Verfügbarkeiten</p>
+    </div>
   </header>
+  <div class="fig-admin__cards fig-admin__cards--grid" style="margin-bottom:12px;">
+    <div class="fig-admin__card">
+      <p class="fig-admin__card-label">Gesamtauslastung (Platzhalter)</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">54.7%</div>
+      <p class="fig-admin__card-meta">Ø Auslastung dieses Monats</p>
+    </div>
+    <div class="fig-admin__card">
+      <p class="fig-admin__card-label">Sprinter Rot</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">67%</div>
+      <p class="fig-admin__card-meta">21/31 Tage</p>
+    </div>
+    <div class="fig-admin__card">
+      <p class="fig-admin__card-label">Sprinter Weiss 1</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">45%</div>
+      <p class="fig-admin__card-meta">14/31 Tage</p>
+    </div>
+    <div class="fig-admin__card">
+      <p class="fig-admin__card-label">Sprinter Weiss 2</p>
+      <div class="fig-admin__card-value fig-admin__card-value--small">52%</div>
+      <p class="fig-admin__card-meta">16/31 Tage</p>
+    </div>
+  </div>
   <form method="get" class="fig-form">
     <div class="fig-form__grid">
       <div><label>Datum</label><input type="date" name="date" value="{{ target_date|date:'Y-m-d' }}"></div>
     </div>
     <div class="fig-form__actions">
-      <button class="fig-btn fig-btn--primary" type="submit">Prüfen</button>
-      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_availability' %}">Heute</a>
+      <button class="fig-btn fig-btn--primary" type="submit">
+        <i data-lucide="search"></i>
+        Prüfen
+      </button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_availability' %}">
+        <i data-lucide="calendar"></i>
+        Heute
+      </a>
     </div>
   </form>
   <div class="fig-admin__cards fig-admin__cards--grid">
@@ -35,9 +65,46 @@
 </section>
 
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Bevorstehende Buchungen</h3>
-    <p class="fig-admin__panel-subtitle">Ab {{ target_date|date:"d.m.Y" }}</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Kalenderansicht (Platzhalter)</h3>
+      <p class="fig-admin__panel-subtitle">Tagesübersicht je Fahrzeug</p>
+    </div>
+  </header>
+  <div class="fig-table">
+    <div class="fig-table__row fig-table__row--head" style="grid-template-columns:160px repeat(7,1fr);">
+      <div class="fig-table__cell">Fahrzeug</div>
+      <div class="fig-table__cell">Mo</div>
+      <div class="fig-table__cell">Di</div>
+      <div class="fig-table__cell">Mi</div>
+      <div class="fig-table__cell">Do</div>
+      <div class="fig-table__cell">Fr</div>
+      <div class="fig-table__cell">Sa</div>
+      <div class="fig-table__cell">So</div>
+    </div>
+    {% for transporter in transporters %}
+      <div class="fig-table__row" style="grid-template-columns:160px repeat(7,1fr);">
+        <div class="fig-table__cell fig-table__cell--id">{{ transporter.name }}</div>
+        <div class="fig-table__cell"><span class="fig-badge fig-badge--success">Frei</span></div>
+        <div class="fig-table__cell"><span class="fig-badge fig-badge--warning">Gebucht</span></div>
+        <div class="fig-table__cell"><span class="fig-badge fig-badge--success">Frei</span></div>
+        <div class="fig-table__cell"><span class="fig-badge fig-badge--success">Frei</span></div>
+        <div class="fig-table__cell"><span class="fig-badge fig-badge--warning">Gebucht</span></div>
+        <div class="fig-table__cell"><span class="fig-badge">Wartung</span></div>
+        <div class="fig-table__cell"><span class="fig-badge fig-badge--success">Frei</span></div>
+      </div>
+    {% empty %}
+      <p class="fig-empty fig-table__empty">Keine Fahrzeuge.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Bevorstehende Buchungen</h3>
+      <p class="fig-admin__panel-subtitle">Ab {{ target_date|date:"d.m.Y" }}</p>
+    </div>
   </header>
   <div class="fig-table">
     {% for booking in upcoming %}

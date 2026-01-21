@@ -2,9 +2,11 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Schadenmeldungen</h3>
-    <p class="fig-admin__panel-subtitle">Neueste Einträge zuerst</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Schadenmeldungen</h3>
+      <p class="fig-admin__panel-subtitle">Neueste Einträge zuerst</p>
+    </div>
   </header>
   <form method="get" class="fig-form">
     <div class="fig-form__grid">
@@ -16,14 +18,52 @@
           <option value="pending" {% if filter.status == "pending" %}selected{% endif %}>Ausstehend</option>
           <option value="in_progress" {% if filter.status == "in_progress" %}selected{% endif %}>In Bearbeitung</option>
           <option value="completed" {% if filter.status == "completed" %}selected{% endif %}>Abgeschlossen</option>
+          <option value="cancelled" {% if filter.status == "cancelled" %}selected{% endif %}>Storniert</option>
+        </select>
+      </div>
+      <div>
+        <label>Versicherung</label>
+        <select name="insurer">
+          <option value="">Alle</option>
+          <option value="Allianz Suisse" {% if filter.insurer == "Allianz Suisse" %}selected{% endif %}>Allianz Suisse</option>
+          <option value="AXA" {% if filter.insurer == "AXA" %}selected{% endif %}>AXA</option>
+          <option value="Baloise" {% if filter.insurer == "Baloise" %}selected{% endif %}>Baloise</option>
+          <option value="Mobiliar" {% if filter.insurer == "Mobiliar" %}selected{% endif %}>Die Mobiliar</option>
+          <option value="Generali" {% if filter.insurer == "Generali" %}selected{% endif %}>Generali</option>
+          <option value="Helvetia" {% if filter.insurer == "Helvetia" %}selected{% endif %}>Helvetia</option>
+          <option value="Zurich" {% if filter.insurer == "Zurich" %}selected{% endif %}>Zurich</option>
+          <option value="Vaudoise" {% if filter.insurer == "Vaudoise" %}selected{% endif %}>Vaudoise</option>
+          <option value="TCS" {% if filter.insurer == "TCS" %}selected{% endif %}>TCS</option>
+          <option value="Simpego" {% if filter.insurer == "Simpego" %}selected{% endif %}>Simpego</option>
+          <option value="Smile" {% if filter.insurer == "Smile" %}selected{% endif %}>Smile</option>
+          <option value="PostFinance" {% if filter.insurer == "PostFinance" %}selected{% endif %}>PostFinance</option>
+          <option value="OTHER" {% if filter.insurer == "OTHER" %}selected{% endif %}>Andere</option>
+        </select>
+      </div>
+      <div>
+        <label>Schadensart</label>
+        <select name="damage_type">
+          <option value="">Alle</option>
+          <option value="Unfallschaden" {% if filter.damage_type == "Unfallschaden" %}selected{% endif %}>Unfallschaden</option>
+          <option value="Hagelschaden" {% if filter.damage_type == "Hagelschaden" %}selected{% endif %}>Hagelschaden</option>
+          <option value="Parkschaden" {% if filter.damage_type == "Parkschaden" %}selected{% endif %}>Parkschaden</option>
+          <option value="Wildschaden" {% if filter.damage_type == "Wildschaden" %}selected{% endif %}>Wildschaden</option>
+          <option value="Vandalismus" {% if filter.damage_type == "Vandalismus" %}selected{% endif %}>Vandalismus</option>
+          <option value="Sonstiges" {% if filter.damage_type == "Sonstiges" %}selected{% endif %}>Sonstiges</option>
         </select>
       </div>
       <div><label>Von</label><input type="date" name="from" value="{{ filter.from }}"></div>
       <div><label>Bis</label><input type="date" name="to" value="{{ filter.to }}"></div>
     </div>
     <div class="fig-form__actions">
-      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
-      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_damage_reports' %}">Zurücksetzen</a>
+      <button class="fig-btn fig-btn--primary" type="submit">
+        <i data-lucide="search"></i>
+        Filtern
+      </button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_damage_reports' %}">
+        <i data-lucide="rotate-ccw"></i>
+        Zurücksetzen
+      </a>
     </div>
   </form>
   <div class="fig-table">
@@ -32,6 +72,9 @@
       <div class="fig-table__cell">Kunde</div>
       <div class="fig-table__cell">Fahrzeug</div>
       <div class="fig-table__cell">Datum</div>
+      <div class="fig-table__cell">Versicherung</div>
+      <div class="fig-table__cell">Schätzung</div>
+      <div class="fig-table__cell">Schadensart</div>
       <div class="fig-table__cell">Dateien</div>
       <div class="fig-table__cell">Status</div>
       <div class="fig-table__cell">Aktionen</div>
@@ -50,6 +93,9 @@
           <div class="fig-table__meta">{% if report.plate %}{{ report.plate }}{% endif %}</div>
         </div>
         <div class="fig-table__cell">{{ report.created_at|date:"d.m.Y" }}</div>
+        <div class="fig-table__cell">{{ report.insurer|default:"-" }}</div>
+        <div class="fig-table__cell">CHF {{ report.estimated_cost_chf|default:"0" }}</div>
+        <div class="fig-table__cell">{{ report.damage_type|default:"-" }}</div>
         <div class="fig-table__cell">
           {% with report.photos.count as cnt %}
             {% if cnt %}
@@ -66,10 +112,19 @@
             <span class="fig-badge fig-badge--info">In Bearbeitung</span>
           {% elif report.status == "completed" %}
             <span class="fig-badge fig-badge--success">Abgeschlossen</span>
+          {% elif report.status == "cancelled" %}
+            <span class="fig-badge">Storniert</span>
           {% endif %}
         </div>
         <div class="fig-table__cell">
-          <button class="fig-btn fig-btn--ghost js-open-modal" data-target="report-{{ report.pk }}">Details</button>
+          <a class="fig-btn fig-btn--ghost fig-btn--icon" href="{% url 'portal_damage_report_detail' report.pk %}">
+            <i data-lucide="pencil"></i>
+            Bearbeiten
+          </a>
+          <button class="fig-btn fig-btn--ghost fig-btn--icon js-open-modal" data-target="report-{{ report.pk }}">
+            <i data-lucide="eye"></i>
+            Details
+          </button>
         </div>
       </div>
     {% empty %}
@@ -120,7 +175,7 @@
                 {% for photo in report.photos.all %}
                   <a href="{{ photo.public_url }}" target="_blank" class="fig-admin__card fig-admin__card--clickable" style="text-decoration:none;padding:8px;">
                     <div class="fig-admin__card-label">#{{ photo.id }}</div>
-                    <img src="{{ photo.public_url }}" alt="" style="width:100%;height:90px;object-fit:cover;border-radius:6px;">
+                    <img src="{{ photo.public_url }}" alt="" loading="lazy" decoding="async" style="width:100%;height:90px;object-fit:cover;border-radius:6px;">
                   </a>
                 {% endfor %}
               </div>

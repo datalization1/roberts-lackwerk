@@ -2,9 +2,11 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Schadenmeldung SM-{{ report.pk }}</h3>
-    <p class="fig-admin__panel-subtitle">{{ report.created_at|date:"d.m.Y H:i" }}</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Schadenmeldung SM-{{ report.pk }}</h3>
+      <p class="fig-admin__panel-subtitle">{{ report.created_at|date:"d.m.Y H:i" }}</p>
+    </div>
   </header>
   <div class="fig-admin__cards fig-admin__cards--grid">
     <article class="fig-admin__card">
@@ -30,19 +32,37 @@
   </div>
 
   <div class="fig-admin__panel" style="margin-top:14px;">
-    <header class="fig-admin__panel-header">
-      <h4>Status & Notizen</h4>
+    <header class="fig-admin__panel-header fig-admin__panel-header--split">
+      <div class="fig-admin__panel-header-group">
+        <h4>Status & Notizen</h4>
+      </div>
     </header>
     <form method="post" class="fig-form">
       {% csrf_token %}
       <div class="fig-form__grid">
         <div>{{ form.status.label_tag }} {{ form.status }}</div>
+        <div>{{ form.priority.label_tag }} {{ form.priority }}</div>
+        <div>{{ form.estimated_cost_chf.label_tag }} {{ form.estimated_cost_chf }}</div>
+        <div>{{ form.assigned_mechanic.label_tag }} {{ form.assigned_mechanic }}</div>
+        <div>{{ form.repair_start.label_tag }} {{ form.repair_start }}</div>
+        <div>{{ form.repair_end.label_tag }} {{ form.repair_end }}</div>
       </div>
       <div class="fig-form__row">
         {{ form.admin_notes.label_tag }} {{ form.admin_notes }}
       </div>
       <div class="fig-form__actions">
-        <button type="submit" class="fig-btn fig-btn--primary">Speichern</button>
+        <button type="submit" class="fig-btn fig-btn--primary">
+          <i data-lucide="save"></i>
+          Speichern
+        </button>
+        <a class="fig-btn fig-btn--ghost" href="{% url 'portal_invoices' %}">
+          <i data-lucide="receipt"></i>
+          Rechnung erstellen
+        </a>
+        <a class="fig-btn fig-btn--ghost" href="mailto:{{ report.email }}">
+          <i data-lucide="mail"></i>
+          E-Mail an Kunde
+        </a>
       </div>
     </form>
     <p class="fig-admin__card-meta">Schadenbeschreibung: {{ report.message|default:"-" }}</p>
@@ -59,7 +79,7 @@
             <div class="fig-admin__card-label">#{{ photo.id }} · {{ photo.uploaded_at|date:"d.m.Y H:i" }}</div>
             {% if photo.public_url %}
               <div style="background:#0f172a;border-radius:8px;padding:6px;display:flex;align-items:center;justify-content:center;min-height:80px;">
-                <img src="{{ photo.public_url }}" alt="Upload {{ photo.id }}" style="max-width:100%;max-height:140px;object-fit:cover;border-radius:6px;">
+                <img src="{{ photo.public_url }}" alt="Upload {{ photo.id }}" loading="lazy" decoding="async" style="max-width:100%;max-height:140px;object-fit:cover;border-radius:6px;">
               </div>
             {% else %}
               <p class="fig-admin__card-meta">Keine Vorschau verfügbar</p>
@@ -69,6 +89,16 @@
       </div>
     {% else %}
       <p class="fig-empty">Keine Dateien vorhanden.</p>
+    {% endif %}
+    {% if report.documents %}
+      <div style="margin-top:12px;">
+        <p class="fig-admin__card-label">Dokumente</p>
+        <ul class="fig-admin__list">
+          {% for doc in report.documents %}
+            <li><a href="{{ doc }}" target="_blank" rel="noreferrer">{{ doc }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
     {% endif %}
   </div>
 </section>

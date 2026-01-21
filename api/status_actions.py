@@ -13,9 +13,11 @@ def add_status_actions(field_name="status", transitions=None):
     def decorator(viewset_cls):
         for new_status, allowed_from in transitions.items():
             def make_action(target_status, allowed):
-                @action(detail=True, methods=["post"])
                 def _action(self, request, pk=None):
-                    if not request.user or not request.user.is_staff:
+                    if not request.user or not (
+                        request.user.is_staff
+                        or request.user.groups.filter(name__in=["admin", "manager", "employee"]).exists()
+                    ):
                         return Response({"detail": "Nur Mitarbeiter dürfen Status ändern."},
                                         status=status.HTTP_403_FORBIDDEN)
                     obj = self.get_object()
@@ -28,7 +30,7 @@ def add_status_actions(field_name="status", transitions=None):
                     serializer = self.get_serializer(obj)
                     return Response(serializer.data)
                 _action.__name__ = target_status  # unique per loop
-                return _action
+                return action(detail=True, methods=["post"], url_path=target_status, url_name=target_status)(_action)
 
             action_fn = make_action(new_status, allowed_from)
             setattr(viewset_cls, new_status, action_fn)

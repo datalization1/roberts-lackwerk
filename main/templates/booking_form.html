@@ -109,15 +109,16 @@
       <!-- Führerscheinnummer -->
       <div class="rl-wizard-field-group">
         <label class="rl-field-label" for="id_driver_license_number">
-          Führerscheinnummer
+          Führerscheinnummer *
         </label>
         <input
           id="id_driver_license_number"
           type="text"
           name="driver_license_number"
           class="rl-input"
-          placeholder="Schweizer Führerscheinnummer (optional)"
-          value="{{ form.driver_license_number.value|default:'' }}">
+          placeholder="Schweizer Führerscheinnummer"
+          value="{{ form.driver_license_number.value|default:'' }}"
+          required>
       </div>
       <div class="rl-wizard-field-group">
         <label class="rl-field-label" for="id_driver_license_photo">

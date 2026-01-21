@@ -14,3 +14,7 @@ boto3==1.35.86
 stripe==8.8.0
 dj-database-url==2.2.0
 reportlab==4.2.5
+pytest==8.3.4
+pytest-django==4.9.0
+playwright==1.49.1
+sentry-sdk==2.20.0

@@ -105,6 +105,14 @@
           <span>Zusatzoptionen</span>
           <span>{% if extras_total %}CHF {{ extras_total }}{% else %}CHF 0{% endif %}</span>
         </div>
+        <div class="rl-review-summary-row rl-review-summary-row--muted">
+          <span>Zwischensumme</span>
+          <span>CHF {{ net_total|default:"0.00" }}</span>
+        </div>
+        <div class="rl-review-summary-row rl-review-summary-row--muted">
+          <span>MwSt. 7.7%</span>
+          <span>CHF {{ vat_amount|default:"0.00" }}</span>
+        </div>
         <div class="rl-review-summary-divider"></div>
         <div class="rl-review-summary-row rl-review-summary-row--total">
           <span>Gesamt:</span>

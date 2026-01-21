@@ -2,23 +2,196 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Fahrzeuge</h3>
-    <p class="fig-admin__panel-subtitle">Alle registrierten Transporter</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Fahrzeugverwaltung</h3>
+      <p class="fig-admin__panel-subtitle">Verwalten Sie Ihre Mietfahrzeuge</p>
+    </div>
+    <div>
+      <button class="fig-btn fig-btn--primary fig-btn--compact js-open-modal" data-target="vehicle-new">
+        <i data-lucide="plus"></i>
+        Fahrzeug hinzufügen
+      </button>
+    </div>
   </header>
-  <div class="fig-admin__cards fig-admin__cards--grid">
-    {% for transporter in transporters %}
-      <article class="fig-admin__card fig-admin__card--tall">
-        <p class="fig-admin__card-label">Transporter</p>
-        <div class="fig-admin__card-value fig-admin__card-value--small">{{ transporter.name }}</div>
-        <p class="fig-admin__card-meta">Kennzeichen: {{ transporter.kennzeichen }}</p>
-        <p class="fig-admin__card-meta">Farbe: {{ transporter.farbe|default:"-" }}</p>
-        <p class="fig-admin__card-meta">Verfügbar ab {{ transporter.verfuegbar_ab|date:"d.m.Y" }}</p>
-        <p class="fig-admin__card-meta">Preis: CHF {{ transporter.preis_chf }}</p>
+  {% if vehicle_created %}
+    <p class="fig-badge fig-badge--success">Fahrzeug hinzugefügt.</p>
+  {% endif %}
+
+  <div class="fig-vehicle-list">
+    {% for vehicle in vehicles %}
+      <article class="fig-vehicle-card{% if vehicle.status != 'available' %} is-inactive{% endif %}">
+        <div class="fig-vehicle-card__media">
+          {% if vehicle.photo %}
+            <img src="{{ vehicle.photo.url }}" alt="{{ vehicle.brand }} {{ vehicle.model }}" loading="lazy">
+          {% else %}
+            <div class="fig-vehicle-card__placeholder">
+              <span>{{ vehicle.brand }} {{ vehicle.model }}</span>
+            </div>
+          {% endif %}
+        </div>
+        <div class="fig-vehicle-card__body">
+          <div class="fig-vehicle-card__title">
+            <span>{{ vehicle.brand }} {{ vehicle.model }}</span>
+            {% if vehicle.status == "available" %}
+              <span class="fig-vehicle-badge fig-vehicle-badge--active">Aktiv</span>
+            {% else %}
+              <span class="fig-vehicle-badge fig-vehicle-badge--inactive">{{ vehicle.get_status_display }}</span>
+            {% endif %}
+          </div>
+          <div class="fig-vehicle-card__meta">
+            <span>Modell: {{ vehicle.get_type_display }}</span>
+            <span>Tagespreis: <strong>CHF {{ vehicle.daily_rate|floatformat:0 }}</strong></span>
+          </div>
+        </div>
+        <div class="fig-vehicle-card__actions">
+          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact js-open-modal" data-target="vehicle-edit-{{ vehicle.id }}"><i data-lucide="pencil"></i>Bearbeiten</button>
+          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact fig-btn--danger" type="button"><i data-lucide="trash-2"></i>Löschen</button>
+        </div>
       </article>
     {% empty %}
-      <p class="fig-empty">Keine Fahrzeuge hinterlegt.</p>
+      <p class="fig-empty">Keine Fahrzeuge angelegt.</p>
     {% endfor %}
   </div>
+
+  <div class="fig-vehicle-stats">
+    <div class="fig-vehicle-stat">
+      <div class="fig-vehicle-stat__value fig-vehicle-stat__value--danger">{{ vehicle_total|default:"0" }}</div>
+      <div class="fig-vehicle-stat__label">Gesamt</div>
+    </div>
+    <div class="fig-vehicle-stat">
+      <div class="fig-vehicle-stat__value fig-vehicle-stat__value--success">{{ vehicle_active|default:"0" }}</div>
+      <div class="fig-vehicle-stat__label">Aktiv</div>
+    </div>
+    <div class="fig-vehicle-stat">
+      <div class="fig-vehicle-stat__value fig-vehicle-stat__value--muted">{{ vehicle_inactive|default:"0" }}</div>
+      <div class="fig-vehicle-stat__label">Inaktiv</div>
+    </div>
+    <div class="fig-vehicle-stat">
+      <div class="fig-vehicle-stat__value">CHF {{ vehicle_avg_rate|default_if_none:"0"|floatformat:0 }}</div>
+      <div class="fig-vehicle-stat__label">Ø Preis</div>
+    </div>
+  </div>
 </section>
+
+<dialog id="modal-vehicle-new" class="fig-modal">
+  <article class="fig-modal__content fig-vehicle-modal">
+    <header class="fig-modal__header">
+      <h4>Neues Fahrzeug hinzufügen</h4>
+      <button type="button" class="fig-modal__close js-close-modal" data-target="vehicle-new">×</button>
+    </header>
+    <div class="fig-modal__body">
+      <form method="post" enctype="multipart/form-data" class="fig-vehicle-form">
+        {% csrf_token %}
+        {% if vehicle_form.errors %}
+          <div class="fig-badge fig-badge--warning">Bitte alle Pflichtfelder ausfüllen.</div>
+        {% endif %}
+        <div class="fig-vehicle-form__grid">
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.brand.label_tag }}
+            {{ vehicle_form.brand }}
+          </div>
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.model.label_tag }}
+            {{ vehicle_form.model }}
+          </div>
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.daily_rate.label_tag }}
+            {{ vehicle_form.daily_rate }}
+          </div>
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.status.label_tag }}
+            {{ vehicle_form.status }}
+          </div>
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.type.label_tag }}
+            {{ vehicle_form.type }}
+          </div>
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.license_plate.label_tag }}
+            {{ vehicle_form.license_plate }}
+          </div>
+        </div>
+        <div class="fig-vehicle-form__row">
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.photo.label_tag }}
+            <div class="fig-vehicle-form__upload">
+              {{ vehicle_form.photo }}
+              <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" type="button"><i data-lucide="upload"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="fig-vehicle-form__actions">
+          <button class="fig-btn fig-btn--primary fig-btn--compact" type="submit"><i data-lucide="check"></i>Hinzufügen</button>
+          <button class="fig-btn fig-btn--ghost fig-btn--compact js-close-modal" data-target="vehicle-new" type="button"><i data-lucide="x"></i>Abbrechen</button>
+        </div>
+      </form>
+    </div>
+  </article>
+</dialog>
+
+{% for vehicle in vehicles %}
+  <dialog id="modal-vehicle-edit-{{ vehicle.id }}" class="fig-modal">
+    <article class="fig-modal__content fig-vehicle-modal">
+      <header class="fig-modal__header">
+        <h4>{{ vehicle.license_plate }} · Bearbeiten</h4>
+        <button type="button" class="fig-modal__close js-close-modal" data-target="vehicle-edit-{{ vehicle.id }}">×</button>
+      </header>
+      <div class="fig-modal__body">
+        <form class="fig-vehicle-form">
+          <div class="fig-vehicle-form__grid">
+            <div class="fig-vehicle-form__field">
+              <label>Status</label>
+              <select>
+                <option value="available" {% if vehicle.status == "available" %}selected{% endif %}>Aktiv</option>
+                <option value="rented" {% if vehicle.status == "rented" %}selected{% endif %}>Vermietet</option>
+                <option value="maintenance" {% if vehicle.status == "maintenance" %}selected{% endif %}>In Wartung</option>
+                <option value="out-of-service" {% if vehicle.status == "out-of-service" %}selected{% endif %}>Außer Betrieb</option>
+              </select>
+            </div>
+            <div class="fig-vehicle-form__field">
+              <label>Nächster Service</label>
+              <input type="date" value="{{ vehicle.next_service|date:'Y-m-d' }}">
+            </div>
+            <div class="fig-vehicle-form__field">
+              <label>Kilometerstand</label>
+              <input type="number" value="{{ vehicle.mileage }}">
+            </div>
+            <div class="fig-vehicle-form__field">
+              <label>Notizen</label>
+              <input type="text" placeholder="Platzhalter">
+            </div>
+          </div>
+          <div class="fig-vehicle-form__actions">
+            <button class="fig-btn fig-btn--primary fig-btn--compact" type="button">Änderungen speichern</button>
+            <button class="fig-btn fig-btn--ghost fig-btn--compact js-close-modal" data-target="vehicle-edit-{{ vehicle.id }}" type="button">Abbrechen</button>
+          </div>
+        </form>
+      </div>
+    </article>
+  </dialog>
+{% endfor %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openButtons = document.querySelectorAll('.js-open-modal');
+    const closeButtons = document.querySelectorAll('.js-close-modal');
+    const openModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+      else if (dlg) dlg.classList.add('is-visible');
+    };
+    const closeModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (!dlg) return;
+      if (typeof dlg.close === 'function') dlg.close();
+      dlg.classList.remove('is-visible');
+    };
+    openButtons.forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.target)));
+    closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.target)));
+    {% if vehicle_form_open %}
+      openModal('vehicle-new');
+    {% endif %}
+  });
+</script>
 {% endblock %}

@@ -1,11 +1,17 @@
+{% load static %}
 <footer class="rl-footer">
   <div class="rl-footer-inner">
     <!-- Spalte 1: Brand + Social -->
     <div class="rl-footer-col rl-footer-col--brand">
-      <h4 class="rl-footer-title">Robert’s Lackwerk</h4>
-      <p class="rl-footer-text">
-        Ihr Partner für Carrosserie-, Lackierarbeiten und Fahrzeugvermietung in der Schweiz.
-      </p>
+      <div class="rl-footer-brand">
+        <img src="{% static 'img/RLicon.png' %}" alt="Robert's Lackwerk" class="rl-footer-logo" loading="lazy">
+        <div class="rl-footer-brand-text">
+          <h4 class="rl-footer-title">Robert’s Lackwerk</h4>
+          <p class="rl-footer-text">
+            Ihr Partner für Carrosserie-, Lackierarbeiten und Fahrzeugvermietung in der Schweiz.
+          </p>
+        </div>
+      </div>
       <!-- <p class="rl-footer-text rl-footer-text--label">Folgen Sie uns</p>
       <div class="rl-footer-social">
         <a href="#" class="rl-footer-social__btn" aria-label="LinkedIn">in</a>

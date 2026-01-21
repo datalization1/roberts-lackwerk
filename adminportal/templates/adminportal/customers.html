@@ -2,69 +2,201 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Kunden</h3>
-    <p class="fig-admin__panel-subtitle">Abgeleitet aus Schadenmeldungen und Buchungen</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Kundenverwaltung</h3>
+      <p class="fig-admin__panel-subtitle">Verwalten Sie alle Kundendaten zentral</p>
+    </div>
+    <div class="fig-customer-header-actions">
+      <form method="get" class="fig-customer-search">
+        <i data-lucide="search"></i>
+        <input type="text" name="q" placeholder="Kunden suchen..." value="{{ filter.q }}">
+      </form>
+      <button class="fig-btn fig-btn--primary fig-btn--compact js-open-modal" type="button" data-target="customer-new">
+        <i data-lucide="plus"></i>
+        Neuer Kunde
+      </button>
+    </div>
   </header>
-  <form method="get" class="fig-form">
-    <div class="fig-form__grid">
-      <div><label>Suche</label><input type="text" name="q" value="{{ filter.q }}"></div>
+  <div class="fig-customer-stats">
+    <div class="fig-customer-stat">
+      <div class="fig-customer-stat__value fig-customer-stat__value--danger">{{ customer_stats.total|default:"0" }}</div>
+      <div class="fig-customer-stat__label">Gesamt Kunden</div>
     </div>
-    <div class="fig-form__actions">
-      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
-      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_customers' %}">Zurücksetzen</a>
+    <div class="fig-customer-stat">
+      <div class="fig-customer-stat__value fig-customer-stat__value--info">{{ customer_stats.damage_reports|default:"0" }}</div>
+      <div class="fig-customer-stat__label">Schadenmeldungen</div>
     </div>
-  </form>
-  {% if customer_created %}
-    <p class="fig-badge fig-badge--success">Kunde erstellt.</p>
-  {% endif %}
-  <form method="post" class="fig-form">
-    {% csrf_token %}
-    <div class="fig-form__grid">
-      <div>{{ customer_form.first_name.label_tag }} {{ customer_form.first_name }}</div>
-      <div>{{ customer_form.last_name.label_tag }} {{ customer_form.last_name }}</div>
-      <div>{{ customer_form.company.label_tag }} {{ customer_form.company }}</div>
-      <div>{{ customer_form.email.label_tag }} {{ customer_form.email }}</div>
-      <div>{{ customer_form.phone.label_tag }} {{ customer_form.phone }}</div>
-      <div>{{ customer_form.address.label_tag }} {{ customer_form.address }}</div>
-      <div>{{ customer_form.postal_code.label_tag }} {{ customer_form.postal_code }}</div>
-      <div>{{ customer_form.city.label_tag }} {{ customer_form.city }}</div>
-      <div>{{ customer_form.source.label_tag }} {{ customer_form.source }}</div>
+    <div class="fig-customer-stat">
+      <div class="fig-customer-stat__value fig-customer-stat__value--purple">{{ customer_stats.rentals|default:"0" }}</div>
+      <div class="fig-customer-stat__label">Vermietungen</div>
     </div>
-    <div class="fig-form__row">
-      {{ customer_form.notes.label_tag }} {{ customer_form.notes }}
+    <div class="fig-customer-stat">
+      <div class="fig-customer-stat__value fig-customer-stat__value--muted">{{ customer_stats.manual|default:"0" }}</div>
+      <div class="fig-customer-stat__label">Manuell</div>
     </div>
-    <div class="fig-form__actions">
-      <button type="submit" class="fig-btn fig-btn--primary">Kunde speichern</button>
-    </div>
-  </form>
-  <div class="fig-table">
-    <div class="fig-table__row fig-table__row--head">
-      <div class="fig-table__cell">Name</div>
-      <div class="fig-table__cell">E-Mail</div>
-      <div class="fig-table__cell">Quelle</div>
-      <div class="fig-table__cell">Telefon</div>
-      <div class="fig-table__cell">Ort</div>
-    </div>
+  </div>
+
+  <div class="fig-customer-list" id="customer-list">
     {% for customer in customers %}
-      <div class="fig-table__row">
-        <div class="fig-table__cell">
-          {% if customer.company %}{{ customer.company }}{% else %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}
+      <article class="fig-customer-card">
+        <div class="fig-customer-card__avatar">
+          <i data-lucide="user"></i>
         </div>
-        <div class="fig-table__cell">{{ customer.email }}</div>
-        <div class="fig-table__cell">
-          <span class="fig-badge fig-badge--success">{{ customer.get_source_display }}</span>
+        <div class="fig-customer-card__content">
+          <div class="fig-customer-card__title">
+            <span class="fig-customer-card__name">
+              {% if customer.company %}
+                {{ customer.company }}
+              {% else %}
+                {{ customer.first_name }} {{ customer.last_name }}
+              {% endif %}
+            </span>
+            {% if customer.source == "damage-report" %}
+              <span class="fig-customer-badge fig-customer-badge--info">Schadenmeldung</span>
+            {% elif customer.source == "rental" %}
+              <span class="fig-customer-badge fig-customer-badge--purple">Vermietung</span>
+            {% elif customer.source == "both" %}
+              <span class="fig-customer-badge fig-customer-badge--danger">Beide</span>
+            {% else %}
+              <span class="fig-customer-badge fig-customer-badge--muted">Manuell</span>
+            {% endif %}
+          </div>
+          <div class="fig-customer-card__meta">
+            <span><i data-lucide="mail"></i>{{ customer.email|default:"-" }}</span>
+            <span><i data-lucide="phone"></i>{{ customer.phone|default:"-" }}</span>
+            <span><i data-lucide="calendar"></i>Seit {{ customer.created_at|date:"d.m.Y" }}</span>
+            <span><i data-lucide="banknote"></i>CHF {{ customer.total_revenue|default_if_none:"0"|floatformat:0 }}</span>
+          </div>
         </div>
-        <div class="fig-table__cell">{{ customer.phone }}</div>
-        <div class="fig-table__cell">
-          {% if customer.postal_code or customer.city %}
-            {{ customer.postal_code }} {{ customer.city }}
-          {% endif %}
+        <div class="fig-customer-card__actions">
+          <a class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" href="{% url 'portal_customer_detail' customer.pk %}">
+            <i data-lucide="eye"></i>
+            Details
+          </a>
+          <button class="fig-btn fig-btn--primary fig-btn--icon fig-btn--compact" type="button">
+            <i data-lucide="receipt"></i>
+            Rechnung
+          </button>
         </div>
-      </div>
+      </article>
     {% empty %}
       <p class="fig-empty fig-table__empty">Keine Kunden gefunden.</p>
     {% endfor %}
   </div>
 </section>
+
+<dialog id="modal-customer-new" class="fig-modal">
+  <article class="fig-modal__content fig-customer-modal">
+    <header class="fig-modal__header">
+      <div class="fig-admin__panel-header-group">
+        <h3>Neuen Kunden anlegen</h3>
+        <p class="fig-admin__panel-subtitle">Geben Sie die Kundendaten ein</p>
+      </div>
+      <button type="button" class="fig-modal__close js-close-modal" data-target="customer-new">×</button>
+    </header>
+
+    {% if customer_created %}
+      <p class="fig-badge fig-badge--success">Kunde erstellt.</p>
+    {% endif %}
+
+    <div class="fig-modal__body">
+      <form method="post" class="fig-customer-form">
+        {% csrf_token %}
+        <div class="fig-customer-form__section">
+          <h4>Persönliche Informationen</h4>
+          <div class="fig-customer-form__grid">
+            <div class="fig-customer-form__field">
+              <label>Vorname <span>*</span></label>
+              {{ customer_form.first_name }}
+            </div>
+            <div class="fig-customer-form__field">
+              <label>Nachname <span>*</span></label>
+              {{ customer_form.last_name }}
+            </div>
+            <div class="fig-customer-form__field">
+              <label>Firma (optional)</label>
+              {{ customer_form.company }}
+            </div>
+            <div class="fig-customer-form__field">
+              <label>E-Mail <span>*</span></label>
+              {{ customer_form.email }}
+            </div>
+            <div class="fig-customer-form__field">
+              <label>Telefon <span>*</span></label>
+              {{ customer_form.phone }}
+            </div>
+            <div class="fig-customer-form__field">
+              <label>Kunde seit</label>
+              <input type="text" value="{{ today|date:'d.m.Y' }}" disabled>
+              <span class="fig-customer-form__hint">Wird automatisch auf das heutige Datum gesetzt</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fig-customer-form__section">
+          <h4>Adresse</h4>
+          <div class="fig-customer-form__grid">
+            <div class="fig-customer-form__field fig-customer-form__field--full">
+              <label>Strasse &amp; Hausnummer <span>*</span></label>
+              {{ customer_form.address }}
+            </div>
+            <div class="fig-customer-form__field">
+              <label>PLZ <span>*</span></label>
+              {{ customer_form.postal_code }}
+            </div>
+            <div class="fig-customer-form__field">
+              <label>Ort <span>*</span></label>
+              {{ customer_form.city }}
+            </div>
+          </div>
+        </div>
+
+        <div class="fig-customer-form__section">
+          <h4>Weitere Informationen</h4>
+          <div class="fig-customer-form__grid">
+            <div class="fig-customer-form__field fig-customer-form__field--full">
+              <label>Quelle</label>
+              {{ customer_form.source }}
+            </div>
+            <div class="fig-customer-form__field fig-customer-form__field--full">
+              <label>Notizen (optional)</label>
+              {{ customer_form.notes }}
+            </div>
+          </div>
+        </div>
+
+        <div class="fig-customer-form__actions">
+          <button type="button" class="fig-btn fig-btn--ghost fig-btn--compact js-close-modal" data-target="customer-new">
+            Abbrechen
+          </button>
+          <button type="submit" class="fig-btn fig-btn--primary fig-btn--compact">
+            <i data-lucide="save"></i>
+            Kunde anlegen
+          </button>
+        </div>
+      </form>
+    </div>
+  </article>
+</dialog>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openButtons = document.querySelectorAll('.js-open-modal');
+    const closeButtons = document.querySelectorAll('.js-close-modal');
+    const openModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+      else if (dlg) dlg.classList.add('is-visible');
+    };
+    const closeModal = (id) => {
+      const dlg = document.getElementById('modal-' + id);
+      if (!dlg) return;
+      if (typeof dlg.close === 'function') dlg.close();
+      dlg.classList.remove('is-visible');
+    };
+    openButtons.forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.target)));
+    closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.target)));
+  });
+</script>
 {% endblock %}

@@ -1,10 +1,23 @@
 {% extends "adminportal/base.html" %}
+{% load adminportal_extras %}
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Buchungen</h3>
-    <p class="fig-admin__panel-subtitle">Letzte Buchungen</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Buchungen</h3>
+      <p class="fig-admin__panel-subtitle">Letzte Buchungen</p>
+    </div>
+    <div>
+      <button class="fig-btn fig-btn--primary js-open-modal" data-target="booking-new">
+        <i data-lucide="plus"></i>
+        Manuelle Buchung
+      </button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_schedule' %}">
+        <i data-lucide="calendar"></i>
+        Kalenderansicht
+      </a>
+    </div>
   </header>
   <form method="get" class="fig-form">
     <div class="fig-form__grid">
@@ -15,6 +28,7 @@
           <option value="">Alle</option>
           <option value="pending" {% if filter.status == "pending" %}selected{% endif %}>Ausstehend</option>
           <option value="confirmed" {% if filter.status == "confirmed" %}selected{% endif %}>Bestätigt</option>
+          <option value="active" {% if filter.status == "active" %}selected{% endif %}>In Vermietung</option>
           <option value="completed" {% if filter.status == "completed" %}selected{% endif %}>Abgeschlossen</option>
           <option value="cancelled" {% if filter.status == "cancelled" %}selected{% endif %}>Storniert</option>
         </select>
@@ -32,8 +46,14 @@
       <div><label>Bis</label><input type="date" name="to" value="{{ filter.to }}"></div>
     </div>
     <div class="fig-form__actions">
-      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
-      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_bookings' %}">Zurücksetzen</a>
+      <button class="fig-btn fig-btn--primary" type="submit">
+        <i data-lucide="search"></i>
+        Filtern
+      </button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_bookings' %}">
+        <i data-lucide="rotate-ccw"></i>
+        Zurücksetzen
+      </a>
     </div>
   </form>
   <div class="fig-table">
@@ -43,6 +63,7 @@
       <div class="fig-table__cell">Kunde</div>
       <div class="fig-table__cell">Datum</div>
       <div class="fig-table__cell">Zeitslot</div>
+      <div class="fig-table__cell">Total</div>
       <div class="fig-table__cell">Aktionen</div>
     </div>
     {% for booking in bookings %}
@@ -66,6 +87,8 @@
               <span class="fig-badge fig-badge--warning">Ausstehend</span>
             {% elif booking.status == "confirmed" %}
               <span class="fig-badge fig-badge--success">Bestätigt</span>
+            {% elif booking.status == "active" %}
+              <span class="fig-badge fig-badge--info">Aktiv</span>
             {% elif booking.status == "completed" %}
               <span class="fig-badge fig-badge--info">Abgeschlossen</span>
             {% elif booking.status == "cancelled" %}
@@ -73,13 +96,69 @@
             {% endif %}
           </div>
         </div>
+        <div class="fig-table__cell">CHF {{ booking.total_price|default:"0" }}</div>
         <div class="fig-table__cell">
-          <button class="fig-btn fig-btn--ghost js-open-modal" data-target="booking-{{ booking.pk }}">Details</button>
+          <a class="fig-btn fig-btn--ghost fig-btn--icon" href="{% url 'portal_booking_detail' booking.pk %}">
+            <i data-lucide="check-circle"></i>
+            Bearbeiten
+          </a>
+          <button class="fig-btn fig-btn--ghost fig-btn--icon js-open-modal" data-target="booking-{{ booking.pk }}">
+            <i data-lucide="eye"></i>
+            Details
+          </button>
         </div>
       </div>
     {% empty %}
       <p class="fig-empty fig-table__empty">Keine Buchungen erfasst.</p>
     {% endfor %}
+  </div>
+
+  <div class="fig-admin__panel" style="margin-top:16px;">
+    <header class="fig-admin__panel-header fig-admin__panel-header--split">
+      <div class="fig-admin__panel-header-group">
+        <h4>Buchungskalender</h4>
+        <p class="fig-admin__panel-subtitle">Monatsübersicht mit Buchungs-Badges</p>
+      </div>
+      <div class="fig-admin__hero-actions">
+        <a class="fig-btn fig-btn--ghost" href="?month={{ calendar.prev_month }}&year={{ calendar.prev_year }}"><i data-lucide="chevron-left"></i></a>
+        <span class="fig-admin__badge">{{ calendar.label }}</span>
+        <a class="fig-btn fig-btn--ghost" href="?month={{ calendar.next_month }}&year={{ calendar.next_year }}"><i data-lucide="chevron-right"></i></a>
+        <a class="fig-btn fig-btn--ghost" href="{% url 'portal_bookings' %}"><i data-lucide="calendar"></i>Heute</a>
+      </div>
+    </header>
+    <div class="fig-table">
+      <div class="fig-table__row fig-table__row--head" style="grid-template-columns:repeat(7,1fr);">
+        <div class="fig-table__cell">Mo</div>
+        <div class="fig-table__cell">Di</div>
+        <div class="fig-table__cell">Mi</div>
+        <div class="fig-table__cell">Do</div>
+        <div class="fig-table__cell">Fr</div>
+        <div class="fig-table__cell">Sa</div>
+        <div class="fig-table__cell">So</div>
+      </div>
+      {% for week in calendar.weeks %}
+        <div class="fig-table__row" style="grid-template-columns:repeat(7,1fr);">
+          {% for day in week %}
+            {% if day == 0 %}
+              <div class="fig-table__cell"></div>
+            {% else %}
+              <div class="fig-table__cell">
+                <div><strong>{{ day }}</strong></div>
+                {% for booking in calendar.bookings_by_day|get_item:day %}
+                  <div style="margin-top:4px;">
+                    <a class="fig-badge {% if booking.status == 'confirmed' %}fig-badge--success{% elif booking.status == 'pending' %}fig-badge--warning{% elif booking.status == 'active' %}fig-badge--info{% else %}fig-badge{% endif %}" href="{% url 'portal_booking_detail' booking.pk %}">
+                      BU-{{ booking.pk }}
+                    </a>
+                  </div>
+                {% empty %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <p class="fig-admin__card-meta">Legende: <span class="fig-badge fig-badge--success">Bestätigt</span> <span class="fig-badge fig-badge--warning">Ausstehend</span> <span class="fig-badge fig-badge--info">Aktiv</span> <span class="fig-badge">Abgeschlossen</span></p>
   </div>
 
   {% for booking in bookings %}
@@ -122,6 +201,71 @@
     </dialog>
   {% endfor %}
 </section>
+
+<dialog id="modal-booking-new" class="fig-modal">
+  <article class="fig-modal__content">
+    <header class="fig-modal__header">
+      <h4>Manuelle Buchung (Platzhalter)</h4>
+      <button type="button" class="fig-modal__close js-close-modal" data-target="booking-new">×</button>
+    </header>
+    <div class="fig-modal__body">
+      <div class="fig-admin__panel" style="margin:0 0 12px 0;">
+        <h5>Kunde suchen</h5>
+        <div class="fig-form__grid">
+          <div><label>Suche</label><input type="text" placeholder="Name / E-Mail / Telefon"></div>
+          <div><label>Treffer</label><input type="text" placeholder="Platzhalter: Kunde auswählen"></div>
+        </div>
+      </div>
+      <div class="fig-admin__panel" style="margin:0 0 12px 0;">
+        <h5>Buchungsdetails</h5>
+        <div class="fig-form__grid">
+          <div><label>Transporter</label><input type="text" placeholder="Sprinter Klein"></div>
+          <div><label>Abholdatum</label><input type="date"></div>
+          <div><label>Rückgabedatum</label><input type="date"></div>
+          <div>
+            <label>Zeitfenster</label>
+            <select>
+              <option>Vormittag</option>
+              <option>Nachmittag</option>
+              <option>Ganzer Tag</option>
+            </select>
+          </div>
+          <div>
+            <label>Kilometerpaket</label>
+            <select>
+              <option>100 km</option>
+              <option>200 km</option>
+              <option>Unbegrenzt</option>
+            </select>
+          </div>
+          <div>
+            <label>Versicherung</label>
+            <select>
+              <option>Basis</option>
+              <option>Vollkasko</option>
+              <option>Premium</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="fig-admin__panel">
+        <h5>Extras</h5>
+        <div class="fig-form__grid">
+          <label class="checkbox"><input type="checkbox"> Möbeldecken</label>
+          <label class="checkbox"><input type="checkbox"> Sackkarre</label>
+          <label class="checkbox"><input type="checkbox"> Zurrgurte</label>
+          <label class="checkbox"><input type="checkbox"> Zusatzfahrer</label>
+        </div>
+      <div class="fig-form__actions" style="margin-top:10px;">
+        <button class="fig-btn fig-btn--primary" type="button">
+          <i data-lucide="check"></i>
+          Buchung erstellen (Platzhalter)
+        </button>
+      </div>
+      </div>
+    </div>
+  </article>
+</dialog>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {

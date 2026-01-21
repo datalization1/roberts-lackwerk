@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}page-gold{% endblock %}
+
 {% block content %}
 <section class="rl-wizard-page">
 
@@ -163,10 +165,16 @@
     <label class="rl-wizard-label" for="{{ form.insurer.id_for_label }}">Versicherung *</label>
     {{ form.insurer }} {{ form.insurer.errors }}
   </div>
+  <div class="rl-wizard-field-group">
+    <label class="rl-wizard-label" for="{{ form.other_insurer.id_for_label }}">Andere Versicherung</label>
+    {{ form.other_insurer }} {{ form.other_insurer.errors }}
+    <p class="rl-wizard-help">Nur ausfüllen, wenn "Andere" ausgewählt ist.</p>
+  </div>
   <div class="rl-wizard-field-group rl-wizard-field-inline">
     <div>
       <label class="rl-wizard-label" for="{{ form.policy_number.id_for_label }}">Policennummer</label>
       {{ form.policy_number }} {{ form.policy_number.errors }}
+      <p class="rl-wizard-help">Optional, falls vorhanden.</p>
     </div>
     <div>
       <label class="rl-wizard-label" for="{{ form.accident_number.id_for_label }}">Schadennummer</label>
@@ -220,6 +228,16 @@
             <label class="rl-wizard-label" for="{{ form.message.id_for_label }}">Schadenbeschreibung *</label>
             {{ form.message }} {{ form.message.errors }}
           </div>
+          <div class="rl-wizard-field-group rl-wizard-field-inline">
+            <div>
+              <label class="rl-wizard-label" for="{{ form.other_party_involved.id_for_label }}">Unfallgegner vorhanden?</label>
+              {{ form.other_party_involved }}
+            </div>
+            <div>
+              <label class="rl-wizard-label" for="{{ form.police_involved.id_for_label }}">Polizei involviert?</label>
+              {{ form.police_involved }}
+            </div>
+          </div>
           <div class="rl-wizard-field-group">
             <label class="rl-wizard-label" for="{{ form.photos.id_for_label }}">Schadenfotos *</label>
             <p class="rl-wizard-help">Laden Sie klare Fotos der beschädigten Bereiche hoch (bis zu 5 Bilder, je max. 5 MB).</p>
@@ -228,7 +246,7 @@
               <div class="rl-upload-icon">⬆</div>
               <div class="rl-upload-text">
                 <div class="rl-upload-title">Klicken Sie, um Bilder hochzuladen</div>
-                <div class="rl-upload-sub">PNG, JPG bis zu 10MB pro Bild</div>
+                <div class="rl-upload-sub">PNG, JPG bis zu 5MB pro Bild</div>
               </div>
             </div>
 
@@ -239,6 +257,12 @@
             <div class="rl-upload-filelist"></div>
 
             {{ form.photos.errors }}
+          </div>
+          <div class="rl-wizard-field-group">
+            <label class="rl-wizard-label" for="{{ form.documents.id_for_label }}">Dokumente (optional)</label>
+            <p class="rl-wizard-help">Polizeibericht oder Skizze (PDF/JPG/PNG, max. 5 Dateien).</p>
+            {{ form.documents }}
+            {{ form.documents.errors }}
           </div>
         {% endif %}
 
@@ -281,8 +305,8 @@
             <section class="rl-summary-section">
               <h3 class="rl-summary-title">Personendaten</h3>
               <dl class="rl-summary-list">
-                <div><dt>Name</dt><dd>{{ summary.personal.full_name|default:"–" }}</dd></div>
-                <div><dt>Adresse</dt><dd>{{ summary.personal.address|default:"–" }}</dd></div>
+                <div><dt>Name</dt><dd>{{ summary.personal.first_name }} {{ summary.personal.last_name }}</dd></div>
+                <div><dt>Adresse</dt><dd>{{ summary.personal.address_street }} {{ summary.personal.postal_code }} {{ summary.personal.city }}</dd></div>
                 <div><dt>Telefon</dt><dd>{{ summary.personal.phone|default:"–" }}</dd></div>
                 <div><dt>E-Mail</dt><dd>{{ summary.personal.email|default:"–" }}</dd></div>
               </dl>
@@ -293,6 +317,7 @@
               <h3 class="rl-summary-title">Versicherung</h3>
               <dl class="rl-summary-list">
                 <div><dt>Versicherung</dt><dd>{{ summary.insurance.insurer|default:"–" }}</dd></div>
+                <div><dt>Andere Versicherung</dt><dd>{{ summary.insurance.other_insurer|default:"–" }}</dd></div>
                 <div><dt>Police-Nr.</dt><dd>{{ summary.insurance.policy_number|default:"–" }}</dd></div>
                 <div><dt>Schaden-Nr.</dt><dd>{{ summary.insurance.accident_number|default:"–" }}</dd></div>
                 <div><dt>Kontakt</dt><dd>{{ summary.insurance.insurer_contact|default:"–" }}</dd></div>
@@ -334,6 +359,14 @@
                   <dd>{{ summary.accident.damage_type|default:"–" }}</dd>
                 </div>
                 <div>
+                  <dt>Unfallgegner</dt>
+                  <dd>{% if summary.accident.other_party_involved %}Ja{% else %}Nein{% endif %}</dd>
+                </div>
+                <div>
+                  <dt>Polizei involviert</dt>
+                  <dd>{% if summary.accident.police_involved %}Ja{% else %}Nein{% endif %}</dd>
+                </div>
+                <div>
                   <dt>Fotos</dt>
                   <dd>
                     {% if photos %}
@@ -352,6 +385,20 @@
                       </div>
                     {% else %}
                       Kein Foto hochgeladen.
+                    {% endif %}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Dokumente</dt>
+                  <dd>
+                    {% if summary.accident.documents %}
+                      <ul class="rl-summary-list">
+                        {% for doc in summary.accident.documents %}
+                          <li>{{ doc.name|default:doc }}</li>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      Keine Dokumente hochgeladen.
                     {% endif %}
                   </dd>
                 </div>

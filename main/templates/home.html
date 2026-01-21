@@ -1,17 +1,20 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}page-home{% endblock %}
+
 {% block content %}
-<div class="figma-home">
+<div class="figma-home figma-home--landing">
   <section class="fig-hero">
     <div class="fig-hero__bg"></div>
     <div class="fig-hero__inner">
-      <p class="fig-eyebrow">Professionelle Karosseriereparatur &amp; Transporter-Vermietung</p>
-      <h1>Fachkundige Lackiererei für unfallbeschädigte Fahrzeuge und zuverlässige Umzugstransporter in der Schweiz</h1>
-      <p class="fig-subtitle">Wir kümmern uns um die vollständige Instandsetzung Ihres Fahrzeugs und stellen Ihnen bei Bedarf sofort einen passenden Transporter zur Verfügung – effizient, gesetzeskonform und zuverlässig.</p>
-      <div class="fig-hero__actions">
-        <a class="fig-btn fig-btn--primary" href="{% url 'schaden_melden' %}">Schaden melden</a>
-        <a class="fig-btn fig-btn--ghost" href="{% url 'mietfahrzeuge' %}">Transporter mieten</a>
+      <div class="fig-hero__content">
+        <h1>Professionelle Karosseriereparatur &amp; Transporter-Vermietung</h1>
+        <p class="fig-subtitle">Fachkundige Lackiererei für unfallbeschädigte Fahrzeuge und zuverlässige Umzugstransporter in der Schweiz</p>
+        <div class="fig-hero__actions">
+          <a class="fig-btn fig-btn--primary" href="{% url 'schaden_melden' %}">Schaden melden</a>
+          <a class="fig-btn fig-btn--ghost" href="{% url 'mietfahrzeuge' %}">Transporter mieten</a>
+        </div>
       </div>
     </div>
   </section>
@@ -22,7 +25,8 @@
       <p>Umfassende Autoreparatur- und Vermietungslösungen nach Ihren Bedürfnissen</p>
     </header>
     <div class="fig-grid fig-grid--4">
-      <article class="fig-card">
+      {% if not use_homepage_services or "Karosseriereparatur" in homepage_service_names %}
+      <a class="fig-card fig-card--link" href="{% url 'schaden_melden' %}">
         <div class="fig-icon"><i data-lucide="car"></i></div>
         <h3>Karosseriereparatur</h3>
         <p>Professionelle Instandsetzung von Unfallschäden an der Karosserie.</p>
@@ -32,73 +36,74 @@
           <li>Schweissarbeiten</li>
           <li>Rahmenrichtarbeiten</li>
         </ul>
-      </article>
-      <article class="fig-card">
+      </a>
+      {% endif %}
+      {% if not use_homepage_services or "Autolackierung" in homepage_service_names %}
+      <a class="fig-card fig-card--link" href="{% url 'dienstleistungen' %}">
         <div class="fig-icon"><i data-lucide="paintbrush"></i></div>
         <h3>Autolackierung</h3>
         <p>Fachgerechte Lackierarbeiten mit modernster Technik und Präzision.</p>
         <ul>
-          <li>Komplettlackierungen</li>
-          <li>Spot-Repair (Teillackierung)</li>
-          <li>Farbton-Anpassung</li>
-          <li>Lackversiegelung</li>
+          <li>Professionelle Lackierung</li>
+          <li>Spot-Reparaturen</li>
+          <li>Vollständige Neulackierung</li>
+          <li>Farbmischung nach Werksangaben</li>
         </ul>
-      </article>
-      <article class="fig-card">
-        <div class="fig-icon"><i data-lucide="shield-check"></i></div>
-        <h3>Versicherungsunterstützung</h3>
-        <p>Direkte Zusammenarbeit mit allen grossen Versicherungen.</p>
-        <ul>
-          <li>Direktabrechnung</li>
-          <li>Schadengutachten</li>
-          <li>Schadensmeldungen</li>
-          <li>Gesetz konforme Dokumentation</li>
-        </ul>
-      </article>
-      <article class="fig-card">
+      </a>
+      {% endif %}
+      {% if not use_homepage_services or "Transporter-Vermietung" in homepage_service_names %}
+      <a class="fig-card fig-card--link" href="{% url 'mietfahrzeuge' %}">
         <div class="fig-icon"><i data-lucide="truck"></i></div>
         <h3>Transporter-Vermietung</h3>
         <p>Zuverlässige Umzugs-Transporter für jeden Bedarf.</p>
         <ul>
-          <li>Verschiedene Grössen</li>
-          <li>Flexible Mietzeiten</li>
-          <li>Gut gewartete Flotte</li>
-          <li>Faire Preise</li>
+          <li>Flexible Mietdauer</li>
+          <li>Moderne Fahrzeuge</li>
+          <li>Kilometerpakete</li>
+          <li>Versicherung inklusive</li>
         </ul>
-      </article>
+      </a>
+      {% endif %}
+      {% if not use_homepage_services or "Versicherungsabwicklung" in homepage_service_names %}
+      <a class="fig-card fig-card--link" href="{% url 'schaden_melden' %}">
+        <div class="fig-icon"><i data-lucide="shield-check"></i></div>
+        <h3>Versicherungsabwicklung</h3>
+        <p>Direkte Zusammenarbeit mit allen grossen Versicherungen.</p>
+        <ul>
+          <li>Direktabrechnung mit Versicherungen</li>
+          <li>Schadensgutachten</li>
+          <li>Ersatzfahrzeug-Service</li>
+          <li>Dokumentation nach Schweizer Standards</li>
+        </ul>
+      </a>
+      {% endif %}
     </div>
   </section>
 
-  <section class="fig-section fig-section--alt">
+  <section class="fig-section fig-section--alt fig-section--centered fig-section--full">
     <header class="fig-section__head">
       <h2>Warum uns wählen</h2>
     </header>
-    <div class="fig-grid fig-grid--3">
-      <article class="fig-pill">
-        <div class="fig-pill__icon"><i data-lucide="award"></i></div>
-        <div>
-          <h3>Expertentechniker</h3>
-          <p>Zertifizierte Fachleute mit jahrelanger Erfahrung in Karosseriereparaturen.</p>
-        </div>
+    <div class="fig-usp-row">
+      <article class="fig-usp">
+        <div class="fig-usp__icon"><i data-lucide="award"></i></div>
+        <h3>Erfahrene Fachkräfte</h3>
+        <p>Über 25 Jahre Erfahrung in Karosserie- und Lackierarbeiten.</p>
       </article>
-      <article class="fig-pill">
-        <div class="fig-pill__icon"><i data-lucide="clock-3"></i></div>
-        <div>
-          <h3>Schnelle Bearbeitung</h3>
-          <p>Effizienter Service, um Sie so schnell wie möglich wieder auf die Strasse zu bringen.</p>
-        </div>
+      <article class="fig-usp">
+        <div class="fig-usp__icon"><i data-lucide="clock-3"></i></div>
+        <h3>Schnelle Bearbeitung</h3>
+        <p>Durchschnittliche Bearbeitungszeit: 3–5 Tage.</p>
       </article>
-      <article class="fig-pill">
-        <div class="fig-pill__icon"><i data-lucide="file-text"></i></div>
-        <div>
-          <h3>Schweizer Gesetz konform</h3>
-          <p>Alle Dokumentationen und Prozesse entsprechen den Schweizer Rechtsvorschriften.</p>
-        </div>
+      <article class="fig-usp">
+        <div class="fig-usp__icon"><i data-lucide="file-text"></i></div>
+        <h3>Schweizer Gesetz konform</h3>
+        <p>Alle Dokumentationen und Prozesse entsprechen den Schweizer Rechtsvorschriften.</p>
       </article>
     </div>
   </section>
 
-  <section class="fig-cta">
+  <section class="fig-cta fig-cta--full">
     <div class="fig-cta__inner">
       <h2>Bereit loszulegen?</h2>
       <p>Reichen Sie noch heute eine Schadenmeldung ein oder buchen Sie einen Transporter.</p>

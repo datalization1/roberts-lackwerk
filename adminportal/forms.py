@@ -1,6 +1,6 @@
 from django import forms
 
-from main.models import DamageReport, Booking
+from main.models import DamageReport, Booking, Vehicle
 from .models import Customer, Invoice, PortalSettings
 
 
@@ -19,6 +19,18 @@ class CustomerForm(forms.ModelForm):
             "source",
             "notes",
         ]
+        labels = {
+            "first_name": "Vorname",
+            "last_name": "Nachname",
+            "company": "Firma",
+            "email": "E-Mail",
+            "phone": "Telefon",
+            "address": "Strasse & Hausnummer",
+            "city": "Ort",
+            "postal_code": "PLZ",
+            "source": "Quelle",
+            "notes": "Notizen",
+        }
 
 
 class InvoiceForm(forms.ModelForm):
@@ -37,6 +49,15 @@ class InvoiceForm(forms.ModelForm):
             "issue_date",
             "due_date",
         ]
+        labels = {
+            "invoice_number": "Rechnungsnummer",
+            "customer": "Kunde",
+            "description": "Beschreibung",
+            "amount_chf": "Betrag (CHF)",
+            "status": "Status",
+            "issue_date": "Rechnungsdatum",
+            "due_date": "Fällig am",
+        }
     related_report = forms.ModelChoiceField(
         queryset=DamageReport.objects.all(), required=False, label="Schadenmeldung"
     )
@@ -45,16 +66,91 @@ class InvoiceForm(forms.ModelForm):
     )
 
 
+class VehicleForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = [
+            "brand",
+            "model",
+            "type",
+            "license_plate",
+            "daily_rate",
+            "status",
+            "photo",
+        ]
+        labels = {
+            "brand": "Fahrzeugname",
+            "model": "Modell",
+            "type": "Typ",
+            "license_plate": "Kennzeichen",
+            "daily_rate": "Tagespreis (CHF)",
+            "status": "Status",
+            "photo": "Fahrzeugbild",
+        }
+
+
 class DamageReportUpdateForm(forms.ModelForm):
     class Meta:
         model = DamageReport
-        fields = ["status", "admin_notes"]
+        fields = [
+            "status",
+            "priority",
+            "estimated_cost_chf",
+            "repair_start",
+            "repair_end",
+            "assigned_mechanic",
+            "admin_notes",
+        ]
 
 
 class BookingUpdateForm(forms.ModelForm):
+    EXTRA_CHOICES = [
+        ("moving_blankets", "Möbeldecken (CHF 15)"),
+        ("hand_truck", "Sackkarre (CHF 10)"),
+        ("tie_down_straps", "Zurrgurte (CHF 8)"),
+        ("navigation", "Navigationsgerät (CHF 12)"),
+        ("additional_driver", "Zusatzfahrer (CHF 20)"),
+        ("winter_tires", "Winterreifen (CHF 25)"),
+    ]
+    extras = forms.MultipleChoiceField(
+        choices=EXTRA_CHOICES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label="Extras",
+    )
+
     class Meta:
         model = Booking
-        fields = ["status", "admin_notes"]
+        fields = [
+            "status",
+            "transporter",
+            "date",
+            "time_slot",
+            "pickup_date",
+            "pickup_time",
+            "return_date",
+            "return_time",
+            "km_package",
+            "insurance",
+            "payment_status",
+            "payment_method",
+            "transaction_id",
+            "total_price",
+            "additional_notes",
+            "admin_notes",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["extras"].initial = list(self.instance.extras or [])
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.extras = self.cleaned_data.get("extras", [])
+        if commit:
+            instance.save()
+        return instance
 
 
 class PortalSettingsForm(forms.ModelForm):
@@ -67,6 +163,7 @@ class PortalSettingsForm(forms.ModelForm):
             "default_currency",
             "notify_new_damage",
             "notify_new_booking",
+            "notify_payment_received",
             "notification_recipients",
             "smtp_host",
             "smtp_port",
@@ -74,8 +171,16 @@ class PortalSettingsForm(forms.ModelForm):
             "smtp_password",
             "smtp_use_tls",
             "smtp_use_ssl",
+            "damage_parts",
+            "damage_types",
+            "insurers",
+            "homepage_services",
         ]
         widgets = {
             "smtp_password": forms.PasswordInput(render_value=True),
             "notification_recipients": forms.Textarea(attrs={"rows": 2, "placeholder": "kommagetrennte E-Mails"}),
+            "damage_parts": forms.HiddenInput(),
+            "damage_types": forms.HiddenInput(),
+            "insurers": forms.HiddenInput(),
+            "homepage_services": forms.HiddenInput(),
         }

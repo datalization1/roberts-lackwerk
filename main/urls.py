@@ -13,6 +13,7 @@ urlpatterns = [
     path("ueber-uns/", ueber_uns, name="ueber_uns"),
     path("impressum/", views.impressum, name="impressum"),
     path("datenschutz/", views.datenschutz, name="datenschutz"),
+    path("healthz/", views.healthz, name="healthz"),
 
     # Schaden melden (Wizard)
     path("schaden/", ClaimWizard.as_view(), name="schaden"),

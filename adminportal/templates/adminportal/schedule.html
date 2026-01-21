@@ -2,12 +2,23 @@
 
 {% block portal_content %}
 <section class="fig-admin__panel fig-admin__panel--wide">
-  <header class="fig-admin__panel-header">
-    <h3>Zeitplan</h3>
-    <p class="fig-admin__panel-subtitle">Gebuchte Slots chronologisch</p>
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Zeitplan</h3>
+      <p class="fig-admin__panel-subtitle">Gebuchte Slots chronologisch</p>
+    </div>
   </header>
   <form method="get" class="fig-form">
     <div class="fig-form__grid">
+      <div>
+        <label>Zeitraum</label>
+        <select name="range">
+          <option value="">Benutzerdefiniert</option>
+          <option value="today">Heute</option>
+          <option value="week">Diese Woche</option>
+          <option value="month">Dieser Monat</option>
+        </select>
+      </div>
       <div><label>Suche</label><input type="text" name="q" value="{{ filter.q }}"></div>
       <div>
         <label>Status</label>
@@ -32,16 +43,24 @@
       <div><label>Bis</label><input type="date" name="to" value="{{ filter.to }}"></div>
     </div>
     <div class="fig-form__actions">
-      <button class="fig-btn fig-btn--primary" type="submit">Filtern</button>
-      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_schedule' %}">Zurücksetzen</a>
+      <button class="fig-btn fig-btn--primary" type="submit">
+        <i data-lucide="search"></i>
+        Filtern
+      </button>
+      <a class="fig-btn fig-btn--ghost" href="{% url 'portal_schedule' %}">
+        <i data-lucide="rotate-ccw"></i>
+        Zurücksetzen
+      </a>
     </div>
   </form>
   {% if grouped_bookings %}
     {% for date, items in grouped_bookings.items %}
       <div class="fig-admin__panel" style="margin-bottom:12px;">
-        <div class="fig-admin__panel-header">
-          <h4>{{ date|date:"l, d.m.Y" }}</h4>
-          <p class="fig-admin__panel-subtitle">{{ items|length }} Buchung(en)</p>
+        <div class="fig-admin__panel-header fig-admin__panel-header--split">
+          <div class="fig-admin__panel-header-group">
+            <h4>{{ date|date:"l, d.m.Y" }}</h4>
+            <p class="fig-admin__panel-subtitle">{{ items|length }} Buchung(en)</p>
+          </div>
         </div>
         <div class="fig-table">
           {% for booking in items %}
@@ -62,6 +81,8 @@
                   <span class="fig-badge fig-badge--success">Bestätigt</span>
                 {% elif booking.status == "pending" %}
                   <span class="fig-badge fig-badge--warning">Ausstehend</span>
+                {% elif booking.status == "active" %}
+                  <span class="fig-badge fig-badge--info">Aktiv</span>
                 {% elif booking.status == "completed" %}
                   <span class="fig-badge fig-badge--info">Abgeschlossen</span>
                 {% elif booking.status == "cancelled" %}
@@ -83,6 +104,7 @@
         <h4>Timeline</h4>
         <p class="fig-admin__panel-subtitle">Übersicht für {{ timeline_dates|length }} Tage</p>
       </header>
+      <p class="fig-admin__card-meta">Legende: <span class="fig-badge fig-badge--success">Bestätigt</span> <span class="fig-badge fig-badge--warning">Ausstehend</span> <span class="fig-badge fig-badge--info">Aktiv</span> <span class="fig-badge">Storniert</span></p>
       <div class="fig-table fig-table--scroll">
         <div class="fig-table__row fig-table__row--head" style="grid-template-columns:180px repeat({{ timeline_dates|length }},120px);overflow-x:auto;">
           <div class="fig-table__cell">Transporter</div>
@@ -96,7 +118,7 @@
             {% for booking in row.slots %}
               <div class="fig-table__cell">
                 {% if booking %}
-                  <span class="fig-badge {% if booking.status == 'confirmed' %}fig-badge--success{% elif booking.status == 'pending' %}fig-badge--warning{% elif booking.status == 'cancelled' %}fig-badge--muted{% else %}fig-badge--info{% endif %}">
+                  <span class="fig-badge {% if booking.status == 'confirmed' %}fig-badge--success{% elif booking.status == 'pending' %}fig-badge--warning{% elif booking.status == 'active' %}fig-badge--info{% elif booking.status == 'cancelled' %}fig-badge--muted{% else %}fig-badge--info{% endif %}">
                     {{ booking.get_time_slot_display }}
                   </span>
                   <div class="fig-table__meta">{{ booking.customer_name }}</div>
