@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -46,7 +47,7 @@ else:
     ALLOWED_HOSTS = os.environ.get(
         "DJANGO_ALLOWED_HOSTS",
         "roberts-lackwerk-bf57599aa7c8.herokuapp.com",
-        # "roberts-lackwerk.ch, www.roberts-lackwerk.ch", 
+        "roberts-lackwerk.ch, www.roberts-lackwerk.ch", 
     ).split(",")
 
 # Security: lokal kein HTTPS-Zwang, auf Heroku schon
@@ -179,7 +180,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if "test" in sys.argv:
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+else:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0
 
 # Default primary key field type
