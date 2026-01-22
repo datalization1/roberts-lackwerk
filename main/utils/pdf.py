@@ -44,7 +44,7 @@ def render_booking_invoice_pdf(booking, rental_days, base_price, extras_total, v
 
     p.drawString(40, y, f"Zwischensumme: CHF {base_price or Decimal('0.00') + (extras_total or Decimal('0.00'))}")
     y -= 14
-    p.drawString(40, y, f"MwSt. 7.7%: CHF {vat_amount}")
+    p.drawString(40, y, f"MwSt. 7.7% (inkl.): CHF {vat_amount}")
     y -= 16
     p.setFont("Helvetica-Bold", 12)
     p.drawString(40, y, f"Gesamt: CHF {total_price}")

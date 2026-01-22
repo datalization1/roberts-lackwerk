@@ -12,7 +12,7 @@ from .models import (
 
 @admin.register(Transporter)
 class TransporterAdmin(admin.ModelAdmin):
-    list_display = ("name", "kennzeichen", "farbe", "preis_chf", "verfuegbar_ab", "buchung", "preview")
+    list_display = ("name", "kennzeichen", "farbe", "preis_chf", "halbtag_preis_chf", "verfuegbar_ab", "buchung", "preview")
 
     def preview(self, obj):
         if obj.bild:
@@ -36,7 +36,7 @@ class CustomerAdmin(admin.ModelAdmin):
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
-    list_display = ("license_plate", "brand", "model", "type", "status", "daily_rate")
+    list_display = ("license_plate", "brand", "model", "type", "status", "daily_rate", "half_day_rate")
     list_filter = ("type", "status")
     search_fields = ("license_plate", "brand", "model")
 

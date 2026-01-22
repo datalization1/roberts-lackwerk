@@ -12,31 +12,15 @@
     <p class="rl-wizard-subtitle">Buchen Sie einen Umzugstransporter für Ihre Umzugsbedürfnisse.</p>
   </header>
 
-  <!-- Progress Card -->
-  <section class="rl-wizard-card rl-wizard-card--progress">
-    <div class="rl-stepper">
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Mietdetails</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item">
-        <span class="rl-stepper__label">Kundendaten</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item">
-        <span class="rl-stepper__label">Zusatzoptionen</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item">
-        <span class="rl-stepper__label">Überprüfung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item">
-        <span class="rl-stepper__label">Zahlung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
+  <div class="rl-progress-single">
+    <div class="rl-progress-single__top">
+      <span class="rl-progress-single__label">Mietdetails</span>
+      <span class="rl-progress-single__step">Schritt 1 von 5</span>
     </div>
-  </section>
+    <div class="rl-progress-track">
+      <span class="rl-progress-fill" style="width: 20%;"></span>
+    </div>
+  </div>
 
   <section class="rl-wizard-card">
     <header class="rl-wizard-card__header">
@@ -141,6 +125,9 @@
                 </div>
               </label>
             </div>
+            <p class="rl-text-muted rl-text-muted--small">
+              Hinweis: Bei verspäteter Rückgabe wird ein weiterer Halbtag verrechnet.
+            </p>
           </div>
 
           <!-- Verfügbarkeits-Banner + Modelle -->
@@ -161,47 +148,40 @@
 
           <label class="rl-field-label">Modell auswählen <span class="rl-field-required">*</span></label>
 
-          {% if transporters %}
-            <div class="rl-rental-grid">
-              {% for t in transporters %}
-                <label class="rl-rental-card {% if t.is_unavailable %}rl-rental-card--unavailable{% endif %}">
-                  <input type="radio" name="transporter_id" value="{{ t.id }}" class="rl-rental-card__input"
-                        {% if t.is_unavailable %}
-                          disabled
+          {% if has_filter %}
+            {% if available_count > 0 and transporters %}
+              <div class="rl-rental-grid">
+                {% for t in transporters %}
+                  {% if not t.is_unavailable %}
+                    <label class="rl-rental-card">
+                      <input type="radio" name="transporter_id" value="{{ t.id }}" class="rl-rental-card__input"
+                        {% if step1.transporter_id %}
+                          {% if step1.transporter_id == t.id %}checked{% endif %}
+                        {% elif forloop.first %}
+                          checked
+                        {% endif %}>
+                      <div class="rl-rental-card__inner">
+                        <span class="rl-rental-card__badge rl-rental-card__badge--available">Verfügbar</span>
+                        {% if t.image %}
+                          <div class="rl-rental-card__image" style="background-image:url('{{ t.image.url }}');"></div>
                         {% else %}
-                  {% if step1.transporter_id %}
-                    {% if step1.transporter_id == t.id %}checked{% endif %}
-                  {% elif forloop.first %}
-                    checked
+                          <div class="rl-rental-card__image rl-rental-card__image--placeholder"></div>
+                        {% endif %}
+                        <div class="rl-rental-card__body">
+                          <h3 class="rl-rental-card__title">{{ t.name }}</h3>
+                          {% if t.farbe %}<p class="rl-rental-card__meta">Farbe: {{ t.farbe }}</p>{% endif %}
+                          {% if t.preis_chf %}<p class="rl-rental-card__price">CHF {{ t.preis_chf|floatformat:0 }}</p>{% endif %}
+                        </div>
+                      </div>
+                    </label>
                   {% endif %}
-                {% endif %}>
-              <div class="rl-rental-card__inner">
-                {% if t.is_unavailable %}
-                  <span class="rl-rental-card__badge rl-rental-card__badge--unavailable">Ausgebucht</span>
-                {% else %}
-                  <span class="rl-rental-card__badge rl-rental-card__badge--available">Verfügbar</span>
-                {% endif %}
-                {% if t.image %}
-                  <div class="rl-rental-card__image" style="background-image:url('{{ t.image.url }}');"></div>
-                {% else %}
-                  <div class="rl-rental-card__image rl-rental-card__image--placeholder"></div>
-                {% endif %}
-                <div class="rl-rental-card__body">
-                  <h3 class="rl-rental-card__title">{{ t.name }}</h3>
-                  {% if t.farbe %}<p class="rl-rental-card__meta">Farbe: {{ t.farbe }}</p>{% endif %}
-                  {% if t.preis_chf %}<p class="rl-rental-card__price">CHF {{ t.preis_chf|floatformat:0 }}</p>{% endif %}
-                  {% if t.is_unavailable and t.next_available_date %}
-                        <p class="rl-rental-card__note">Nächste Verfügbarkeit:<br>{{ t.next_available_date|date:"j.n.Y" }}</p>
-                      {% endif %}
-                    </div>
-                  </div>
-                </label>
-              {% empty %}
-                <p class="rl-text-muted">Aktuell sind keine Transporter verfügbar.</p>
-              {% endfor %}
-            </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="rl-text-muted">Leider ist kein Fahrzeug für diesen Zeitraum verfügbar.</p>
+            {% endif %}
           {% else %}
-            <p class="rl-text-muted">Aktuell sind keine Transporter verfügbar.</p>
+            <p class="rl-text-muted">Bitte Abholdatum und Zeitblock wählen, um verfügbare Fahrzeuge zu sehen.</p>
           {% endif %}
         </div>
 

@@ -25,7 +25,7 @@ class MietfahrzeugeViewTests(TestCase):
     def test_missing_fields_shows_error(self):
         resp = self.client.post(reverse("mietfahrzeuge"), {})
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Bitte Abholdatum, Zeitblock und einen Transporter auswählen.")
+        self.assertContains(resp, "Bitte Abholdatum und Zeitblock auswählen.")
 
     def test_valid_post_sets_session_and_redirects(self):
         today = timezone.localdate().isoformat()

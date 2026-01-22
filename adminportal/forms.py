@@ -75,6 +75,7 @@ class VehicleForm(forms.ModelForm):
             "type",
             "license_plate",
             "daily_rate",
+            "half_day_rate",
             "status",
             "photo",
         ]
@@ -84,6 +85,7 @@ class VehicleForm(forms.ModelForm):
             "type": "Typ",
             "license_plate": "Kennzeichen",
             "daily_rate": "Tagespreis (CHF)",
+            "half_day_rate": "Halbtagespreis (CHF)",
             "status": "Status",
             "photo": "Fahrzeugbild",
         }

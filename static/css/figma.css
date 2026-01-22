@@ -282,6 +282,14 @@
   .fig-hero__inner { padding: 0 24px; }
   .fig-usp-row { gap: 20px; }
 }
+@media (max-width: 640px) {
+  .fig-hero {
+    min-height: calc(70vh - var(--nav-height));
+    padding: 84px 0 64px 0;
+  }
+  .fig-hero h1 { font-size: 34px; }
+  .fig-subtitle { font-size: 0.95rem; }
+}
 
 /* Admin override */
 .fig-admin {

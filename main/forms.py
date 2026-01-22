@@ -118,11 +118,11 @@ class PersonalDetailsForm(forms.Form):
                                 widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Vorname"}))
     last_name = forms.CharField(label="Nachname *", max_length=80,
                                 widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Nachname"}))
-    address_street = forms.CharField(label="Strasse & Nr. *", max_length=200,
+    address_street = forms.CharField(label="Strasse & Nr. (optional)", max_length=200, required=False,
                               widget=forms.TextInput(attrs={"class":"form-control","placeholder":"z.B. Bahnhofstrasse 1"}))
-    postal_code = forms.CharField(label="PLZ *", max_length=10,
+    postal_code = forms.CharField(label="PLZ (optional)", max_length=10, required=False,
                               widget=forms.TextInput(attrs={"class":"form-control","placeholder":"8000"}))
-    city = forms.CharField(label="Ort *", max_length=120,
+    city = forms.CharField(label="Ort (optional)", max_length=120, required=False,
                               widget=forms.TextInput(attrs={"class":"form-control","placeholder":"Zürich"}))
     phone = forms.CharField(label="Telefon *", max_length=50, required=True,
                             widget=forms.TextInput(attrs={
@@ -137,6 +137,8 @@ class PersonalDetailsForm(forms.Form):
 
     def clean_postal_code(self):
         code = (self.cleaned_data.get("postal_code") or "").strip()
+        if not code:
+            return code
         if not re.match(r"^\d{4}$", code):
             raise forms.ValidationError("PLZ muss 4-stellig sein.")
         return code

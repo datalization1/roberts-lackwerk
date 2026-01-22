@@ -10,6 +10,7 @@ __pycache__/
 
 # Virtualenv
 .venv/
+.venv*/
 venv/
 .env
 **/node_modules/
@@ -23,6 +24,12 @@ static/admin/
 # Dumps / DB-Exports
 latest.dump
 db.sqlite3
+
+# Media uploads
+media/
+
+# Pytest cache
+.pytest_cache/
 
 # Design assets (local Figma export)
 Figma/

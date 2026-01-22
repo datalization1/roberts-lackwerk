@@ -117,6 +117,7 @@ class Vehicle(models.Model):
     payload = models.PositiveIntegerField(help_text="kg", null=True, blank=True)
     features = models.JSONField(default=list, blank=True)
     daily_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    half_day_rate = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     vin = models.CharField(max_length=32, blank=True)
     insurance_number = models.CharField(max_length=64, blank=True)
     next_service = models.DateField(null=True, blank=True)
@@ -321,6 +322,7 @@ class Transporter(models.Model):
     kennzeichen  = models.CharField(max_length=20, unique=True)
     farbe = models.CharField("Farbe", max_length=50, blank=True)
     preis_chf = models.DecimalField("Preis (CHF)", max_digits=7, decimal_places=2, default=0)
+    halbtag_preis_chf = models.DecimalField("Halbtag (CHF)", max_digits=7, decimal_places=2, default=0)
     verfuegbar_ab = models.DateField()
 
     # Hinweis: Dein Template verwendet stellenweise "transporter.image".

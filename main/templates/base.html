@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded',function(){
         <a class="navbar-brand rl-nav__brand" href="{% url 'home' %}">
           <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk" class="rl-nav__logo" decoding="async">
         </a>
+        <a href="{% url 'schaden_melden' %}" class="btn btn-primary rl-nav__cta rl-nav__cta--mobile js-start-modal">Jetzt starten</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded',function(){
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'mietfahrzeuge' %}active{% endif %}" href="{% url 'mietfahrzeuge' %}">Vermietung</a></li>
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'ueber_uns' %}active{% endif %}" href="{% url 'ueber_uns' %}">Über uns</a></li>
           </ul>
-          <a href="{% url 'schaden_melden' %}" class="btn btn-primary rl-nav__cta">Jetzt starten</a>
+          <a href="{% url 'schaden_melden' %}" class="btn btn-primary rl-nav__cta rl-nav__cta--desktop js-start-modal">Jetzt starten</a>
         </div>
       </div>
     </nav>
@@ -106,5 +107,38 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   })();
 </script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('rlStartModal');
+    if (!modalEl || !window.bootstrap) {
+      return;
+    }
+    const modal = new bootstrap.Modal(modalEl);
+    document.querySelectorAll('.js-start-modal').forEach(function (btn) {
+      btn.addEventListener('click', function (event) {
+        event.preventDefault();
+        modal.show();
+      });
+    });
+  });
+</script>
   </body>
 </html>
+
+<div class="modal fade rl-start-modal" id="rlStartModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header rl-start-modal__header">
+        <h5 class="modal-title">Willkommen bei Robert's Lackwerk</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+      </div>
+      <div class="modal-body">
+        <p>Wir freuen, dass Sie die Dienstleistung von Robert's Lackwerk in Anspruch nehmen möchten. Mit welcher Dienstleistung möchten Sie fortfahren?</p>
+        <div class="rl-start-modal__actions">
+          <a class="btn rl-start-modal__btn rl-start-modal__btn--solid" href="{% url 'schaden_melden' %}">Schaden melden</a>
+          <a class="btn rl-start-modal__btn rl-start-modal__btn--outline" href="{% url 'mietfahrzeuge' %}">Transporter mieten</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -24,21 +24,16 @@
         <p class="rl-wizard-subtitle">Bitte prüfen Sie alle Angaben und bestätigen Sie die Schadenmeldung.</p>
       {% endif %}
 
-      <div class="rl-progress-grid">
-        {% for step_key in steps_list %}
-          {% with idx=forloop.counter %}
-            {% with done=wizard.steps.step1|add:'0' %}
-              <div class="rl-progress-item">
-                <div class="rl-progress-label">
-                  {% if step_key == "car" %}Fahrzeugdetails{% elif step_key == "personal" %}Persönliche Daten{% elif step_key == "insurance" %}Versicherungsdetails{% elif step_key == "accident" %}Unfalldetails{% else %}Zusammenfassung{% endif %}
-                </div>
-                <div class="rl-progress-bar">
-                  <span class="{% if forloop.counter <= wizard.steps.step1 %}is-active{% endif %}"></span>
-                </div>
-              </div>
-            {% endwith %}
-          {% endwith %}
-        {% endfor %}
+      <div class="rl-progress-single">
+        <div class="rl-progress-single__top">
+          <span class="rl-progress-single__label">
+            {% if wizard.steps.current == "car" %}Fahrzeugdetails{% elif wizard.steps.current == "personal" %}Persönliche Daten{% elif wizard.steps.current == "insurance" %}Versicherungsdetails{% elif wizard.steps.current == "accident" %}Unfalldetails{% else %}Zusammenfassung{% endif %}
+          </span>
+          <span class="rl-progress-single__step">Schritt {{ wizard.steps.step1 }} von {{ wizard.steps.count }}</span>
+        </div>
+        <div class="rl-progress-track">
+          <span class="rl-progress-fill" style="width: {{ progress }}%;"></span>
+        </div>
       </div>
     </header>
   {% endwith %}
@@ -135,17 +130,17 @@
   </div>
   <div class="rl-wizard-field-group rl-wizard-field-inline">
     <div>
-      <label class="rl-wizard-label" for="{{ form.address_street.id_for_label }}">Strasse & Nr. *</label>
+      <label class="rl-wizard-label" for="{{ form.address_street.id_for_label }}">Strasse & Nr. (optional)</label>
       {{ form.address_street }} {{ form.address_street.errors }}
     </div>
     <div>
-      <label class="rl-wizard-label" for="{{ form.postal_code.id_for_label }}">PLZ *</label>
+      <label class="rl-wizard-label" for="{{ form.postal_code.id_for_label }}">PLZ (optional)</label>
       {{ form.postal_code }} {{ form.postal_code.errors }}
     </div>
   </div>
   <div class="rl-wizard-field-group rl-wizard-field-inline">
     <div>
-      <label class="rl-wizard-label" for="{{ form.city.id_for_label }}">Ort *</label>
+      <label class="rl-wizard-label" for="{{ form.city.id_for_label }}">Ort (optional)</label>
       {{ form.city }} {{ form.city.errors }}
     </div>
     <div>

@@ -42,6 +42,7 @@
           <div class="fig-vehicle-card__meta">
             <span>Modell: {{ vehicle.get_type_display }}</span>
             <span>Tagespreis: <strong>CHF {{ vehicle.daily_rate|floatformat:0 }}</strong></span>
+            <span>Halbtag: <strong>CHF {{ vehicle.half_day_rate|floatformat:0 }}</strong></span>
           </div>
         </div>
         <div class="fig-vehicle-card__actions">
@@ -98,6 +99,10 @@
           <div class="fig-vehicle-form__field">
             {{ vehicle_form.daily_rate.label_tag }}
             {{ vehicle_form.daily_rate }}
+          </div>
+          <div class="fig-vehicle-form__field">
+            {{ vehicle_form.half_day_rate.label_tag }}
+            {{ vehicle_form.half_day_rate }}
           </div>
           <div class="fig-vehicle-form__field">
             {{ vehicle_form.status.label_tag }}

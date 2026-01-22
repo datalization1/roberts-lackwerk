@@ -299,7 +299,7 @@ def mietfahrzeuge(request):
         timeblock = request.POST.get("time_block") or request.POST.get("timeblock")
         return_date = request.POST.get("return_date")
 
-        if transporter_id and pickup_date and timeblock:
+        if pickup_date and timeblock:
             slot_map = {
                 "morning": "MORNING",
                 "afternoon": "AFTERNOON",
@@ -316,20 +316,21 @@ def mietfahrzeuge(request):
             }
             request.session["rental_step1"] = step1_data
 
-            return redirect("booking_create", transporter_id=transporter_id)
+            if transporter_id:
+                return redirect("booking_create", transporter_id=transporter_id)
 
-        # wenn etwas fehlt → Fehlermeldung setzen und Formular neu rendern
-        context = {
-            "transporters": transporters,
-            "step1": step1_data,
-            "has_filter": False,
-            "all_available": False,
-            "any_unavailable": False,
-            "available_count": transporters.count(),
-            "total_count": transporters.count(),
-            "form_error": "Bitte Abholdatum, Zeitblock und einen Transporter auswählen.",
-        }
-        return render(request, "mietfahrzeuge.html", context)
+        if not pickup_date or not timeblock:
+            context = {
+                "transporters": transporters,
+                "step1": step1_data,
+                "has_filter": False,
+                "all_available": False,
+                "any_unavailable": False,
+                "available_count": transporters.count(),
+                "total_count": transporters.count(),
+                "form_error": "Bitte Abholdatum und Zeitblock auswählen.",
+            }
+            return render(request, "mietfahrzeuge.html", context)
 
     # 🔹 Verfügbarkeit pro Transporter prüfen (nur wenn Datum + Slot gewählt)
     selected_date_str = step1_data.get("date")
@@ -384,6 +385,7 @@ def _sync_transporters_from_vehicles():
         defaults = {
             "name": f"{vehicle.brand} {vehicle.model}".strip() or vehicle.license_plate,
             "preis_chf": vehicle.daily_rate or 0,
+            "halbtag_preis_chf": vehicle.half_day_rate or 0,
             "verfuegbar_ab": timezone.localdate(),
         }
         transporter, created = Transporter.objects.get_or_create(
@@ -396,6 +398,8 @@ def _sync_transporters_from_vehicles():
             updates["name"] = name
         if transporter.preis_chf != vehicle.daily_rate:
             updates["preis_chf"] = vehicle.daily_rate or 0
+        if transporter.halbtag_preis_chf != vehicle.half_day_rate:
+            updates["halbtag_preis_chf"] = vehicle.half_day_rate or 0
         if vehicle.photo and transporter.bild != vehicle.photo:
             updates["bild"] = vehicle.photo
         if updates:
@@ -589,8 +593,13 @@ def booking_review(request):
 
     # ❗ Basispreis direkt aus dem Transporter-Modell
     daily_price = booking.transporter.preis_chf  # DecimalField
+    half_day_price = booking.transporter.halbtag_preis_chf or (daily_price / 2 if daily_price else None)
+    is_half_day = booking.time_slot in ("MORNING", "AFTERNOON")
     rental_days = 1  # ggf. später über Dauer berechnen
-    base_price = daily_price * rental_days if daily_price else None
+    if is_half_day:
+        base_price = half_day_price
+    else:
+        base_price = daily_price * rental_days if daily_price else None
 
     extras = []
     if booking.additional_insurance:
@@ -607,8 +616,8 @@ def booking_review(request):
     # ❗ Gesamt = Fahrzeug + Extras
     net_total = (base_price or Decimal("0.00")) + extras_total
     vat_rate = Decimal("0.077")
-    vat_amount = (net_total * vat_rate).quantize(Decimal("0.01"))
-    total_price = (net_total + vat_amount).quantize(Decimal("0.01"))
+    vat_amount = (net_total * vat_rate / (Decimal("1.0") + vat_rate)).quantize(Decimal("0.01"))
+    total_price = net_total.quantize(Decimal("0.01"))
 
     context = {
         "booking": booking,
@@ -619,6 +628,7 @@ def booking_review(request):
         "net_total": net_total,
         "vat_amount": vat_amount,
         "total_price": total_price,
+        "is_half_day": is_half_day,
     }
 
     if request.method == "POST":
@@ -634,11 +644,17 @@ def booking_payment(request):
     booking = get_object_or_404(Booking, pk=booking_id)
 
     daily_price = booking.transporter.preis_chf
+    half_day_price = booking.transporter.halbtag_preis_chf or (daily_price / 2 if daily_price else None)
+    is_half_day = booking.time_slot in ("MORNING", "AFTERNOON")
     if booking.pickup_date and booking.return_date:
         rental_days = (booking.return_date - booking.pickup_date).days + 1
     else:
         rental_days = 1
-    base_price = daily_price * rental_days if daily_price else None
+    if is_half_day:
+        base_price = half_day_price
+        rental_days = 1
+    else:
+        base_price = daily_price * rental_days if daily_price else None
 
     extras_total = Decimal("0.00")
     if booking.additional_insurance:
@@ -651,8 +667,9 @@ def booking_payment(request):
         extras_total += Decimal("8")
 
     net_total = (base_price or Decimal("0.00")) + extras_total
-    vat_amount = (net_total * Decimal("0.077")).quantize(Decimal("0.01"))
-    total_price = (net_total + vat_amount).quantize(Decimal("0.01"))
+    vat_rate = Decimal("0.077")
+    vat_amount = (net_total * vat_rate / (Decimal("1.0") + vat_rate)).quantize(Decimal("0.01"))
+    total_price = net_total.quantize(Decimal("0.01"))
 
     if request.method == "POST":
         method = request.POST.get("payment_method", "CARD")

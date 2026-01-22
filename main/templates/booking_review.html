@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block body_class %}page-gold{% endblock %}
+
 {% block content %}
 <section class="rl-wizard">
   <!-- Header -->
@@ -98,7 +100,14 @@
       <!-- Preisbox -->
       <div class="rl-review-summary">
         <div class="rl-review-summary-row">
-          <span>Basistarif{% if rental_days %} ({{ rental_days }} Tag(e)){% endif %}</span>
+          <span>
+            Basistarif
+            {% if is_half_day %}
+              (Halbtag)
+            {% elif rental_days %}
+              ({{ rental_days }} Tag(e))
+            {% endif %}
+          </span>
           <span>{% if base_price %}CHF {{ base_price }}{% else %}CHF –{% endif %}</span>
         </div>
         <div class="rl-review-summary-row rl-review-summary-row--muted">
@@ -110,7 +119,7 @@
           <span>CHF {{ net_total|default:"0.00" }}</span>
         </div>
         <div class="rl-review-summary-row rl-review-summary-row--muted">
-          <span>MwSt. 7.7%</span>
+          <span>MwSt. 7.7% (inkl.)</span>
           <span>CHF {{ vat_amount|default:"0.00" }}</span>
         </div>
         <div class="rl-review-summary-divider"></div>
