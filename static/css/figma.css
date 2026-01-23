@@ -2388,6 +2388,6 @@
 .page-home .fig-hero__actions .fig-btn { flex: 1 1 220px; max-width: 260px; }
 @media(max-width:720px){
   .page-home .fig-hero__actions{flex-direction:column;align-items:center;}
-  .page-home .fig-hero__actions .fig-btn{flex:0 0 260px;width:100%;max-width:260px;}
+  .page-home .fig-hero__actions .fig-btn{width:220px;max-width:100%;}
 }
 .page-home .fig-section--alt { background: var(--fig-surface); }
