@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 </script>
 <body class="page-bg {% block body_class %}{% endblock %}" data-ga-id="{{ GA_MEASUREMENT_ID }}">
+    {% block nav %}
     <nav class="navbar navbar-expand-lg navbar-dark rl-nav">
       <div class="container-fluid rl-nav-inner">
         <a class="navbar-brand rl-nav__brand" href="{% url 'home' %}">
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded',function(){
         </div>
       </div>
     </nav>
+    {% endblock %}
     <main class="page-main">
       <div class="page-container">
         {% block content %}{% endblock %}

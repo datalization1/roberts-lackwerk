@@ -45,6 +45,9 @@ class Invoice(models.Model):
     related_report = models.ForeignKey(DamageReport, on_delete=models.SET_NULL, null=True, blank=True, related_name="invoices")
     related_booking = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, blank=True, related_name="invoices")
     description = models.TextField(blank=True)
+    items = models.JSONField(default=list, blank=True)
+    vat_rate = models.DecimalField(max_digits=4, decimal_places=2, default=7.7)
+    vat_included = models.BooleanField(default=True)
     amount_chf = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     issue_date = models.DateField(default=timezone.localdate)
@@ -70,8 +73,8 @@ class Invoice(models.Model):
     @classmethod
     def generate_invoice_number(cls):
         today = timezone.localdate()
-        year = today.year
-        prefix = f"RE-{year}-"
+        year_suffix = str(today.year)[-2:]
+        prefix = f"RE-{year_suffix}-"
         last = cls.objects.filter(invoice_number__startswith=prefix).order_by("-invoice_number").first()
         if last:
             try:

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}page-admin{% endblock %}
+{% block nav %}{% endblock %}
+
 {% block content %}
 <style>
 .fig-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 1.5rem; z-index: 40; }
@@ -18,118 +21,133 @@
 .fig-timeline__item { border: 1px solid #1e293b; border-radius: 10px; padding: 12px; background: #0b1222; }
 .fig-timeline__title { font-weight: 700; }
 </style>
-<div class="figma-home figma-home--admin">
-  <section class="fig-admin">
-    <header class="fig-admin__hero">
-      <div>
-        <p class="fig-eyebrow">Interner Bereich</p>
-        <h1>Admin Dashboard</h1>
-        <p class="fig-subtitle">Schadenmeldungen, Vermietungen und Fuhrpark im Überblick</p>
+<div class="figma-home figma-home--admin admin-home">
+  <section class="admin-home__shell">
+    <header class="admin-home__hero">
+      <div class="admin-home__brand">
+        <div class="admin-home__logo-wrap">
+          <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk" class="admin-home__logo">
+        </div>
+        <div>
+          <p class="admin-home__eyebrow">Interner Bereich</p>
+          <h1>Admin Center</h1>
+          <p class="admin-home__subtitle">Schadenmeldungen, Vermietungen und Fuhrpark im Überblick</p>
+        </div>
       </div>
-      <div class="fig-admin__hero-actions">
-        <span class="fig-admin__badge">Angemeldet als {{ request.user.username }}</span>
-        <a class="fig-btn fig-btn--ghost" href="{% url 'admin_logout' %}">Logout</a>
+      <div class="admin-home__meta">
+        <span class="admin-home__badge">Angemeldet als {{ request.user.username }}</span>
+        <a class="admin-home__logout" href="{% url 'admin_logout' %}">Logout</a>
       </div>
     </header>
 
-    <nav class="fig-admin__tabs">
-      <a class="fig-admin__tab {% if active_tab == 'dashboard' %}is-active{% endif %}" href="?tab=dashboard">Dashboard</a>
-      <a class="fig-admin__tab {% if active_tab == 'reports' %}is-active{% endif %}" href="?tab=reports">Schadenmeldungen</a>
-      <a class="fig-admin__tab {% if active_tab == 'bookings' %}is-active{% endif %}" href="?tab=bookings">Buchungen</a>
-      <a class="fig-admin__tab {% if active_tab == 'vehicles' %}is-active{% endif %}" href="?tab=vehicles">Fahrzeuge</a>
-    </nav>
-
-    <div class="fig-admin__kpis">
-      <article class="fig-admin__card">
-        <p class="fig-admin__card-label">Schadenmeldungen</p>
-        <div class="fig-admin__card-value">{{ total_reports }}</div>
-        <p class="fig-admin__card-meta">Neue in den letzten 7 Tagen: {{ recent_reports_count }}</p>
-      </article>
-      <article class="fig-admin__card">
-        <p class="fig-admin__card-label">Buchungen</p>
-        <div class="fig-admin__card-value">{{ total_bookings }}</div>
-        <p class="fig-admin__card-meta">Heute geplant: {{ bookings_today }}</p>
-      </article>
-      <article class="fig-admin__card">
-        <p class="fig-admin__card-label">Anstehende Buchungen</p>
-        <div class="fig-admin__card-value">{{ upcoming_bookings }}</div>
-        <p class="fig-admin__card-meta">inkl. bestätigte Slots</p>
-      </article>
-      <article class="fig-admin__card">
-        <p class="fig-admin__card-label">Transporter im Bestand</p>
-        <div class="fig-admin__card-value">{{ transporter_count }}</div>
-        <p class="fig-admin__card-meta">Aktive Fahrzeuge</p>
-      </article>
+    <div class="admin-home__quick">
+      <a class="admin-home__quick-card" href="?tab=reports">
+        <div>
+          <p>Schadenmeldungen</p>
+          <h3>{{ total_reports }}</h3>
+          <span>{{ recent_reports_count }} neu in 7 Tagen</span>
+        </div>
+      </a>
+      <a class="admin-home__quick-card" href="?tab=bookings">
+        <div>
+          <p>Buchungen</p>
+          <h3>{{ total_bookings }}</h3>
+          <span>{{ bookings_today }} heute geplant</span>
+        </div>
+      </a>
+      <a class="admin-home__quick-card" href="?tab=vehicles">
+        <div>
+          <p>Transporter</p>
+          <h3>{{ transporter_count }}</h3>
+          <span>Aktive Fahrzeuge</span>
+        </div>
+      </a>
+      <a class="admin-home__quick-card admin-home__quick-card--accent" href="?tab=dashboard">
+        <div>
+          <p>Übersicht</p>
+          <h3>{{ upcoming_bookings }}</h3>
+          <span>Anstehende Buchungen</span>
+        </div>
+      </a>
     </div>
 
     {% if active_tab == "dashboard" %}
-      <div class="fig-admin__panels">
-        <section class="fig-admin__panel">
-          <header class="fig-admin__panel-header">
-            <h3>Neueste Schadenmeldungen</h3>
-            <p class="fig-admin__panel-subtitle">Letzte Eingänge</p>
+      <div class="admin-home__grid">
+        <section class="admin-home__panel">
+          <header class="admin-home__panel-header">
+            <div>
+              <h3>Neueste Schadenmeldungen</h3>
+              <p>Letzte Eingänge</p>
+            </div>
+            <a class="admin-home__link" href="?tab=reports">Alle ansehen</a>
           </header>
-          <div class="fig-list">
+          <div class="admin-home__list">
             {% for report in recent_reports %}
-              <article class="fig-list__item">
+              <article class="admin-home__list-item">
                 <div>
-                  <div class="fig-list__title">
+                  <div class="admin-home__list-title">
                     {% if report.company_name %}{{ report.company_name }}{% else %}{{ report.first_name }} {{ report.last_name }}{% endif %}
                   </div>
-                  <div class="fig-list__meta">
+                  <div class="admin-home__list-meta">
                     {{ report.car_brand }} {{ report.car_model }}{% if report.plate %} · {{ report.plate }}{% endif %}
                   </div>
                 </div>
-                <div class="fig-badge fig-badge--warning">Neu</div>
+                <span class="admin-home__pill">Neu</span>
               </article>
             {% empty %}
-              <p class="fig-empty">Noch keine Schadenmeldungen vorhanden.</p>
+              <p class="admin-home__empty">Noch keine Schadenmeldungen vorhanden.</p>
             {% endfor %}
           </div>
         </section>
 
-        <section class="fig-admin__panel">
-          <header class="fig-admin__panel-header">
-            <h3>Anstehende Buchungen</h3>
-            <p class="fig-admin__panel-subtitle">Nächste Abholtermine</p>
+        <section class="admin-home__panel">
+          <header class="admin-home__panel-header">
+            <div>
+              <h3>Anstehende Buchungen</h3>
+              <p>Nächste Abholtermine</p>
+            </div>
+            <a class="admin-home__link" href="?tab=bookings">Zum Kalender</a>
           </header>
-          <div class="fig-list">
+          <div class="admin-home__list">
             {% for booking in upcoming_booking_list %}
-              <article class="fig-list__item">
+              <article class="admin-home__list-item">
                 <div>
-                  <div class="fig-list__title">{{ booking.transporter.name }}</div>
-                  <div class="fig-list__meta">
+                  <div class="admin-home__list-title">{{ booking.transporter.name }}</div>
+                  <div class="admin-home__list-meta">
                     {{ booking.customer_name }} · {{ booking.date|date:"d.m.Y" }} · {{ booking.get_time_slot_display }}
                   </div>
                 </div>
-                <div class="fig-badge fig-badge--success">Bestätigt</div>
+                <span class="admin-home__pill admin-home__pill--ok">Bestätigt</span>
               </article>
             {% empty %}
-              <p class="fig-empty">Keine zukünftigen Buchungen vorhanden.</p>
+              <p class="admin-home__empty">Keine zukünftigen Buchungen vorhanden.</p>
             {% endfor %}
           </div>
         </section>
       </div>
 
-      <section class="fig-admin__panel fig-admin__panel--wide">
-        <header class="fig-admin__panel-header">
-          <h3>Transporter-Übersicht</h3>
-          <p class="fig-admin__panel-subtitle">Verfügbare Fahrzeuge im Fuhrpark</p>
+      <section class="admin-home__panel admin-home__panel--wide">
+        <header class="admin-home__panel-header">
+          <div>
+            <h3>Transporter-Übersicht</h3>
+            <p>Verfügbare Fahrzeuge im Fuhrpark</p>
+          </div>
+          <a class="admin-home__link" href="?tab=vehicles">Bestand öffnen</a>
         </header>
-        <div class="fig-admin__cards">
+        <div class="admin-home__fleet">
           {% for transporter in transporters %}
-            <article class="fig-admin__card fig-admin__card--inline">
+            <article class="admin-home__fleet-card">
               <div>
-                <p class="fig-admin__card-label">Name</p>
-                <div class="fig-admin__card-value fig-admin__card-value--small">{{ transporter.name }}</div>
-                <p class="fig-admin__card-meta">Kennzeichen: {{ transporter.kennzeichen }}</p>
+                <p>Name</p>
+                <h4>{{ transporter.name }}</h4>
+                <span>Kennzeichen: {{ transporter.kennzeichen }}</span>
               </div>
-              <div class="fig-admin__card-meta">
+              <div class="admin-home__fleet-meta">
                 Verfügbar ab {{ transporter.verfuegbar_ab|date:"d.m.Y" }}
               </div>
             </article>
           {% empty %}
-            <p class="fig-empty">Noch keine Transporter erfasst.</p>
+            <p class="admin-home__empty">Noch keine Transporter erfasst.</p>
           {% endfor %}
         </div>
       </section>

@@ -12,10 +12,10 @@
         <i data-lucide="search"></i>
         <input type="text" name="q" placeholder="Rechnungen suchen..." value="{{ filter.q }}">
       </form>
-      <button class="fig-btn fig-btn--primary fig-btn--compact js-open-modal" type="button" data-target="invoice-new">
+      <a class="fig-btn fig-btn--primary fig-btn--compact" href="{% url 'portal_invoice_new_customer' %}">
         <i data-lucide="plus"></i>
         Neue Rechnung
-      </button>
+      </a>
     </div>
   </header>
 
@@ -108,10 +108,10 @@
           </div>
         </div>
         <div class="fig-invoice-card__actions">
-          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" type="button">
+          <a class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" href="{% url 'portal_invoice_preview' invoice.pk %}">
             <i data-lucide="eye"></i>
             Ansehen
-          </button>
+          </a>
           <a class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" href="{% url 'portal_invoice_pdf' invoice.pk %}">
             <i data-lucide="download"></i>
             PDF
@@ -120,10 +120,15 @@
             <i data-lucide="send"></i>
             Senden
           </button>
-          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact fig-btn--danger" type="button">
-            <i data-lucide="trash-2"></i>
-            Löschen
-          </button>
+          {% if invoice.status == "pending" or invoice.status == "overdue" %}
+            <form method="post" action="{% url 'portal_invoice_cancel' invoice.pk %}">
+              {% csrf_token %}
+              <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact fig-btn--danger" type="submit">
+                <i data-lucide="trash-2"></i>
+                Stornieren
+              </button>
+            </form>
+          {% endif %}
         </div>
       </article>
     {% empty %}
@@ -131,92 +136,4 @@
     {% endfor %}
   </div>
 </section>
-
-<dialog id="modal-invoice-new" class="fig-modal">
-  <article class="fig-modal__content fig-customer-modal">
-    <header class="fig-modal__header">
-      <div class="fig-admin__panel-header-group">
-        <h3>Neue Rechnung</h3>
-        <p class="fig-admin__panel-subtitle">Rechnung manuell erfassen</p>
-      </div>
-      <button type="button" class="fig-modal__close js-close-modal" data-target="invoice-new">×</button>
-    </header>
-    <div class="fig-modal__body">
-      <form method="post" class="fig-customer-form fig-invoice-form">
-        {% csrf_token %}
-        <div class="fig-customer-form__section">
-          <h4>Kunde auswählen</h4>
-          <p class="fig-admin__panel-subtitle">Kunden müssen vorab unter „Kunden“ angelegt werden.</p>
-          <div class="fig-customer-form__grid fig-invoice-form__customer">
-            <div class="fig-customer-form__field fig-customer-form__field--full">
-              {{ invoice_form.customer.label_tag }} {{ invoice_form.customer }}
-              <span class="fig-customer-form__hint">Falls der Kunde fehlt, bitte zuerst in der Kundenverwaltung anlegen.</span>
-              <a class="fig-btn fig-btn--ghost fig-btn--compact" href="{% url 'portal_customers' %}">
-                <i data-lucide="users"></i>
-                Zur Kundenverwaltung
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="fig-customer-form__section fig-invoice-form__details">
-          <h4>Rechnungsdetails</h4>
-          <div class="fig-customer-form__grid">
-            <div class="fig-customer-form__field">{{ invoice_form.invoice_number.label_tag }} {{ invoice_form.invoice_number }}</div>
-            <div class="fig-customer-form__field">{{ invoice_form.amount_chf.label_tag }} {{ invoice_form.amount_chf }}</div>
-            <div class="fig-customer-form__field">{{ invoice_form.status.label_tag }} {{ invoice_form.status }}</div>
-            <div class="fig-customer-form__field">{{ invoice_form.issue_date.label_tag }} {{ invoice_form.issue_date }}</div>
-            <div class="fig-customer-form__field">{{ invoice_form.due_date.label_tag }} {{ invoice_form.due_date }}</div>
-            <div class="fig-customer-form__field fig-customer-form__field--full">{{ invoice_form.related_report.label_tag }} {{ invoice_form.related_report }}</div>
-            <div class="fig-customer-form__field fig-customer-form__field--full">{{ invoice_form.related_booking.label_tag }} {{ invoice_form.related_booking }}</div>
-            <div class="fig-customer-form__field fig-customer-form__field--full">
-              {{ invoice_form.description.label_tag }} {{ invoice_form.description }}
-            </div>
-          </div>
-        </div>
-        <div class="fig-customer-form__actions">
-          <button type="button" class="fig-btn fig-btn--ghost fig-btn--compact js-close-modal" data-target="invoice-new">Abbrechen</button>
-          <button type="submit" class="fig-btn fig-btn--primary fig-btn--compact">
-            <i data-lucide="save"></i>
-            Rechnung speichern
-          </button>
-        </div>
-      </form>
-    </div>
-  </article>
-</dialog>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const openButtons = document.querySelectorAll('.js-open-modal');
-    const closeButtons = document.querySelectorAll('.js-close-modal');
-    const openModal = (id) => {
-      const dlg = document.getElementById('modal-' + id);
-      if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
-      else if (dlg) dlg.classList.add('is-visible');
-    };
-    const closeModal = (id) => {
-      const dlg = document.getElementById('modal-' + id);
-      if (!dlg) return;
-      if (typeof dlg.close === 'function') dlg.close();
-      dlg.classList.remove('is-visible');
-    };
-    const updateInvoiceForm = () => {
-      const customerSelect = document.querySelector('.fig-invoice-form select[name="customer"]');
-      const details = document.querySelector('.fig-invoice-form__details');
-      const submit = document.querySelector('.fig-invoice-form button[type="submit"]');
-      if (!customerSelect || !details || !submit) return;
-      const hasCustomer = Boolean(customerSelect.value);
-      details.classList.toggle('is-active', hasCustomer);
-      submit.disabled = !hasCustomer;
-    };
-    openButtons.forEach(btn => btn.addEventListener('click', () => {
-      openModal(btn.dataset.target);
-      updateInvoiceForm();
-    }));
-    closeButtons.forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.target)));
-    const customerSelect = document.querySelector('.fig-invoice-form select[name="customer"]');
-    if (customerSelect) customerSelect.addEventListener('change', updateInvoiceForm);
-    updateInvoiceForm();
-  });
-</script>
 {% endblock %}

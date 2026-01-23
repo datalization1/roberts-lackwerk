@@ -1,39 +1,49 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block body_class %}page-admin-login{% endblock %}
+{% block nav %}{% endblock %}
+
 {% block content %}
-<section class="section">
-  <div class="page-container" style="max-width:480px;margin:0 auto;">
-    <header class="section__header" style="text-align:center;margin-bottom:2rem;">
-      <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk" style="height:48px;margin-bottom:12px;">
-      <h1 class="section__title">Admin Login</h1>
-      <p class="section__subtitle">Interner Bereich für Robert&apos;s Lackwerk</p>
+<section class="admin-login">
+  <div class="admin-login__shell">
+    <header class="admin-login__header">
+      <div class="admin-login__logo">
+        <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk">
+      </div>
+      <div class="admin-login__intro">
+        <p class="admin-login__eyebrow">Interner Bereich</p>
+        <h1>Admin Login</h1>
+        <p>Bitte melden Sie sich an, um fortzufahren.</p>
+      </div>
     </header>
 
-    {% if error_message %}
-      <div class="alert alert-danger" role="alert">
-        {{ error_message }}
-      </div>
-    {% endif %}
-
-    <form method="post" class="form">
-      {% csrf_token %}
-      <div class="form-field">
-        <label for="{{ form.username.id_for_label }}">Benutzername</label>
-        {{ form.username }}
-      </div>
-      <div class="form-field" style="margin-top:1rem;">
-        <label for="{{ form.password.id_for_label }}">Passwort</label>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          {{ form.password }}
-          <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-password">Anzeigen</button>
+    <div class="admin-login__card">
+      {% if error_message %}
+        <div class="admin-login__alert" role="alert">
+          {{ error_message }}
         </div>
-      </div>
-      <div style="margin-top:1.5rem;display:flex;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
-        <a class="btn btn-outline-secondary" href="{% url 'home' %}">Zurück zur Startseite</a>
-        <button type="submit" class="btn btn-primary">Anmelden</button>
-      </div>
-    </form>
+      {% endif %}
+
+      <form method="post" class="admin-login__form">
+        {% csrf_token %}
+        <div class="admin-login__field">
+          <label for="{{ form.username.id_for_label }}">Benutzername</label>
+          {{ form.username }}
+        </div>
+        <div class="admin-login__field">
+          <label for="{{ form.password.id_for_label }}">Passwort</label>
+          <div class="admin-login__password">
+            {{ form.password }}
+            <button type="button" class="admin-login__toggle" id="toggle-password">Anzeigen</button>
+          </div>
+        </div>
+        <div class="admin-login__actions">
+          <a class="admin-login__back" href="{% url 'home' %}">Zurück zur Startseite</a>
+          <button type="submit" class="admin-login__submit">Anmelden</button>
+        </div>
+      </form>
+    </div>
   </div>
 </section>
 <script>

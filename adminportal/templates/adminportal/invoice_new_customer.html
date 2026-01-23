@@ -1,0 +1,64 @@
+{% extends "adminportal/base.html" %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Neue Rechnung</h3>
+      <p class="fig-admin__panel-subtitle">Schritt 1 · Kunde auswählen</p>
+    </div>
+    <div class="fig-customer-header-actions">
+      <form method="get" class="fig-customer-search">
+        <i data-lucide="search"></i>
+        <input type="text" name="q" placeholder="Kunde suchen..." value="{{ filter.q }}">
+      </form>
+      <a class="fig-btn fig-btn--ghost fig-btn--compact" href="{% url 'portal_customers' %}">
+        <i data-lucide="users"></i>
+        Kundenverwaltung
+      </a>
+    </div>
+  </header>
+
+  <div class="fig-customer-list">
+    {% for customer in customers %}
+      <article class="fig-customer-card">
+        <div class="fig-customer-card__avatar">
+          <i data-lucide="user"></i>
+        </div>
+        <div class="fig-customer-card__content">
+          <div class="fig-customer-card__title">
+            <span class="fig-customer-card__name">
+              {% if customer.company %}
+                {{ customer.company }}
+              {% else %}
+                {{ customer.first_name }} {{ customer.last_name }}
+              {% endif %}
+            </span>
+            {% if customer.source == "damage-report" %}
+              <span class="fig-customer-badge fig-customer-badge--info">Schadenmeldung</span>
+            {% elif customer.source == "rental" %}
+              <span class="fig-customer-badge fig-customer-badge--purple">Vermietung</span>
+            {% elif customer.source == "both" %}
+              <span class="fig-customer-badge fig-customer-badge--danger">Beide</span>
+            {% else %}
+              <span class="fig-customer-badge fig-customer-badge--muted">Manuell</span>
+            {% endif %}
+          </div>
+          <div class="fig-customer-card__meta">
+            <span><i data-lucide="mail"></i>{{ customer.email|default:"-" }}</span>
+            <span><i data-lucide="phone"></i>{{ customer.phone|default:"-" }}</span>
+            <span><i data-lucide="map-pin"></i>{{ customer.city|default:"-" }}</span>
+          </div>
+        </div>
+        <div class="fig-customer-card__actions">
+          <a class="fig-btn fig-btn--primary fig-btn--compact" href="{% url 'portal_invoice_new_details' customer.pk %}">
+            Auswählen
+          </a>
+        </div>
+      </article>
+    {% empty %}
+      <p class="fig-empty">Keine Kunden gefunden.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -2,6 +2,7 @@ import io
 import csv
 import calendar
 import json
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -12,6 +13,8 @@ from django.db.models.functions import Coalesce
 from datetime import timedelta
 from django.http import HttpResponse, JsonResponse
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from django.conf import settings
 from reportlab.lib.pagesizes import A4
 
 from main.models import DamageReport, Booking, Transporter, Vehicle
@@ -71,6 +74,55 @@ def _base_context(active_tab: str):
         ).count()
         ctx["kpi"]["bookings_pending"] = Booking.objects.filter(status="pending").count()
     return ctx
+
+
+def _invoice_contact_details():
+    return {
+        "company": "Robert's Lackwerk",
+        "address_line_1": "Neumattstrasse 54",
+        "address_line_2": "4612 Wangen bei Olten",
+        "phone": "+41 76 329 02 05",
+        "email": "info@roberts-lackwerk.ch",
+    }
+
+
+def _invoice_totals(items, vat_rate):
+    def to_decimal(value):
+        try:
+            return Decimal(str(value))
+        except Exception:
+            return Decimal("0")
+
+    subtotal = Decimal("0")
+    for item in items or []:
+        qty = to_decimal(item.get("quantity") or 0)
+        unit_price = to_decimal(item.get("unit_price") or 0)
+        subtotal += (qty * unit_price)
+    vat_amount = (subtotal * Decimal(str(vat_rate)) / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    total = (subtotal + vat_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return (
+        subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+        vat_amount,
+        total,
+    )
+
+
+def _invoice_totals_with_included(items, vat_rate, vat_included):
+    subtotal = Decimal("0")
+    for item in items or []:
+        qty = Decimal(str(item.get("quantity") or 0))
+        unit_price = Decimal(str(item.get("unit_price") or 0))
+        subtotal += (qty * unit_price)
+    if vat_included:
+        divisor = Decimal("1") + (Decimal(str(vat_rate)) / Decimal("100"))
+        net_subtotal = (subtotal / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if divisor != 0 else subtotal
+        vat_amount = (subtotal - net_subtotal).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        total = subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    else:
+        net_subtotal = subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        vat_amount = (subtotal * Decimal(str(vat_rate)) / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        total = (subtotal + vat_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return net_subtotal, vat_amount, total
 
 
 @login_required
@@ -437,6 +489,47 @@ def invoices(request):
 
 @login_required
 @user_passes_test(_is_staff)
+def invoice_new_customer(request):
+    ctx = _base_context("invoices")
+    q = (request.GET.get("q") or "").strip()
+    qs = Customer.objects.all()
+    if q:
+        qs = qs.filter(
+            Q(first_name__icontains=q)
+            | Q(last_name__icontains=q)
+            | Q(company__icontains=q)
+            | Q(email__icontains=q)
+            | Q(phone__icontains=q)
+        )
+    ctx["customers"] = qs.order_by("-created_at")[:200]
+    ctx["filter"] = {"q": q}
+    return render(request, "adminportal/invoice_new_customer.html", ctx)
+
+
+@login_required
+@user_passes_test(_is_staff)
+def invoice_new_details(request, customer_id):
+    customer = get_object_or_404(Customer, pk=customer_id)
+    ctx = _base_context("invoices")
+    draft = request.session.get("invoice_draft")
+    draft_for_customer = draft if draft and draft.get("customer_id") == customer.id else None
+    ctx.update(
+        {
+            "customer": customer,
+            "invoice_number": (draft_for_customer or {}).get("invoice_number") or Invoice.generate_invoice_number(),
+            "issue_date": (draft_for_customer or {}).get("issue_date") or timezone.localdate().isoformat(),
+            "due_date": (draft_for_customer or {}).get("due_date") or (timezone.localdate() + timezone.timedelta(days=30)).isoformat(),
+            "default_notes": (draft_for_customer or {}).get("notes") or "Zahlbar innerhalb von 30 Tagen netto.\nVielen Dank für Ihr Vertrauen!",
+            "draft_items": json.dumps((draft_for_customer or {}).get("items") or []),
+            "vat_rate": (draft_for_customer or {}).get("vat_rate") or "7.7",
+            "vat_included": (draft_for_customer or {}).get("vat_included", True),
+        }
+    )
+    return render(request, "adminportal/invoice_new_details.html", ctx)
+
+
+@login_required
+@user_passes_test(_is_staff)
 def invoice_export(request):
     q = request.GET.get("q")
     status = request.GET.get("status")
@@ -512,6 +605,277 @@ def invoice_export(request):
 
 
 @login_required
+@user_passes_test(_is_staff)
+def invoice_preview(request, pk):
+    invoice = get_object_or_404(Invoice.objects.select_related("customer"), pk=pk)
+    subtotal, vat_amount, total_amount = _invoice_totals_with_included(
+        invoice.items, invoice.vat_rate, getattr(invoice, "vat_included", True)
+    )
+    ctx = _base_context("invoices")
+    ctx.update(
+        {
+            "invoice": invoice,
+            "contact": _invoice_contact_details(),
+            "subtotal": subtotal,
+            "vat_amount": vat_amount,
+            "total_amount": total_amount,
+        }
+    )
+    return render(request, "adminportal/invoice_preview.html", ctx)
+
+
+@login_required
+@user_passes_test(_is_staff)
+def invoice_preview_draft(request, customer_id):
+    customer = get_object_or_404(Customer, pk=customer_id)
+    if request.method != "POST":
+        return redirect("portal_invoice_new_details", customer_id=customer_id)
+
+    items_raw = request.POST.get("items_json") or "[]"
+    try:
+        items_payload = json.loads(items_raw)
+    except json.JSONDecodeError:
+        items_payload = []
+
+    normalized_items = []
+    for item in items_payload:
+        description = (item.get("description") or "").strip()
+        quantity = Decimal(str(item.get("quantity") or 0))
+        unit_price = Decimal(str(item.get("unit_price") or 0))
+        line_total = (quantity * unit_price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        normalized_items.append(
+            {
+                "description": description,
+                "quantity": float(quantity),
+                "unit_price": float(unit_price),
+                "total": float(line_total),
+            }
+        )
+
+    vat_rate = Decimal(str(request.POST.get("vat_rate") or "7.7"))
+    vat_included = request.POST.get("vat_included") == "1"
+    issue_date = request.POST.get("issue_date") or timezone.localdate().isoformat()
+    due_date = request.POST.get("due_date") or ""
+    notes = request.POST.get("notes") or ""
+    invoice_number = (request.POST.get("invoice_number") or "").strip() or Invoice.generate_invoice_number()
+
+    draft_payload = {
+        "customer_id": customer.id,
+        "invoice_number": invoice_number,
+        "issue_date": issue_date,
+        "due_date": due_date,
+        "notes": notes,
+        "items": normalized_items,
+        "vat_rate": str(vat_rate),
+        "vat_included": vat_included,
+    }
+    request.session["invoice_draft"] = draft_payload
+
+    subtotal, vat_amount, total_amount = _invoice_totals_with_included(normalized_items, vat_rate, vat_included)
+    ctx = _base_context("invoices")
+    ctx.update(
+        {
+            "invoice": {
+                "invoice_number": invoice_number,
+                "issue_date": issue_date,
+                "due_date": due_date,
+                "vat_rate": vat_rate,
+                "items": normalized_items,
+                "description": notes,
+                "customer": customer,
+                "vat_included": vat_included,
+            },
+            "contact": _invoice_contact_details(),
+            "subtotal": subtotal,
+            "vat_amount": vat_amount,
+            "total_amount": total_amount,
+            "is_draft_preview": True,
+            "customer_id": customer.id,
+        }
+    )
+    return render(request, "adminportal/invoice_preview.html", ctx)
+
+
+@login_required
+@user_passes_test(_is_staff)
+def invoice_create_from_draft(request, customer_id):
+    if request.method != "POST":
+        return redirect("portal_invoice_new_details", customer_id=customer_id)
+    draft = request.session.get("invoice_draft")
+    if not draft or draft.get("customer_id") != customer_id:
+        return redirect("portal_invoice_new_details", customer_id=customer_id)
+    customer = get_object_or_404(Customer, pk=customer_id)
+    vat_rate = Decimal(str(draft.get("vat_rate") or "7.7"))
+    vat_included = bool(draft.get("vat_included", True))
+    subtotal, vat_amount, total_amount = _invoice_totals_with_included(draft.get("items") or [], vat_rate, vat_included)
+
+    invoice = Invoice(
+        customer=customer,
+        invoice_number=draft.get("invoice_number") or Invoice.generate_invoice_number(),
+        issue_date=draft.get("issue_date") or timezone.localdate().isoformat(),
+        due_date=draft.get("due_date") or None,
+        description=draft.get("notes") or "",
+        amount_chf=total_amount,
+        status="pending",
+        items=draft.get("items") or [],
+        vat_rate=vat_rate,
+        vat_included=vat_included,
+    )
+    invoice.save()
+    request.session.pop("invoice_draft", None)
+    return redirect("portal_invoice_preview", pk=invoice.pk)
+
+
+@login_required
+@user_passes_test(lambda u: _has_role(u, ["admin", "manager"]))
+def invoice_cancel(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if request.method != "POST":
+        return redirect("portal_invoices")
+    if invoice.status == "paid":
+        return redirect("portal_invoices")
+    if invoice.status in ["pending", "overdue"]:
+        invoice.status = "cancelled"
+        invoice.add_event("cancelled", "Im Portal storniert")
+        invoice.save(update_fields=["status", "payment_events", "updated_at"])
+        log_audit(
+            "invoice_cancelled",
+            request=request,
+            actor=request.user,
+            metadata={"invoice": invoice.invoice_number},
+        )
+    return redirect("portal_invoices")
+
+
+@login_required
+@user_passes_test(_is_staff)
+def invoice_send_email(request, pk):
+    invoice = get_object_or_404(Invoice.objects.select_related("customer"), pk=pk)
+    if request.method != "POST":
+        return redirect("portal_invoice_preview", pk=pk)
+
+    buffer = io.BytesIO()
+    _render_invoice_pdf(invoice, buffer)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    if not invoice.customer.email:
+        return redirect("portal_invoice_preview", pk=pk)
+
+    portal_settings = PortalSettings.objects.first()
+    send_templated_mail(
+        subject=f"Rechnung {invoice.invoice_number}",
+        template_path="emails/invoice_customer.html",
+        context={"invoice": invoice},
+        recipients=[invoice.customer.email],
+        portal_settings=portal_settings,
+        attachments=[(f"Rechnung-{invoice.invoice_number}.pdf", pdf, "application/pdf")],
+    )
+    return redirect("portal_invoice_preview", pk=pk)
+
+
+def _render_invoice_pdf(invoice, buffer):
+    contact = _invoice_contact_details()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    y = height - 60
+
+    logo_path = settings.BASE_DIR / "static" / "img" / "RL_logo2.png"
+    if logo_path.exists():
+        logo = ImageReader(str(logo_path))
+        p.drawImage(logo, 40, y - 10, width=120, height=50, mask="auto")
+    p.setFont("Helvetica-Bold", 18)
+    p.drawString(360, y + 6, "RECHNUNG")
+
+    y -= 40
+    p.setFont("Helvetica-Bold", 14)
+    p.setFillColorRGB(0.86, 0.05, 0.05)
+    p.drawString(40, y, contact["company"])
+    p.setFillColorRGB(0, 0, 0)
+    p.setFont("Helvetica", 10)
+    y -= 14
+    p.drawString(40, y, contact["address_line_1"])
+    y -= 12
+    p.drawString(40, y, contact["address_line_2"])
+    y -= 12
+    p.drawString(40, y, f"Tel: {contact['phone']}")
+    y -= 12
+    p.drawString(40, y, f"E-Mail: {contact['email']}")
+
+    y -= 24
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(40, y, "Rechnungsempfaenger:")
+    p.setFont("Helvetica", 10)
+    y -= 14
+    p.drawString(40, y, str(invoice.customer))
+    y -= 12
+    p.drawString(40, y, invoice.customer.address or "")
+    y -= 12
+    p.drawString(40, y, f"{invoice.customer.postal_code} {invoice.customer.city}")
+    y -= 12
+    p.drawString(40, y, invoice.customer.email or "")
+
+    y -= 24
+    p.setFont("Helvetica", 10)
+    p.drawRightString(540, y + 24, f"Rechnungsnr: {invoice.invoice_number}")
+    p.drawRightString(540, y + 10, f"Datum: {invoice.issue_date}")
+    p.drawRightString(540, y - 4, f"Faellig: {invoice.due_date or '-'}")
+
+    y -= 24
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(40, y, "Beschreibung")
+    p.drawString(300, y, "Menge")
+    p.drawString(380, y, "Einzelpreis")
+    p.drawString(480, y, "Gesamt")
+    y -= 10
+    p.line(40, y, 540, y)
+
+    p.setFont("Helvetica", 9)
+    y -= 14
+    for item in invoice.items or []:
+        p.drawString(40, y, str(item.get("description") or "-")[:40])
+        p.drawRightString(340, y, str(item.get("quantity") or 0))
+        p.drawRightString(440, y, f"CHF {item.get('unit_price', 0):.2f}")
+        p.drawRightString(540, y, f"CHF {item.get('total', 0):.2f}")
+        y -= 14
+        if y < 120:
+            p.showPage()
+            y = height - 60
+
+    subtotal, vat_amount, total_amount = _invoice_totals_with_included(
+        invoice.items, invoice.vat_rate, getattr(invoice, "vat_included", True)
+    )
+    y -= 10
+    p.line(320, y, 540, y)
+    y -= 16
+    p.drawRightString(470, y, "Zwischensumme:")
+    p.drawRightString(540, y, f"CHF {subtotal}")
+    y -= 14
+    p.drawRightString(470, y, f"MwSt ({invoice.vat_rate}%):")
+    p.drawRightString(540, y, f"CHF {vat_amount}")
+    y -= 18
+    p.setFont("Helvetica-Bold", 11)
+    p.drawRightString(470, y, "Gesamtbetrag:")
+    p.drawRightString(540, y, f"CHF {total_amount}")
+
+    if invoice.description:
+        y -= 24
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(40, y, "Anmerkungen")
+        y -= 14
+        p.setFont("Helvetica", 9)
+        for line in invoice.description.splitlines():
+            p.drawString(40, y, line[:90])
+            y -= 12
+            if y < 60:
+                p.showPage()
+                y = height - 60
+
+    p.showPage()
+    p.save()
+
+
+@login_required
 @user_passes_test(lambda u: _has_role(u, ["admin", "manager"]))
 def invoice_mark_paid(request, pk):
     invoice = get_object_or_404(Invoice, pk=pk)
@@ -553,82 +917,8 @@ def invoice_raise_reminder(request, pk):
 @user_passes_test(_is_staff)
 def invoice_pdf(request, pk):
     invoice = get_object_or_404(Invoice.objects.select_related("customer"), pk=pk)
-    portal_settings = PortalSettings.objects.first()
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
-    y = height - 60
-    p.setFont("Helvetica-Bold", 18)
-    p.drawString(40, y, f"Rechnung {invoice.invoice_number}")
-    y -= 25
-    p.setFont("Helvetica", 10)
-    if portal_settings and portal_settings.branding_text:
-        p.drawString(40, y, portal_settings.branding_text[:80])
-        y -= 14
-    contact = portal_settings.contact_email if portal_settings else ""
-    if contact:
-        p.drawString(40, y, f"Kontakt: {contact}")
-        y -= 14
-    p.drawString(40, y, f"Datum: {invoice.issue_date} | Fällig: {invoice.due_date or '-'}")
-    y -= 16
-    p.drawString(40, y, f"Status: {invoice.get_status_display()} | Mahnstufe: {invoice.reminder_level or 0}")
-    if invoice.payment_date:
-        y -= 14
-        p.drawString(40, y, f"Bezahlt am: {invoice.payment_date}")
-
-    y -= 24
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(40, y, "Kunde")
-    p.setFont("Helvetica", 10)
-    y -= 16
-    p.drawString(40, y, f"{invoice.customer or '-'}")
-    y -= 14
-    p.drawString(40, y, f"E-Mail: {invoice.customer.email if invoice.customer else ''}")
-    y -= 14
-    p.drawString(40, y, f"Telefon: {invoice.customer.phone if invoice.customer else ''}")
-    y -= 14
-    p.drawString(40, y, f"Adresse: {invoice.customer.address if invoice.customer else ''}")
-
-    y -= 24
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(40, y, "Details")
-    p.setFont("Helvetica", 10)
-    y -= 16
-    p.drawString(40, y, f"Betrag: CHF {invoice.amount_chf}")
-    y -= 14
-    if invoice.related_report_id:
-        p.drawString(40, y, f"Schadenmeldung: SM-{invoice.related_report_id}")
-        y -= 14
-    if invoice.related_booking_id:
-        p.drawString(40, y, f"Buchung: BU-{invoice.related_booking_id}")
-        y -= 14
-    y -= 14
-    p.drawString(40, y, f"Beschreibung:")
-    y -= 14
-    for line in (invoice.description or "-").splitlines() or ["-"]:
-        p.drawString(50, y, line[:100])
-        y -= 12
-        if y < 60:
-            p.showPage()
-            y = height - 60
-
-    if invoice.payment_events:
-        y -= 16
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(40, y, "Zahlungshistorie")
-        p.setFont("Helvetica", 9)
-        y -= 14
-        for ev in invoice.payment_events[:6]:
-            line = f"{ev.get('ts','')} · {ev.get('kind','')} — {ev.get('note','')}"
-            p.drawString(40, y, line[:120])
-            y -= 12
-            if y < 60:
-                p.showPage()
-                y = height - 60
-
-    p.showPage()
-    p.save()
+    _render_invoice_pdf(invoice, buffer)
     pdf = buffer.getvalue()
     buffer.close()
 

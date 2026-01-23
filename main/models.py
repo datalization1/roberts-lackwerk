@@ -174,7 +174,8 @@ class Invoice(models.Model):
     def generate_invoice_number(cls):
         today = timezone.localdate()
         year = today.year
-        prefix = f"RE-{year}-"
+        year_suffix = str(year)[-2:]
+        prefix = f"RE-{year_suffix}-"
         last = cls.objects.filter(invoice_number__startswith=prefix).order_by("-invoice_number").first()
         if last and last.invoice_number:
             try:

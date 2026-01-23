@@ -1,0 +1,135 @@
+{% extends "adminportal/base.html" %}
+{% load static %}
+
+{% block portal_content %}
+<section class="fig-admin__panel fig-admin__panel--wide">
+  <header class="fig-admin__panel-header fig-admin__panel-header--split">
+    <div class="fig-admin__panel-header-group">
+      <h3>Rechnungsvorschau</h3>
+      <p class="fig-admin__panel-subtitle">Überprüfen Sie die Rechnung vor dem Versand</p>
+    </div>
+    {% if is_draft_preview %}
+      <a class="fig-btn fig-btn--ghost fig-btn--compact" href="{% url 'portal_invoice_new_details' customer_id %}">
+        <i data-lucide="edit-3"></i>
+        Bearbeiten
+      </a>
+    {% else %}
+      <a class="fig-btn fig-btn--ghost fig-btn--compact" href="{% url 'portal_invoices' %}">
+        <i data-lucide="arrow-left"></i>
+        Zurück
+      </a>
+    {% endif %}
+  </header>
+
+  <div class="fig-invoice-preview">
+    <div class="fig-invoice-preview__sheet fig-invoice-preview__sheet--lifted">
+      <div class="fig-invoice-preview__header">
+        <div class="fig-invoice-preview__brand">
+          <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk" class="fig-invoice-preview__logo">
+          <h1>{{ contact.company }}</h1>
+          <p>
+            {{ contact.address_line_1 }}<br>
+            {{ contact.address_line_2 }}<br>
+            Tel: {{ contact.phone }}<br>
+            {{ contact.email }}
+          </p>
+        </div>
+        <div class="fig-invoice-preview__meta">
+          <h2>RECHNUNG</h2>
+          <p>Rechnungsnr: <strong>{{ invoice.invoice_number }}</strong></p>
+          <p>Datum: {{ invoice.issue_date }}</p>
+          <p>Fällig: {{ invoice.due_date|default:"-" }}</p>
+        </div>
+      </div>
+
+      <div class="fig-invoice-preview__section">
+        <h4>Rechnungsempfänger:</h4>
+        <p>
+          {{ invoice.customer }}<br>
+          {{ invoice.customer.address }}<br>
+          {{ invoice.customer.postal_code }} {{ invoice.customer.city }}<br>
+          {{ invoice.customer.email }}
+        </p>
+      </div>
+
+      <table class="fig-invoice-preview__table">
+        <thead>
+          <tr>
+            <th>Beschreibung</th>
+            <th>Menge</th>
+            <th>Einzelpreis</th>
+            <th>Gesamt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in invoice.items %}
+            <tr>
+              <td>{{ item.description|default:"-" }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>CHF {{ item.unit_price|floatformat:2 }}</td>
+              <td>CHF {{ item.total|floatformat:2 }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">Keine Positionen vorhanden.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="fig-invoice-preview__totals">
+        <div>
+          <span>Zwischensumme:</span>
+          <strong>CHF {{ subtotal }}</strong>
+        </div>
+        <div>
+          <span>MwSt ({{ invoice.vat_rate }}%):</span>
+          <strong>CHF {{ vat_amount }}</strong>
+        </div>
+        <div class="fig-invoice-preview__total">
+          <span>Gesamtbetrag:</span>
+          <strong>CHF {{ total_amount }}</strong>
+        </div>
+      </div>
+
+      {% if invoice.description %}
+        <div class="fig-invoice-preview__section fig-invoice-preview__notes">
+          <h4>Anmerkungen:</h4>
+          <p>{{ invoice.description|linebreaksbr }}</p>
+        </div>
+      {% endif %}
+      <div class="fig-invoice-preview__footer">
+        <p>{{ contact.company }} · {{ contact.address_line_1 }} · {{ contact.address_line_2 }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="fig-invoice-preview__actions">
+    {% if is_draft_preview %}
+      <form method="post" action="{% url 'portal_invoice_create_from_draft' customer_id %}">
+        {% csrf_token %}
+        <button class="fig-btn fig-btn--primary fig-btn--compact" type="submit">
+          <i data-lucide="check-circle"></i>
+          Rechnung erstellen
+        </button>
+      </form>
+    {% else %}
+      <a class="fig-btn fig-btn--ghost fig-btn--compact" href="{% url 'portal_invoice_pdf' invoice.pk %}">
+        <i data-lucide="download"></i>
+        Als PDF herunterladen
+      </a>
+      <button class="fig-btn fig-btn--ghost fig-btn--compact" type="button" disabled>
+        <i data-lucide="file-text"></i>
+        Als DOCX herunterladen
+      </button>
+      <form method="post" action="{% url 'portal_invoice_send_email' invoice.pk %}">
+        {% csrf_token %}
+        <button class="fig-btn fig-btn--primary fig-btn--compact" type="submit">
+          <i data-lucide="send"></i>
+          Per E-Mail versenden
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -163,3 +163,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.select_related("customer").all().order_by("-invoice_date")
     serializer_class = InvoiceSerializer
     permission_classes = [StaffOnly]
+
+    @action(detail=False, methods=["get"], permission_classes=[StaffOnly])
+    def next_number(self, request):
+        return Response({"invoice_number": Invoice.generate_invoice_number()})

@@ -35,7 +35,7 @@ class ApiSmokeTests(TestCase):
         )
         invoice = Invoice.objects.create(customer=customer)
         self.assertTrue(invoice.invoice_number)
-        self.assertIn(str(timezone.localdate().year), invoice.invoice_number)
+        self.assertIn(str(timezone.localdate().year)[-2:], invoice.invoice_number)
 
     def test_invoice_totals_calculated(self):
         customer = Customer.objects.create(
