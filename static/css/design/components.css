@@ -428,7 +428,7 @@
 .rl-rental-card__price{margin-top:.5rem;font-size:1rem;font-weight:600;}
 .rl-rental-card__meta{margin-top:.2rem;color:var(--text-soft);}
 .rl-rental-card__note{font-size:.8rem;margin-top:.4rem;color:var(--text-muted);}
-.rl-input--date{width:100%;background:#020617;border-radius:.75rem;border:1px solid rgba(148,163,184,.35);padding:.6rem .9rem;color:#e5e7eb;font-size:.9rem;}
+.rl-input--date{width:100%;max-width:100%;min-width:0;box-sizing:border-box;background:#020617;border-radius:.75rem;border:1px solid rgba(148,163,184,.35);padding:.6rem .9rem;color:#e5e7eb;font-size:.9rem;}
 .rl-input--date:focus{outline:none;border-color:rgba(248,113,113,1);box-shadow:0 0 0 1px rgba(248,113,113,.55);}
 .rl-input--date::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.85;}
 

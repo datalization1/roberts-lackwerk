@@ -28,7 +28,7 @@
       <p class="rl-wizard-card__subtitle">Wählen Sie Ihren Transporter und den Mietzeitraum.</p>
     </header>
 
-      <form method="post">
+      <form method="post" data-has-filter="{{ has_filter|yesno:'1,0' }}">
         {% csrf_token %}
 
         <div class="rl-wizard-fields">
@@ -200,6 +200,8 @@ document.addEventListener('DOMContentLoaded',function(){
   const returnGroup = document.getElementById('return_date_group');
   const hint = document.querySelector('.rl-input-hint');
   const input = document.getElementById('pickup_date');
+  const form = document.querySelector('.rl-wizard-card form');
+  let isSubmitting = false;
   if (!returnGroup) return;
 
   function toggleHint() {
@@ -216,10 +218,26 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   }
 
+  function maybeSubmitAvailability() {
+    if (!form || isSubmitting) return;
+    const selected = document.querySelector('input[name="time_block"]:checked');
+    if (input && input.value && selected) {
+      isSubmitting = true;
+      form.requestSubmit();
+    }
+  }
+
   radios.forEach(r => r.addEventListener('change', updateReturnVisibility));
+  radios.forEach(r => r.addEventListener('change', maybeSubmitAvailability));
   if (input) {
     input.addEventListener('change', toggleHint);
+    input.addEventListener('change', maybeSubmitAvailability);
     toggleHint();
+  }
+  if (form) {
+    form.addEventListener('submit', () => {
+      isSubmitting = true;
+    });
   }
   updateReturnVisibility();
 });

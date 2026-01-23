@@ -52,21 +52,7 @@
         <h3 class="rl-review-title">Zahlungsmethode wählen</h3>
         <div class="rl-payment-methods">
           <label class="rl-payment-card">
-            <input id="payment_card" type="radio" name="payment_method" value="CARD" class="rl-payment-card__input" checked>
-            <div class="rl-payment-card__inner">
-              <div class="rl-payment-card__icon">💳</div>
-              <div class="rl-payment-card__body">
-                <div class="rl-payment-card__title">Kreditkarte (Stripe)</div>
-                <div class="rl-payment-card__text">Bezahlen Sie sicher mit Kreditkarte</div>
-                <div class="rl-payment-card__badges">
-                  <span>VISA</span><span>Mastercard</span><span>AMEX</span>
-                </div>
-              </div>
-            </div>
-          </label>
-
-          <label class="rl-payment-card">
-            <input id="payment_cash" type="radio" name="payment_method" value="CASH" class="rl-payment-card__input">
+            <input id="payment_cash" type="radio" name="payment_method" value="CASH" class="rl-payment-card__input" checked>
             <div class="rl-payment-card__inner">
               <div class="rl-payment-card__icon">💵</div>
               <div class="rl-payment-card__body">
@@ -76,39 +62,6 @@
               </div>
             </div>
           </label>
-        </div>
-      </div>
-
-      <!-- Kreditkarten-Details (nur UI, noch ohne echte Stripe-Integration) -->
-      <div id="card-details-section" class="rl-payment-section">
-        <h3 class="rl-review-title">Kreditkarten-Details</h3>
-        <p class="rl-review-subtext">Ihre Zahlungsdaten sind durch SSL-Verschlüsselung geschützt.</p>
-
-        <div class="rl-payment-demo">
-          <strong>Demo-Modus:</strong>
-          <span>Dies ist eine Testumgebung. Verwenden Sie die Testkartennummer:</span>
-          <span class="rl-payment-demo-card">4242 4242 4242 4242</span>
-        </div>
-
-        <div class="rl-payment-grid">
-          <div class="form-group">
-            <label class="form-label">Karteninhaber</label>
-            <input type="text" class="form-input" placeholder="Max Mustermann">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Kartennummer</label>
-            <input type="text" class="form-input" placeholder="1234 5678 9012 3456">
-          </div>
-          <div class="form-group form-group--split">
-            <div>
-              <label class="form-label">Gültig bis</label>
-              <input type="text" class="form-input" placeholder="MM/JJ">
-            </div>
-            <div>
-              <label class="form-label">CVV</label>
-              <input type="text" class="form-input" placeholder="123">
-            </div>
-          </div>
         </div>
       </div>
 
@@ -123,31 +76,9 @@
       <!-- Footer Buttons -->
       <footer class="rl-wizard-footer">
         <a href="{% url 'booking_review' %}" class="btn rl-btn-secondary">← Zurück</a>
-        <button type="submit" class="btn rl-btn-primary">Jetzt bezahlen{% if total_price %} (CHF {{ total_price }}){% endif %}</button>
+        <button type="submit" class="btn rl-btn-primary">Buchung abschließen{% if total_price %} (CHF {{ total_price }}){% endif %}</button>
       </footer>
     </form>
   </section>
 </section>
-<script>
-document.addEventListener('DOMContentLoaded',function(){
-  const cardRadio = document.getElementById('payment_card');
-  const cashRadio = document.getElementById('payment_cash');
-  const cardSection = document.getElementById('card-details-section');
-
-  function toggleCardSection(){
-    if (!cardSection || !cardRadio || !cashRadio) return;
-    if (cashRadio.checked){
-      cardSection.style.display = 'none';
-    }else{
-      cardSection.style.display = '';
-    }
-  }
-
-  if (cardRadio && cashRadio){
-    cardRadio.addEventListener('change', toggleCardSection);
-    cashRadio.addEventListener('change', toggleCardSection);
-    toggleCardSection();  // initialer Zustand
-  }
-});
-</script>
 {% endblock %}

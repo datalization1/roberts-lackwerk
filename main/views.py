@@ -308,7 +308,7 @@ def mietfahrzeuge(request):
             time_slot_code = slot_map.get(timeblock, "MORNING")
 
             step1_data = {
-                "transporter_id": int(transporter_id),
+                "transporter_id": int(transporter_id) if transporter_id else None,
                 "date": pickup_date,
                 "time_slot": time_slot_code,
                 "timeblock": timeblock,
@@ -672,9 +672,8 @@ def booking_payment(request):
     total_price = net_total.quantize(Decimal("0.01"))
 
     if request.method == "POST":
-        method = request.POST.get("payment_method", "CARD")
-        booking.payment_method = "CARD" if method == "CARD" else "CASH"
-        booking.payment_status = "paid" if method == "CARD" else "unpaid"
+        booking.payment_method = "CASH"
+        booking.payment_status = "unpaid"
         booking.total_price = total_price
         booking.save()
 
