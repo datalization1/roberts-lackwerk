@@ -11,31 +11,15 @@
     <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse</p>
   </header>
 
-  <!-- Progress Card (separat, NICHT im Header) -->
-  <section class="rl-wizard-card rl-wizard-card--progress">
-    <div class="rl-stepper">
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Mietdetails</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Kundendaten</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Zusatzoptionen</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item">
-        <span class="rl-stepper__label">Überprüfung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item">
-        <span class="rl-stepper__label">Zahlung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
+  <div class="rl-progress-single">
+    <div class="rl-progress-single__top">
+      <span class="rl-progress-single__label">Zusatzoptionen</span>
+      <span class="rl-progress-single__step">Schritt 3 von 5</span>
     </div>
-  </section>
+    <div class="rl-progress-track">
+      <span class="rl-progress-fill" style="width: 60%;"></span>
+    </div>
+  </div>
 
   <!-- Karte: Zusätzliche Optionen -->
   <section class="rl-wizard-card">
@@ -49,11 +33,6 @@
 
       <!-- Additional Equipment & Services -->
       <div class="rl-options-section">
-        <div class="rl-options-header">
-          <label class="form-label">Additional Equipment &amp; Services</label>
-          <p class="form-help">Select any additional items you need for your move</p>
-        </div>
-
         <div class="rl-options-grid">
           <!-- Additional Insurance -->
             <label class="rl-option-card">
@@ -123,13 +102,13 @@
 
       <!-- Additional Notes -->
       <div class="rl-options-notes">
-        <label for="id_additional_notes" class="form-label">Additional Notes</label>
+        <label for="id_additional_notes" class="form-label">Notiz</label>
         <textarea id="id_additional_notes"
           name="additional_notes"
           class="form-textarea"
           rows="4"
-          placeholder="Any special requests or information we should know...">{{ booking.additional_notes|default:'' }}</textarea>
-        <p class="form-help">Optional - Let us know if you have any special requirements</p>
+          placeholder="Gibt es besondere Wünsche oder Informationen, die wir wissen sollten?">{{ booking.additional_notes|default:'' }}</textarea>
+        <p class="form-help">Teilen Sie uns bitte mit, wenn Sie besondere Anforderungen haben.</p>
       </div>
 
       <!-- Footer Buttons -->

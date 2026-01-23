@@ -6,36 +6,19 @@
 <section class="rl-wizard">
   <!-- Header -->
   <header class="rl-wizard-header">
-    <a href="{% url 'booking_review' %}" class="rl-back-link">← Zurück zur Übersicht</a>
     <h1 class="rl-wizard-title">Zahlung</h1>
     <p class="rl-wizard-subtitle">Wählen Sie Ihre Zahlungsmethode.</p>
   </header>
 
-  <!-- Progress Card -->
-  <section class="rl-wizard-card rl-wizard-card--progress">
-    <div class="rl-stepper">
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Mietdetails</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Kundendaten</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Zusatzoptionen</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Überprüfung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Zahlung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
+  <div class="rl-progress-single">
+    <div class="rl-progress-single__top">
+      <span class="rl-progress-single__label">Zahlung</span>
+      <span class="rl-progress-single__step">Schritt 5 von 5</span>
     </div>
-  </section>
+    <div class="rl-progress-track">
+      <span class="rl-progress-fill" style="width: 100%;"></span>
+    </div>
+  </div>
 
   <!-- Payment Card -->
   <section class="rl-wizard-card">
@@ -76,7 +59,7 @@
       <!-- Footer Buttons -->
       <footer class="rl-wizard-footer">
         <a href="{% url 'booking_review' %}" class="btn rl-btn-secondary">← Zurück</a>
-        <button type="submit" class="btn rl-btn-primary">Buchung abschließen{% if total_price %} (CHF {{ total_price }}){% endif %}</button>
+        <button type="submit" class="btn rl-btn-primary">Jetzt bezahlen</button>
       </footer>
     </form>
   </section>

@@ -11,17 +11,16 @@
       Bitte geben Sie detaillierte Informationen über den Schaden an Ihrem Fahrzeug an.
     </p>
 
-    <div class="rl-wizard-progress-row">
-      <div class="rl-wizard-progress-label">
-        Schritt {{ step|default:"1" }} von 5
+    <div class="rl-progress-single">
+      <div class="rl-progress-single__top">
+        <span class="rl-progress-single__label">
+          {% if step == 1 or step == "1" %}Fahrzeugdetails{% elif step == 2 or step == "2" %}Persönliche Daten{% elif step == 3 or step == "3" %}Versicherungsdetails{% elif step == 4 or step == "4" %}Unfalldetails{% else %}Zusammenfassung{% endif %}
+        </span>
+        <span class="rl-progress-single__step">Schritt {{ step|default:"1" }} von 5</span>
       </div>
-      <div class="rl-wizard-progress-percent">
-        {{ progress_percent|default:"20" }}% Abgeschlossen
+      <div class="rl-progress-track">
+        <span class="rl-progress-fill" data-progress="{{ progress_percent|default:'20' }}"></span>
       </div>
-    </div>
-
-    <div class="progress-track">
-      <div class="progress-bar" data-progress="{{ progress_percent|default:'20' }}"></div>
     </div>
   </header>
 

@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded',function(){
     var p = el.getAttribute('data-progress');
     if(p){ el.style.width = p + '%'; }
   });
+  document.querySelectorAll('.rl-progress-fill[data-progress]').forEach(function(el){
+    var p = el.getAttribute('data-progress');
+    if(p){ el.style.width = p + '%'; }
+  });
 });
 </script>
 <body class="page-bg {% block body_class %}{% endblock %}" data-ga-id="{{ GA_MEASUREMENT_ID }}">

@@ -6,36 +6,19 @@
 <section class="rl-wizard">
   <!-- Header -->
   <header class="rl-wizard-header">
-    <a href="{% url 'mietfahrzeuge' %}" class="rl-back-link">← Zurück zur Übersicht</a>
     <h1 class="rl-wizard-title">Buchung überprüfen</h1>
     <p class="rl-wizard-subtitle">Überprüfen Sie Ihre Buchung vor der Bestätigung.</p>
   </header>
 
-  <!-- Progress Card -->
-  <section class="rl-wizard-card rl-wizard-card--progress">
-    <div class="rl-stepper">
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Mietdetails</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Kundendaten</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Zusatzoptionen</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item is-active">
-        <span class="rl-stepper__label">Überprüfung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
-      <div class="rl-stepper__item">
-        <span class="rl-stepper__label">Zahlung</span>
-        <span class="rl-stepper__bar"><span class="rl-stepper__bar-fill"></span></span>
-      </div>
+  <div class="rl-progress-single">
+    <div class="rl-progress-single__top">
+      <span class="rl-progress-single__label">Überprüfung</span>
+      <span class="rl-progress-single__step">Schritt 4 von 5</span>
     </div>
-  </section>
+    <div class="rl-progress-track">
+      <span class="rl-progress-fill" style="width: 80%;"></span>
+    </div>
+  </div>
 
   <!-- Review Card -->
   <section class="rl-wizard-card">
@@ -132,7 +115,7 @@
       <!-- Footer Buttons -->
       <footer class="rl-wizard-footer">
         <a href="{% url 'booking_options' %}" class="btn rl-btn-secondary">← Zurück</a>
-        <button type="submit" class="btn rl-btn-primary">Weiter zur Zahlung →</button>
+        <button type="submit" class="btn rl-btn-primary">zur Zahlung →</button>
       </footer>
     </form>
   </section>

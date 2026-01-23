@@ -42,7 +42,7 @@ SECRET_KEY = os.environ.get(
 
 # ALLOWED_HOSTS: lokal nur localhost, auf Heroku über ENV
 if DEBUG:
-    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost", "192.168.0.28"]
 else:
     ALLOWED_HOSTS = os.environ.get(
         "DJANGO_ALLOWED_HOSTS",

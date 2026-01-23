@@ -2384,4 +2384,10 @@
   background: linear-gradient(135deg, rgba(var(--fig-accent-rgb), 0.18), rgba(0,0,0,0.95));
 }
 .page-home .fig-cta__inner p { color: #d9cfa5; }
+.page-home .fig-hero__actions { align-items: stretch; }
+.page-home .fig-hero__actions .fig-btn { flex: 1 1 220px; max-width: 260px; }
+@media(max-width:720px){
+  .page-home .fig-hero__actions{flex-direction:column;align-items:center;}
+  .page-home .fig-hero__actions .fig-btn{flex:0 0 260px;width:100%;max-width:260px;}
+}
 .page-home .fig-section--alt { background: var(--fig-surface); }
