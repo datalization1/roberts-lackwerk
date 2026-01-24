@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="rl-wizard-page">
+  <section class="rl-wizard-card rl-success-card">
+    <div class="rl-success-card__icon">✓</div>
+
+    <h1 class="rl-success-main-title">Vielen Dank für Ihre Buchung</h1>
+    <p class="rl-success-main-subtitle">
+      Wir haben Ihre Buchung erhalten und senden Ihnen in Kürze eine Bestätigung per E-Mail.
+    </p>
+
+    <h2 class="rl-success-card__title">Buchung erfolgreich übermittelt</h2>
+    <p class="rl-success-card__text">
+      Ihre Referenznummer lautet <strong>BU-{{ booking.pk }}</strong>.
+      Bitte halten Sie diese Nummer für Rückfragen bereit.
+    </p>
+
+    <div class="rl-success-card__summary">
+      <div class="rl-success-pill">
+        <span class="rl-success-pill__label">Transporter</span>
+        <span class="rl-success-pill__value">{{ booking.transporter.name }}</span>
+      </div>
+      <div class="rl-success-pill">
+        <span class="rl-success-pill__label">Datum</span>
+        <span class="rl-success-pill__value">{{ booking.date|date:"d.m.Y" }}</span>
+      </div>
+      <div class="rl-success-pill">
+        <span class="rl-success-pill__label">Zeitfenster</span>
+        <span class="rl-success-pill__value">{{ booking.get_time_slot_display }}</span>
+      </div>
+      <div class="rl-success-pill">
+        <span class="rl-success-pill__label">Kontakt</span>
+        <span class="rl-success-pill__value">{{ booking.customer_email }}</span>
+      </div>
+    </div>
+
+    <div class="rl-success-footer">
+      <a href="{% url 'mietfahrzeuge' %}" class="btn rl-btn-secondary">Zurück zur Übersicht</a>
+      <a href="{% url 'home' %}" class="btn rl-btn-primary">Zur Startseite</a>
+    </div>
+  </section>
+</section>
+{% endblock %}

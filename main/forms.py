@@ -17,7 +17,8 @@ class MultipleFileField(forms.FileField):
     FileField, das immer eine Liste von Dateien zurückgibt.
     """
     widget = MultipleFileInput(attrs={
-        "accept": "image/jpeg,image/png,image/jpg"
+        "accept": "image/jpeg,image/png,image/jpg",
+        "multiple": True,
     })
 
     def __init__(self, *args, allowed_types=None, max_files=5, max_size_mb=5, **kwargs):
@@ -132,7 +133,7 @@ class PersonalDetailsForm(forms.Form):
                                 "title": "Telefonnummer bitte mit +41 oder 0 beginnen",
                                 "inputmode": "tel",
                             }))
-    email = forms.EmailField(label="E-Mail *",
+    email = forms.EmailField(label="E-Mail (optional)", required=False,
                              widget=forms.EmailInput(attrs={"class":"form-control","placeholder":"name@example.com"}))
 
     def clean_postal_code(self):
@@ -223,10 +224,11 @@ class InsuranceDetailsForm(forms.Form):
             insurers = [label for value, label in INSURER_CHOICES if value not in [INSURER_OTHER, INSURER_NO]]
             insurers.extend(["Andere", "Ohne Versicherung melden"])
         insurers = [name for name in insurers if name not in ["Andere", "Ohne Versicherung melden"]]
-        choices = [(name, name) for name in insurers]
+        choices = [("", "Bitte wählen")] + [(name, name) for name in insurers]
         choices.append((INSURER_OTHER, "Andere"))
         choices.append((INSURER_NO, "Ohne Versicherung melden"))
         self.fields["insurer"].choices = choices
+        self.fields["insurer"].initial = ""
 
     def clean(self):
         cleaned = super().clean()
@@ -257,11 +259,28 @@ class AccidentDetailsForm(forms.Form):
     ]
 
     damaged_parts = forms.MultipleChoiceField(
-        label="Beschädigte Teile",
+        label="Beschädigte Teile *",
         choices=DAMAGE_PART_CODES,              # kommt aus models.py
         widget=forms.CheckboxSelectMultiple,
-        required=False,
+        required=True,
     )
+    damaged_parts_other = forms.CharField(
+        label="Sonstiges (bitte angeben)",
+        max_length=120,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Kurz beschreiben"}),
+    )
+
+    @property
+    def sorted_damaged_parts(self):
+        items = list(self["damaged_parts"])
+        return sorted(
+            items,
+            key=lambda widget: (
+                widget.choice_label.lower() == "sonstiges",
+                widget.choice_label.lower(),
+            ),
+        )
 
     accident_date = forms.DateField(
         label="Unfalldatum",
@@ -284,14 +303,13 @@ class AccidentDetailsForm(forms.Form):
     )
 
     message = forms.CharField(
-        label="Schadenbeschreibung",
-        required=True,
+        label="Schadenbeschreibung (optional)",
+        required=False,
         widget=forms.Textarea(
             attrs={
                 "class": "form-control",
                 "rows": 4,
                 "placeholder": "Beschreiben Sie den Schaden so genau wie möglich.",
-                "minlength": "20",
             }
         ),
     )
@@ -302,6 +320,7 @@ class AccidentDetailsForm(forms.Form):
         widget=MultipleFileInput(
             attrs={
                 "accept": "image/jpeg,image/png,image/webp",
+                "multiple": True,
                 "data-max-size": "5",  # MB
                 "data-max-files": "5",
             }
@@ -335,35 +354,40 @@ class AccidentDetailsForm(forms.Form):
         parts = self._active_items(parts_raw)
         if not parts:
             parts = [label for _, label in DAMAGE_PART_CODES]
-        self.fields["damaged_parts"].choices = [(name, name) for name in parts]
+        parts_sorted = sorted(
+            [label for label in parts if label.lower() != "sonstiges"],
+            key=lambda value: value.lower(),
+        )
+        if any(label.lower() == "sonstiges" for label in parts):
+            parts_sorted.append("Sonstiges")
+        self.fields["damaged_parts"].choices = [
+            ("OTHER" if label.lower() == "sonstiges" else label, label)
+            for label in parts_sorted
+        ]
         damage_types_raw = list(settings.damage_types or []) if settings and settings.damage_types else []
         damage_types = self._active_items(damage_types_raw)
         if not damage_types:
             damage_types = [label for label, _ in self.DAMAGE_TYPE_CHOICES]
         self.fields["damage_type"].choices = [(name, name) for name in damage_types]
 
-    documents = MultipleFileField(
-        label="Dokumente (Polizeibericht/Skizze)",
-        required=False,
-        widget=MultipleFileInput(
-            attrs={
-                "accept": "application/pdf,image/jpeg,image/png,image/webp",
-                "data-max-size": "8",
-                "data-max-files": "5",
-            }
-        ),
-        allowed_types={"application/pdf", "image/jpeg", "image/png", "image/webp"},
-        max_size_mb=8,
-    )
-
-    other_party_involved = forms.BooleanField(label="Unfallgegner vorhanden", required=False)
-    police_involved = forms.BooleanField(label="Polizei involviert", required=False)
 
     def clean_accident_date(self):
         accident_date = self.cleaned_data.get("accident_date")
         if accident_date and accident_date > date.today():
             raise forms.ValidationError("Unfalldatum darf nicht in der Zukunft liegen.")
         return accident_date
+
+    def clean_damaged_parts_other(self):
+        return (self.cleaned_data.get("damaged_parts_other") or "").strip()
+
+    def clean(self):
+        cleaned = super().clean()
+        parts = cleaned.get("damaged_parts") or []
+        if not parts:
+            self.add_error("damaged_parts", "Bitte mindestens ein beschädigtes Teil auswählen.")
+        if "OTHER" in parts and not cleaned.get("damaged_parts_other"):
+            self.add_error("damaged_parts_other", "Bitte kurz beschreiben.")
+        return cleaned
 
 # ---------- Schaden melden: Step 5 ----------
 class ReviewForm(forms.Form):
@@ -434,7 +458,6 @@ class BookingForm(forms.ModelForm):
         if license_number and len(license_number) < 5:
             self.add_error("driver_license_number", "Führerscheinnummer scheint zu kurz.")
         return cleaned
-
 
 # --- Verfügbarkeits-Suche (Datum + Slot) ---
 class AvailabilitySearchForm(forms.Form):

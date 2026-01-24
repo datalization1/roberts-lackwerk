@@ -83,7 +83,7 @@
 .rl-service-title{font-size:1.25rem;line-height:1.2;word-break:break-word;margin:0;}
 
 /* NAVBAR */
-.rl-nav{background:var(--bg-card);border-bottom:1px solid var(--border);}
+.rl-nav{background:var(--bg-card);border-bottom:1px solid var(--border);position:fixed;top:0;left:0;width:100%;z-index:1000;}
 .rl-nav-inner{max-width:var(--container-width);margin:0 auto;display:flex;align-items:center;gap:.75rem;}
 .rl-nav__brand{display:inline-flex;align-items:center;gap:.6rem;font-weight:700;text-decoration:none;color:#fff;}
 .rl-nav__brand img{height:80px;width:auto;display:block;filter:drop-shadow(0 12px 22px rgba(0,0,0,.55));}
@@ -225,7 +225,9 @@
 .rl-upload-icon{width:42px;height:42px;border-radius:999px;border:1px solid rgba(224,39,39,.5);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:.25rem;} 
 .rl-upload-text{text-align:center;} .rl-upload-title{font-weight:600;} .rl-upload-sub{font-size:.8rem;color:var(--text-soft);} .rl-upload-input input[type=file]{display:none;} 
 .rl-upload-filelist{margin-top:1rem;font-size:.85rem;color:var(--text-soft);} 
-.rl-upload-file{padding:.1rem 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.rl-upload-file{padding:.1rem 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;gap:.75rem;}
+.rl-upload-file__remove{border:none;background:rgba(255,255,255,.06);color:var(--text-soft);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;cursor:pointer;}
+.rl-upload-file__remove:hover{background:rgba(255,255,255,.12);color:#fff;}
 
 /* Summary */ 
 .rl-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem;margin-top:1.5rem;}

@@ -207,31 +207,37 @@
             {{ form.damage_type }} {{ form.damage_type.errors }}
           </div>
           <div class="rl-wizard-field-group">
-            <label class="rl-wizard-label">Beschädigte Teile</label>
+            <label class="rl-wizard-label">Beschädigte Teile *</label>
             <ul class="rl-checkbox-grid">
-                {% for checkbox in form.damaged_parts %}
-                    <li>
+                {% with items=form.sorted_damaged_parts %}
+                  {% if items %}
+                    {% for checkbox in items %}
+                      <li>
                         {{ checkbox.tag }}
                         <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                    </li>
-                {% endfor %}
+                      </li>
+                    {% endfor %}
+                  {% else %}
+                    {% for checkbox in form.damaged_parts %}
+                      <li>
+                        {{ checkbox.tag }}
+                        <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                      </li>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
             </ul>
 
             {{ form.damaged_parts.errors }}
+            <div class="rl-wizard-field-group is-hidden" data-damaged-parts-other>
+              {{ form.damaged_parts_other.label_tag }}
+              {{ form.damaged_parts_other }}
+              {{ form.damaged_parts_other.errors }}
+            </div>
           </div>
           <div class="rl-wizard-field-group">
-            <label class="rl-wizard-label" for="{{ form.message.id_for_label }}">Schadenbeschreibung *</label>
+            <label class="rl-wizard-label" for="{{ form.message.id_for_label }}">Schadenbeschreibung (optional)</label>
             {{ form.message }} {{ form.message.errors }}
-          </div>
-          <div class="rl-wizard-field-group rl-wizard-field-inline">
-            <div>
-              <label class="rl-wizard-label" for="{{ form.other_party_involved.id_for_label }}">Unfallgegner vorhanden?</label>
-              {{ form.other_party_involved }}
-            </div>
-            <div>
-              <label class="rl-wizard-label" for="{{ form.police_involved.id_for_label }}">Polizei involviert?</label>
-              {{ form.police_involved }}
-            </div>
           </div>
           <div class="rl-wizard-field-group">
             <label class="rl-wizard-label" for="{{ form.photos.id_for_label }}">Schadenfotos *</label>
@@ -252,12 +258,6 @@
             <div class="rl-upload-filelist"></div>
 
             {{ form.photos.errors }}
-          </div>
-          <div class="rl-wizard-field-group">
-            <label class="rl-wizard-label" for="{{ form.documents.id_for_label }}">Dokumente (optional)</label>
-            <p class="rl-wizard-help">Polizeibericht oder Skizze (PDF/JPG/PNG, max. 5 Dateien).</p>
-            {{ form.documents }}
-            {{ form.documents.errors }}
           </div>
         {% endif %}
 
@@ -451,32 +451,83 @@ document.addEventListener('DOMContentLoaded',function(){
   const drop  = document.querySelector('.rl-upload-dropzone');
   const list  = document.querySelector('.rl-upload-filelist');
   if(!input || !drop) return;
+  const fileStore = [];
+
+  const syncInput = () => {
+    const dt = new DataTransfer();
+    fileStore.forEach(file => dt.items.add(file));
+    input.files = dt.files;
+  };
+
+  const renderList = (noteText) => {
+    if(!list) return;
+    list.innerHTML = '';
+    if(!fileStore.length){
+      list.textContent = 'Keine Dateien ausgewählt.';
+      return;
+    }
+    if(noteText){
+      const note = document.createElement('div');
+      note.className = 'rl-upload-file rl-upload-file--warning';
+      note.textContent = noteText;
+      list.appendChild(note);
+    }
+    fileStore.forEach(function(file, index){
+      const row = document.createElement('div');
+      row.className = 'rl-upload-file';
+      row.textContent = file.name;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'rl-upload-file__remove';
+      remove.textContent = 'Entfernen';
+      remove.addEventListener('click', function(){
+        fileStore.splice(index, 1);
+        syncInput();
+        renderList();
+      });
+      row.appendChild(remove);
+      list.appendChild(row);
+    });
+  };
 
   drop.addEventListener('click', function(){
     input.click();
   });
 
   input.addEventListener('change', function(){
-    if(!list) return;
-    list.innerHTML = '';
     if(!this.files || !this.files.length){
-      list.textContent = 'Keine Dateien ausgewählt.';
+      renderList();
       return;
     }
-    const files = Array.from(this.files).slice(0,5);
-    if(this.files.length > files.length){
-      const note = document.createElement('div');
-      note.className = 'rl-upload-file rl-upload-file--warning';
-      note.textContent = 'Es werden nur die ersten 5 Dateien übernommen.';
-      list.appendChild(note);
-    }
-    files.forEach(function(f){
-      const row = document.createElement('div');
-      row.className = 'rl-upload-file';
-      row.textContent = f.name;
-      list.appendChild(row);
+    let noteText = '';
+    Array.from(this.files).forEach(function(file){
+      const exists = fileStore.some(existing => existing.name === file.name && existing.size === file.size);
+      if (exists) return;
+      if (fileStore.length >= 5){
+        noteText = 'Es sind maximal 5 Dateien erlaubt.';
+        return;
+      }
+      fileStore.push(file);
     });
+    syncInput();
+    renderList(noteText);
+    input.value = '';
   });
+
+  const otherWrap = document.querySelector('[data-damaged-parts-other]');
+  const otherInput = otherWrap ? otherWrap.querySelector('input') : null;
+  const otherCheckbox = document.querySelector('input[name="damaged_parts"][value="OTHER"]');
+  const toggleOther = () => {
+    if (!otherWrap || !otherCheckbox) return;
+    const show = otherCheckbox.checked;
+    otherWrap.classList.toggle('is-hidden', !show);
+    if (show && otherInput) otherInput.focus();
+  };
+  if (otherCheckbox) {
+    otherCheckbox.addEventListener('change', toggleOther);
+    toggleOther();
+  }
+  renderList();
 });
 </script>
 {% endblock %}
