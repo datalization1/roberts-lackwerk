@@ -28,6 +28,7 @@ from .forms import (
     ReviewForm,
 )
 from adminportal.utils.audit import log_audit
+from main.utils.rental_extras import normalize_rental_extras
 from .utils.emailing import send_templated_mail, resolve_admin_recipients
 from .utils.security import get_client_ip, is_rate_limited, register_failed_attempt, reset_rate_limit
 from .utils.pdf import render_booking_invoice_pdf
@@ -510,6 +511,13 @@ def transporter_availability(request, transporter_id):
 
 def booking_success(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
+    try:
+        from adminportal.models import PortalSettings
+        portal_settings, _ = PortalSettings.objects.get_or_create(pk=1)
+    except Exception:
+        portal_settings = None
+    extras_data = normalize_rental_extras(portal_settings.rental_extras if portal_settings else [])
+    extras_map = {extra["key"]: extra for extra in extras_data}
     return render(request, "booking_success.html", {"booking": booking})
 
 def available_transporters(request):
@@ -564,13 +572,32 @@ def booking_options(request):
 
     booking = get_object_or_404(Booking, pk=booking_id)
     transporter = booking.transporter
+    try:
+        from adminportal.models import PortalSettings
+        portal_settings, _ = PortalSettings.objects.get_or_create(pk=1)
+    except Exception:
+        portal_settings = None
+    extras_data = normalize_rental_extras(portal_settings.rental_extras if portal_settings else [])
+    extras_map = {extra["key"]: extra for extra in extras_data}
+
+    def selected_extra_keys():
+        if booking.extras:
+            return [key for key in booking.extras if key in extras_map]
+        legacy = {
+            "additional_insurance": booking.additional_insurance,
+            "moving_blankets": booking.moving_blankets,
+            "hand_truck": booking.hand_truck,
+            "tie_down_straps": booking.tie_down_straps,
+        }
+        return [key for key, enabled in legacy.items() if enabled and key in extras_map]
 
     if request.method == "POST":
-        # Checkboxen werden NUR dann True, wenn sie im POST vorhanden sind
-        booking.additional_insurance = "additional_insurance" in request.POST
-        booking.moving_blankets      = "moving_blankets" in request.POST
-        booking.hand_truck           = "hand_truck" in request.POST
-        booking.tie_down_straps      = "tie_down_straps" in request.POST
+        selected_keys = [key for key in request.POST.getlist("extras") if key in extras_map]
+        booking.extras = selected_keys
+        booking.additional_insurance = "additional_insurance" in selected_keys
+        booking.moving_blankets = "moving_blankets" in selected_keys
+        booking.hand_truck = "hand_truck" in selected_keys
+        booking.tie_down_straps = "tie_down_straps" in selected_keys
         booking.additional_notes     = (request.POST.get("additional_notes") or "").strip()
         booking.save()
 
@@ -581,6 +608,8 @@ def booking_options(request):
     context = {
         "booking": booking,
         "transporter": transporter,
+        "extras": [extra for extra in extras_data if extra["active"]],
+        "selected_extras": set(selected_extra_keys()),
     }
     return render(request, "booking_options.html", context)
 
@@ -590,6 +619,13 @@ def booking_review(request):
         return redirect("mietfahrzeuge")
 
     booking = get_object_or_404(Booking, pk=booking_id)
+    try:
+        from adminportal.models import PortalSettings
+        portal_settings, _ = PortalSettings.objects.get_or_create(pk=1)
+    except Exception:
+        portal_settings = None
+    extras_data = normalize_rental_extras(portal_settings.rental_extras if portal_settings else [])
+    extras_map = {extra["key"]: extra for extra in extras_data}
 
     # ❗ Basispreis direkt aus dem Transporter-Modell
     daily_price = booking.transporter.preis_chf  # DecimalField
@@ -601,15 +637,20 @@ def booking_review(request):
     else:
         base_price = daily_price * rental_days if daily_price else None
 
-    extras = []
-    if booking.additional_insurance:
-        extras.append(("Zusatzversicherung", 25))
-    if booking.moving_blankets:
-        extras.append(("Umzugsdecken (10 Stk.)", 15))
-    if booking.hand_truck:
-        extras.append(("Sackkarre / Dolly", 10))
-    if booking.tie_down_straps:
-        extras.append(("Spannsets (4 Stk.)", 8))
+    selected_keys = list(booking.extras or [])
+    if not selected_keys:
+        legacy = {
+            "additional_insurance": booking.additional_insurance,
+            "moving_blankets": booking.moving_blankets,
+            "hand_truck": booking.hand_truck,
+            "tie_down_straps": booking.tie_down_straps,
+        }
+        selected_keys = [key for key, enabled in legacy.items() if enabled]
+    extras = [
+        (extras_map[key]["name"], extras_map[key]["price"])
+        for key in selected_keys
+        if key in extras_map
+    ]
 
     extras_total = sum(Decimal(str(price)) for _, price in extras) if extras else Decimal("0.00")
 
@@ -656,15 +697,19 @@ def booking_payment(request):
     else:
         base_price = daily_price * rental_days if daily_price else None
 
-    extras_total = Decimal("0.00")
-    if booking.additional_insurance:
-        extras_total += Decimal("25")
-    if booking.moving_blankets:
-        extras_total += Decimal("15")
-    if booking.hand_truck:
-        extras_total += Decimal("10")
-    if booking.tie_down_straps:
-        extras_total += Decimal("8")
+    selected_keys = list(booking.extras or [])
+    if not selected_keys:
+        legacy = {
+            "additional_insurance": booking.additional_insurance,
+            "moving_blankets": booking.moving_blankets,
+            "hand_truck": booking.hand_truck,
+            "tie_down_straps": booking.tie_down_straps,
+        }
+        selected_keys = [key for key, enabled in legacy.items() if enabled]
+    extras_total = sum(
+        (extras_map[key]["price"] for key in selected_keys if key in extras_map),
+        Decimal("0.00"),
+    )
 
     net_total = (base_price or Decimal("0.00")) + extras_total
     vat_rate = Decimal("0.077")

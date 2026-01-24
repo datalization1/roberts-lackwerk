@@ -23,9 +23,11 @@
     </article>
     <article class="fig-admin__card">
       <p class="fig-admin__card-label">Optionen</p>
-      <p class="fig-admin__card-meta">Zusatzversicherung: {{ booking.additional_insurance|yesno:"Ja,Nein" }}</p>
-      <p class="fig-admin__card-meta">Umzugsdecken: {{ booking.moving_blankets|yesno:"Ja,Nein" }}</p>
-      <p class="fig-admin__card-meta">Sackkarre: {{ booking.hand_truck|yesno:"Ja,Nein" }}</p>
+      {% if extras_display %}
+        <p class="fig-admin__card-meta">{{ extras_display|join:", " }}</p>
+      {% else %}
+        <p class="fig-admin__card-meta">Keine Zusatzoptionen ausgewählt.</p>
+      {% endif %}
     </article>
   </div>
 

@@ -32,6 +32,10 @@
         <i data-lucide="layout-template"></i>
         Einstellungen Homepage
       </button>
+      <button class="fig-settings-tab" type="button" data-tab="rental-extras">
+        <i data-lucide="package"></i>
+        Vermietung Extras
+      </button>
     </nav>
 
     <section class="fig-settings-section is-active" data-tab="parts" data-field="damage_parts">
@@ -238,6 +242,34 @@
       </div>
     </section>
 
+    <section class="fig-settings-section" data-tab="rental-extras" data-field="rental_extras" data-extra-fields="description,price">
+      <header class="fig-admin__panel-header">
+        <h4>Zusätzliche Optionen (Vermietung)</h4>
+        <p class="fig-admin__panel-subtitle">Optionen für die Buchung von Transportern verwalten</p>
+      </header>
+      <div class="fig-settings-banner">
+        <div class="fig-settings-banner__icon">
+          <i data-lucide="plus-circle"></i>
+        </div>
+        <div>
+          <div class="fig-settings-banner__title">Zusatzoptionen</div>
+          <div class="fig-settings-banner__text">Name, Kurzbeschreibung (5–10 Wörter) und Preis pro Buchung.</div>
+        </div>
+      </div>
+      <div class="fig-settings-toolbar">
+        <div class="fig-settings-count">
+          <i data-lucide="list"></i>
+          Einträge (<span data-count>0</span>)
+        </div>
+        <button class="fig-btn fig-btn--primary fig-btn--compact" type="button" data-action="add">
+          <i data-lucide="plus"></i>
+          Hinzufügen
+        </button>
+      </div>
+      <div class="fig-settings-grid"></div>
+      {{ settings_form.rental_extras }}
+    </section>
+
     <div class="fig-form__actions">
       <button class="fig-btn fig-btn--primary" type="submit">
         <i data-lucide="save"></i>
@@ -260,24 +292,44 @@
       if (section) section.classList.add('is-active');
     }));
 
-    const normalizeItems = (items) => {
+    const slugify = (value) => {
+      return (value || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+    };
+
+    const normalizeItems = (items, extraFields = []) => {
       if (!Array.isArray(items)) return [];
       return items.map(item => {
         if (typeof item === 'string') {
-          return { name: item, active: true };
+          const name = item;
+          return { name, active: true, key: slugify(name) || `extra-${Math.random()}` };
         }
         if (item && typeof item === 'object') {
-          return {
-            name: item.name || item.label || item.title || '',
+          const name = item.name || item.label || item.title || '';
+          const normalized = {
+            name,
             active: item.active !== false,
+            key: item.key || slugify(name) || `extra-${Math.random()}`,
           };
+          extraFields.forEach(field => {
+            normalized[field] = item[field] ?? '';
+          });
+          return normalized;
         }
-        return { name: '', active: true };
+        return { name: '', active: true, key: `extra-${Math.random()}` };
       }).filter(item => item.name);
     };
 
     document.querySelectorAll('.fig-settings-section[data-field]').forEach(section => {
       const field = section.dataset.field;
+      const extraFields = (section.dataset.extraFields || '')
+        .split(',')
+        .map(value => value.trim())
+        .filter(Boolean);
       const input = section.querySelector(`input[name="${field}"]`);
       const grid = section.querySelector('.fig-settings-grid');
       const addButton = section.querySelector('[data-action="add"]');
@@ -289,14 +341,22 @@
       const loadItems = () => {
         if (!input) return [];
         try {
-          return normalizeItems(JSON.parse(input.value || '[]'));
+          return normalizeItems(JSON.parse(input.value || '[]'), extraFields);
         } catch (err) {
-          return normalizeItems([]);
+          return normalizeItems([], extraFields);
         }
       };
 
       const persist = () => {
-        if (input) input.value = JSON.stringify(items.map(item => ({ name: item.name, active: item.active })));
+        if (input) {
+          input.value = JSON.stringify(items.map(item => {
+            const payload = { key: item.key, name: item.name, active: item.active };
+            extraFields.forEach(field => {
+              payload[field] = item[field] ?? '';
+            });
+            return payload;
+          }));
+        }
         if (countEl) countEl.textContent = items.length.toString();
       };
 
@@ -309,9 +369,20 @@
           if (editingIndex === index) card.classList.add('is-editing');
 
           if (editingIndex === index) {
+            const extraInputs = extraFields.map(field => {
+              const value = (item[field] ?? '').toString().replace(/"/g, '&quot;');
+              if (field === 'price') {
+                return `<input class="fig-settings-card__input" type="number" step="0.01" value="${value}" data-role="${field}" placeholder="Preis (CHF)">`;
+              }
+              if (field === 'description') {
+                return `<input class="fig-settings-card__input" type="text" value="${value}" data-role="${field}" placeholder="Kurzbeschreibung">`;
+              }
+              return `<input class="fig-settings-card__input" type="text" value="${value}" data-role="${field}">`;
+            }).join('');
             card.innerHTML = `
               <div class="fig-settings-card__edit">
                 <input class="fig-settings-card__input" type="text" value="${item.name}" data-role="name">
+                ${extraInputs}
                 <label class="fig-settings-card__toggle">
                   <input type="checkbox" data-index="${index}" ${item.active ? 'checked' : ''}> Aktiv
                 </label>
@@ -326,6 +397,10 @@
               </div>
             `;
           } else {
+            const extraMeta = [
+              item.description ? `<div class="fig-settings-card__meta">${item.description}</div>` : '',
+              item.price !== '' && item.price !== undefined ? `<div class="fig-settings-card__meta">CHF ${item.price}</div>` : '',
+            ].join('');
             card.innerHTML = `
               <div class="fig-settings-card__header">
                 <span class="fig-settings-card__title">${item.name}</span>
@@ -338,6 +413,7 @@
                   </button>
                 </div>
               </div>
+              ${extraMeta}
               <label class="fig-settings-card__toggle">
                 <input type="checkbox" data-index="${index}" ${item.active ? 'checked' : ''}>
                 <span class="fig-settings-card__switch" aria-hidden="true"></span>
@@ -353,7 +429,11 @@
 
       const addItem = () => {
         if (editingIndex !== null) return;
-        items.push({ name: 'Neuer Eintrag', active: true, _new: true });
+        const newItem = { name: 'Neuer Eintrag', active: true, _new: true, key: `extra-${Date.now()}` };
+        extraFields.forEach(field => {
+          newItem[field] = field === 'price' ? '0' : '';
+        });
+        items.push(newItem);
         editingIndex = items.length - 1;
         render();
         const inputEl = grid.querySelector('.fig-settings-card__input');
@@ -376,8 +456,8 @@
 
       const saveEdit = (index) => {
         const card = grid.querySelectorAll('.fig-settings-card')[index];
-        const inputEl = card ? card.querySelector('[data-role="name"]') : null;
-        const value = (inputEl && inputEl.value || '').trim();
+        const nameEl = card ? card.querySelector('[data-role="name"]') : null;
+        const value = (nameEl && nameEl.value || '').trim();
         if (!value) {
           if (items[index] && items[index]._new) {
             items.splice(index, 1);
@@ -392,6 +472,10 @@
           return;
         }
         items[index].name = value;
+        extraFields.forEach(field => {
+          const fieldEl = card ? card.querySelector(`[data-role="${field}"]`) : null;
+          items[index][field] = (fieldEl && fieldEl.value || '').trim();
+        });
         delete items[index]._new;
         editingIndex = null;
         render();

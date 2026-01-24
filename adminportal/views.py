@@ -18,6 +18,7 @@ from django.conf import settings
 from reportlab.lib.pagesizes import A4
 
 from main.models import DamageReport, Booking, Transporter, Vehicle
+from main.utils.rental_extras import normalize_rental_extras
 from .models import Customer, Invoice, PortalSettings
 from .forms import (
     CustomerForm,
@@ -1049,16 +1050,42 @@ def damage_report_detail(request, pk):
 @user_passes_test(_is_staff)
 def booking_detail(request, pk):
     booking = get_object_or_404(Booking.objects.select_related("transporter"), pk=pk)
+    portal_settings = PortalSettings.objects.first()
+    extras_data = normalize_rental_extras(portal_settings.rental_extras if portal_settings else [])
+    extras_choices = [
+        (extra["key"], f'{extra["name"]} (CHF {extra["price"]})')
+        for extra in extras_data
+    ] or BookingUpdateForm.DEFAULT_EXTRA_CHOICES
+    extras_map = {extra["key"]: extra for extra in extras_data}
+    extras_display = [
+        f'{extras_map[key]["name"]} (CHF {extras_map[key]["price"]})'
+        for key in (booking.extras or [])
+        if key in extras_map
+    ]
+    if not extras_display:
+        legacy_labels = {
+            "additional_insurance": "Zusatzversicherung (CHF 25)",
+            "moving_blankets": "Umzugsdecken (CHF 15)",
+            "hand_truck": "Sackkarre (CHF 10)",
+            "tie_down_straps": "Zurrgurte (CHF 8)",
+        }
+        legacy_flags = {
+            "additional_insurance": booking.additional_insurance,
+            "moving_blankets": booking.moving_blankets,
+            "hand_truck": booking.hand_truck,
+            "tie_down_straps": booking.tie_down_straps,
+        }
+        extras_display = [label for key, label in legacy_labels.items() if legacy_flags.get(key)]
     if request.method == "POST":
-        form = BookingUpdateForm(request.POST, instance=booking)
+        form = BookingUpdateForm(request.POST, instance=booking, extras_choices=extras_choices)
         if form.is_valid():
             form.save()
             log_audit("booking_updated", request=request, actor=request.user, metadata={"booking_id": booking.pk})
             return redirect("portal_booking_detail", pk=pk)
     else:
-        form = BookingUpdateForm(instance=booking)
+        form = BookingUpdateForm(instance=booking, extras_choices=extras_choices)
     ctx = _base_context("bookings")
-    ctx.update({"booking": booking, "form": form})
+    ctx.update({"booking": booking, "form": form, "extras_display": extras_display})
     return render(request, "adminportal/booking_detail.html", ctx)
 
 # Create your views here.

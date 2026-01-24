@@ -134,6 +134,38 @@ class PortalSettings(models.Model):
             {"name": "Versicherungsabwicklung", "active": True},
         ]
 
+    def _default_rental_extras():
+        return [
+            {
+                "key": "additional_insurance",
+                "name": "Zusätzliche Versicherung",
+                "description": "Zusätzlicher Schutz für Ihre Buchung und Sicherheit.",
+                "price": 25,
+                "active": True,
+            },
+            {
+                "key": "moving_blankets",
+                "name": "Umzugsdecken",
+                "description": "Schützt Möbel vor Kratzern und Stößen.",
+                "price": 15,
+                "active": True,
+            },
+            {
+                "key": "hand_truck",
+                "name": "Sackkarre / Transportwagen",
+                "description": "Hilft beim Transport schwerer Gegenstände.",
+                "price": 10,
+                "active": True,
+            },
+            {
+                "key": "tie_down_straps",
+                "name": "Zurrgurte (4 Stück)",
+                "description": "Sichert Ihre Ladung für den Transport.",
+                "price": 8,
+                "active": True,
+            },
+        ]
+
     contact_email = models.EmailField(blank=True, default="")
     branding_text = models.CharField(max_length=200, blank=True, default="Verwaltung von Schadenmeldungen und Buchungen")
     default_daily_price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
@@ -152,6 +184,7 @@ class PortalSettings(models.Model):
     damage_types = models.JSONField(default=_default_damage_types, blank=True)
     insurers = models.JSONField(default=_default_insurers, blank=True)
     homepage_services = models.JSONField(default=_default_homepage_services, blank=True)
+    rental_extras = models.JSONField(default=_default_rental_extras, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

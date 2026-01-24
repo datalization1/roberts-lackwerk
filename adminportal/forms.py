@@ -106,7 +106,7 @@ class DamageReportUpdateForm(forms.ModelForm):
 
 
 class BookingUpdateForm(forms.ModelForm):
-    EXTRA_CHOICES = [
+    DEFAULT_EXTRA_CHOICES = [
         ("moving_blankets", "Möbeldecken (CHF 15)"),
         ("hand_truck", "Sackkarre (CHF 10)"),
         ("tie_down_straps", "Zurrgurte (CHF 8)"),
@@ -115,7 +115,7 @@ class BookingUpdateForm(forms.ModelForm):
         ("winter_tires", "Winterreifen (CHF 25)"),
     ]
     extras = forms.MultipleChoiceField(
-        choices=EXTRA_CHOICES,
+        choices=DEFAULT_EXTRA_CHOICES,
         required=False,
         widget=forms.CheckboxSelectMultiple,
         label="Extras",
@@ -142,8 +142,10 @@ class BookingUpdateForm(forms.ModelForm):
             "admin_notes",
         ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, extras_choices=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if extras_choices is not None:
+            self.fields["extras"].choices = extras_choices
         if self.instance and self.instance.pk:
             self.fields["extras"].initial = list(self.instance.extras or [])
 
@@ -177,6 +179,7 @@ class PortalSettingsForm(forms.ModelForm):
             "damage_types",
             "insurers",
             "homepage_services",
+            "rental_extras",
         ]
         widgets = {
             "smtp_password": forms.PasswordInput(render_value=True),
@@ -185,4 +188,5 @@ class PortalSettingsForm(forms.ModelForm):
             "damage_types": forms.HiddenInput(),
             "insurers": forms.HiddenInput(),
             "homepage_services": forms.HiddenInput(),
+            "rental_extras": forms.HiddenInput(),
         }
