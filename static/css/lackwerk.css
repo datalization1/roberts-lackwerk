@@ -183,7 +183,7 @@ body.lw-body {
 
 /* ---------- Trust-Streifen ----------------------------------------------- */
 .lw-trust { background: var(--lw-surface); border-top: 1px solid var(--lw-border); border-bottom: 1px solid var(--lw-border); }
-.lw-trust__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; padding: 48px 0; }
+.lw-trust__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; padding-block: 48px; }
 .lw-trust__item { display: flex; gap: 16px; align-items: flex-start; }
 .lw-trust__ic { width: 44px; height: 44px; border-radius: 11px; background: var(--lw-surface-2); color: var(--lw-accent-ink); display: grid; place-items: center; flex: none; }
 .lw-trust__item h3 { margin: 2px 0 4px; font-size: 16px; font-weight: 700; }
@@ -517,7 +517,7 @@ body.lw-body {
 
 /* Wizard-Bühne: zentriert, luftig */
 .lw-body .rl-wizard-page,
-.lw-body .rl-wizard { max-width: 780px; margin: 0 auto; padding: 24px 0 64px; }
+.lw-body .rl-wizard { max-width: 780px; margin: 0 auto; padding: 24px 20px 64px; }
 .lw-body .rl-wizard-header { margin-bottom: 20px; text-align: center; }
 .lw-body .rl-wizard-title { font-size: clamp(26px, 4vw, 34px); font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px; }
 .lw-body .rl-wizard-subtitle { font-size: 16px; color: var(--lw-muted); }
