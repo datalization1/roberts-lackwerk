@@ -9,7 +9,8 @@
     <meta name="description" content="{% block meta_description %}Professionelle Karosseriereparatur und Autolackierung sowie zuverlässige Transporter-Vermietung in Wangen bei Olten. Direkte Versicherungsabwicklung.{% endblock %}">
     <link rel="canonical" href="{% block canonical %}https://roberts-lackwerk.ch{{ request.path }}{% endblock %}">
     <meta name="robots" content="index,follow">
-    <link rel="icon" type="image/png" href="{% static 'img/RLicon.png' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+    <link rel="alternate icon" type="image/png" href="{% static 'img/RLicon.png' %}">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -36,9 +37,8 @@
     {% block nav %}
     <header class="lw-nav">
       <div class="lw-wrap lw-nav__in">
-        <a class="lw-brand" href="{% url 'home' %}">
-          <span class="lw-brand__mark">RL</span>
-          <span>Robert's Lackwerk</span>
+        <a class="lw-brand" href="{% url 'home' %}" aria-label="Robert's Lackwerk – Startseite">
+          <img src="{% static 'img/logo-wordmark.svg' %}" alt="Robert's Lackwerk" class="lw-brand__logo" width="738" height="476">
         </a>
 
         <a href="{% url 'schaden_melden' %}" class="lw-btn lw-btn--primary lw-btn--sm lw-nav__cta-mobile js-start-modal">Jetzt starten</a>

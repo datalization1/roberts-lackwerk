@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="Lädt – Fahrzeug wird lackiert">
+  <style>
+    .lw-fill   { animation: lwFill 2.6s cubic-bezier(.4,0,.3,1) infinite; }
+    .lw-drop   { animation: lwSpray 0.9s linear infinite; }
+    .lw-drop2  { animation: lwSpray 0.9s linear infinite; animation-delay: .3s; }
+    .lw-drop3  { animation: lwSpray 0.9s linear infinite; animation-delay: .6s; }
+    .lw-cone   { animation: lwCone 0.9s ease-in-out infinite; transform-origin: 70px 92px; }
+    @keyframes lwFill {
+      0%   { transform: translateY(66px); opacity: 1; }
+      52%  { transform: translateY(0);    opacity: 1; }
+      80%  { transform: translateY(0);    opacity: 1; }
+      92%  { transform: translateY(0);    opacity: 0; }
+      100% { transform: translateY(66px); opacity: 0; }
+    }
+    @keyframes lwSpray {
+      0%   { transform: translateX(0);   opacity: 0; }
+      20%  { opacity: 1; }
+      100% { transform: translateX(30px); opacity: 0; }
+    }
+    @keyframes lwCone {
+      0%,100% { opacity: .18; }
+      50%     { opacity: .4; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .lw-fill,.lw-drop,.lw-drop2,.lw-drop3,.lw-cone { animation: none; }
+      .lw-fill { transform: translateY(14px); }
+    }
+  </style>
+
+  <defs>
+    <clipPath id="lwCar">
+      <rect x="100" y="104" width="150" height="34" rx="12"/>
+      <path d="M124 104 L140 80 Q144 74 152 74 L198 74 Q208 74 212 82 L228 104 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Boden -->
+  <line x1="70" y1="156" x2="268" y2="156" stroke="#ece4d5" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Farbfüllung im Auto -->
+  <g clip-path="url(#lwCar)">
+    <rect class="lw-fill" x="96" y="74" width="160" height="66" fill="#e3a008"/>
+  </g>
+
+  <!-- Auto-Umriss -->
+  <g fill="none" stroke="#c4b99f" stroke-width="3" stroke-linejoin="round">
+    <rect x="100" y="104" width="150" height="34" rx="12"/>
+    <path d="M124 104 L140 80 Q144 74 152 74 L198 74 Q208 74 212 82 L228 104"/>
+    <line x1="174" y1="76" x2="174" y2="104"/>
+  </g>
+
+  <!-- Räder -->
+  <g>
+    <circle cx="130" cy="140" r="15" fill="#1c1915"/>
+    <circle cx="130" cy="140" r="6" fill="#faf8f3"/>
+    <circle cx="220" cy="140" r="15" fill="#1c1915"/>
+    <circle cx="220" cy="140" r="6" fill="#faf8f3"/>
+  </g>
+
+  <!-- Sprühkegel -->
+  <path class="lw-cone" d="M70 92 L96 82 L96 102 Z" fill="#e3a008"/>
+
+  <!-- Sprühtropfen -->
+  <g fill="#e3a008">
+    <circle class="lw-drop"  cx="72" cy="88" r="2.6"/>
+    <circle class="lw-drop2" cx="72" cy="94" r="2.2"/>
+    <circle class="lw-drop3" cx="72" cy="91" r="2.4"/>
+  </g>
+
+  <!-- Spritzpistole -->
+  <g>
+    <!-- Becher -->
+    <path d="M30 60 H54 L50 78 H34 Z" fill="#e3a008"/>
+    <ellipse cx="42" cy="60" rx="12" ry="3.2" fill="#b8820a"/>
+    <!-- Körper -->
+    <rect x="30" y="80" width="34" height="14" rx="4" fill="#3a352c"/>
+    <rect x="62" y="83" width="12" height="7" rx="2" fill="#46413a"/>
+    <!-- Griff -->
+    <path d="M34 94 L46 94 L42 120 L34 120 Z" fill="#3a352c"/>
+    <!-- Abzug -->
+    <path d="M46 95 q7 4 5 13" fill="none" stroke="#3a352c" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>
