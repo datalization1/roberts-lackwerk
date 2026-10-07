@@ -4,147 +4,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Robert's Lackwerk</title>
+
+    <title>{% block meta_title %}Robert's Lackwerk – Carrosserie, Lackiererei & Transporter-Vermietung{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Professionelle Karosseriereparatur und Autolackierung sowie zuverlässige Transporter-Vermietung in Wangen bei Olten. Direkte Versicherungsabwicklung.{% endblock %}">
+    <link rel="canonical" href="{% block canonical %}https://roberts-lackwerk.ch{{ request.path }}{% endblock %}">
+    <meta name="robots" content="index,follow">
     <link rel="icon" type="image/png" href="{% static 'img/RLicon.png' %}">
 
-    <!-- Bootstrap CSS -->
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Robert's Lackwerk">
+    <meta property="og:title" content="{% block og_title %}Robert's Lackwerk{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Carrosserie, Lackiererei & Transporter-Vermietung in der Schweiz.{% endblock %}">
+    <meta property="og:locale" content="de_CH">
+
+    <!-- Bootstrap (Legacy – wird waehrend der Umstellung noch von Wizard/Buchung genutzt) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Design System CSS -->
+    <!-- Legacy Design-System (wird schrittweise abgeloest) -->
     <link rel="stylesheet" href="{% static 'css/design/variables.css' %}">
     <link rel="stylesheet" href="{% static 'css/design/layout.css' %}">
     <link rel="stylesheet" href="{% static 'css/design/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/figma.css' %}">
+
+    <!-- Neues, konsolidiertes Design-System (gewinnt) -->
+    <link rel="stylesheet" href="{% static 'css/lackwerk.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
-<script>
-document.addEventListener('DOMContentLoaded',function(){
-  document.querySelectorAll('.progress-bar[data-progress]').forEach(function(el){
-    var p = el.getAttribute('data-progress');
-    if(p){ el.style.width = p + '%'; }
-  });
-  document.querySelectorAll('.rl-progress-fill[data-progress]').forEach(function(el){
-    var p = el.getAttribute('data-progress');
-    if(p){ el.style.width = p + '%'; }
-  });
-});
-</script>
-<body class="page-bg {% block body_class %}{% endblock %}" data-ga-id="{{ GA_MEASUREMENT_ID }}">
+<body class="lw-body {% block body_class %}{% endblock %}" data-ga-id="{{ GA_MEASUREMENT_ID }}">
+
     {% block nav %}
-    <nav class="navbar navbar-expand-lg navbar-dark rl-nav">
-      <div class="container-fluid rl-nav-inner">
-        <a class="navbar-brand rl-nav__brand" href="{% url 'home' %}">
-          <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk" class="rl-nav__logo" decoding="async">
+    <header class="lw-nav">
+      <div class="lw-wrap lw-nav__in">
+        <a class="lw-brand" href="{% url 'home' %}">
+          <span class="lw-brand__mark">RL</span>
+          <span>Robert's Lackwerk</span>
         </a>
-        <a href="{% url 'schaden_melden' %}" class="btn btn-primary rl-nav__cta rl-nav__cta--mobile js-start-modal">Jetzt starten</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-          <span class="navbar-toggler-icon"></span>
+
+        <a href="{% url 'schaden_melden' %}" class="lw-btn lw-btn--primary lw-btn--sm lw-nav__cta-mobile js-start-modal">Jetzt starten</a>
+        <button class="lw-nav__toggle" type="button" aria-label="Menü" aria-expanded="false" data-nav-toggle>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <div class="collapse navbar-collapse rl-nav__links" id="navbarNav">
-          <ul class="navbar-nav ms-auto rl-nav__list">
-            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">Startseite</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'schaden_melden' %}active{% endif %}" href="{% url 'schaden_melden' %}">Schadenmeldung</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'mietfahrzeuge' %}active{% endif %}" href="{% url 'mietfahrzeuge' %}">Vermietung</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'ueber_uns' %}active{% endif %}" href="{% url 'ueber_uns' %}">Über uns</a></li>
+
+        <nav class="lw-nav__menu" id="lwNavMenu">
+          <ul class="lw-nav__links">
+            <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">Startseite</a></li>
+            <li><a href="{% url 'schaden_melden' %}" class="{% if request.resolver_match.url_name == 'schaden_melden' %}is-active{% endif %}">Schadenmeldung</a></li>
+            <li><a href="{% url 'mietfahrzeuge' %}" class="{% if request.resolver_match.url_name == 'mietfahrzeuge' %}is-active{% endif %}">Vermietung</a></li>
+            <li><a href="{% url 'ueber_uns' %}" class="{% if request.resolver_match.url_name == 'ueber_uns' %}is-active{% endif %}">Über uns</a></li>
           </ul>
-          <a href="{% url 'schaden_melden' %}" class="btn btn-primary rl-nav__cta rl-nav__cta--desktop js-start-modal">Jetzt starten</a>
-        </div>
+          <a href="{% url 'schaden_melden' %}" class="lw-btn lw-btn--primary lw-btn--sm lw-nav__cta lw-nav__cta--desktop js-start-modal">Jetzt starten</a>
+        </nav>
       </div>
-    </nav>
+    </header>
     {% endblock %}
+
     <main class="page-main">
       <div class="page-container">
         {% block content %}{% endblock %}
       </div>
     </main>
 
-     {% include "partials/footer.html" %} 
-     {% include "partials/cookie_banner.html" %}
+    {% include "partials/footer.html" %}
+    {% include "partials/cookie_banner.html" %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    if (window.lucide) {
-      lucide.createIcons();
-    }
-
-    // Set max today for date inputs
-    const today = new Date().toISOString().split('T')[0];
-    document.querySelectorAll('input[data-max-today="true"]').forEach(function(el){
-      el.setAttribute('max', today);
-    });
-
-    // Basic file size/type check for inputs carrying data-max-size (MB)
-    document.querySelectorAll('input[type="file"][data-max-size]').forEach(function(el){
-      el.addEventListener('change', function(ev){
-        const maxMB = parseInt(el.dataset.maxSize || '5', 10);
-        const maxBytes = maxMB * 1024 * 1024;
-        const allowed = (el.getAttribute('accept') || '').split(',').filter(Boolean);
-        for (const file of el.files) {
-          if (file.size > maxBytes) {
-            alert(`Datei ${file.name} ist zu groß. Maximal ${maxMB} MB.`);
-            el.value = '';
-            return;
-          }
-          if (allowed.length && !allowed.includes(file.type)) {
-            alert(`Datei ${file.name} hat einen ungültigen Typ (${file.type}).`);
-            el.value = '';
-            return;
-          }
-        }
-      });
-    });
-  });
-</script>
-<script>
-  (function () {
-    const key = 'rl_cookie_consent';
-    const consent = localStorage.getItem(key);
-    const gaId = document.body.getAttribute('data-ga-id');
-    if (consent === 'accepted' && gaId) {
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
-      document.head.appendChild(script);
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', gaId);
-    }
-  })();
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const modalEl = document.getElementById('rlStartModal');
-    if (!modalEl || !window.bootstrap) {
-      return;
-    }
-    const modal = new bootstrap.Modal(modalEl);
-    document.querySelectorAll('.js-start-modal').forEach(function (btn) {
-      btn.addEventListener('click', function (event) {
-        event.preventDefault();
-        modal.show();
-      });
-    });
-  });
-</script>
-  </body>
-</html>
-
-<div class="modal fade rl-start-modal" id="rlStartModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header rl-start-modal__header">
-        <h5 class="modal-title">Willkommen bei Robert's Lackwerk</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
-      </div>
-      <div class="modal-body">
-        <p>Wir freuen, dass Sie die Dienstleistung von Robert's Lackwerk in Anspruch nehmen möchten. Mit welcher Dienstleistung möchten Sie fortfahren?</p>
-        <div class="rl-start-modal__actions">
-          <a class="btn rl-start-modal__btn rl-start-modal__btn--solid" href="{% url 'schaden_melden' %}">Schaden melden</a>
-          <a class="btn rl-start-modal__btn rl-start-modal__btn--outline" href="{% url 'mietfahrzeuge' %}">Transporter mieten</a>
+    <!-- Start-Modal -->
+    <div class="lw-modal" id="lwStartModal" aria-hidden="true">
+      <div class="lw-modal__backdrop" data-modal-close></div>
+      <div class="lw-modal__panel" role="dialog" aria-modal="true" aria-labelledby="lwStartTitle">
+        <button type="button" class="lw-modal__close" data-modal-close aria-label="Schließen">&times;</button>
+        <h3 id="lwStartTitle">Willkommen bei Robert's Lackwerk</h3>
+        <p>Womit möchten Sie fortfahren?</p>
+        <div class="lw-modal__actions">
+          <a class="lw-btn lw-btn--primary lw-btn--block" href="{% url 'schaden_melden' %}">Schaden melden</a>
+          <a class="lw-btn lw-btn--ghost lw-btn--block" href="{% url 'mietfahrzeuge' %}">Transporter mieten</a>
         </div>
       </div>
     </div>
-  </div>
-</div>
+
+    <!-- Bootstrap JS (Legacy) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.lucide) { lucide.createIcons(); }
+
+        // Mobile-Navigation
+        var navToggle = document.querySelector('[data-nav-toggle]');
+        var navMenu = document.getElementById('lwNavMenu');
+        if (navToggle && navMenu) {
+          navToggle.addEventListener('click', function () {
+            var open = navMenu.classList.toggle('is-open');
+            navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          });
+        }
+
+        // Start-Modal
+        var startModal = document.getElementById('lwStartModal');
+        if (startModal) {
+          document.querySelectorAll('.js-start-modal').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+              e.preventDefault();
+              startModal.classList.add('is-open');
+              startModal.setAttribute('aria-hidden', 'false');
+            });
+          });
+          startModal.querySelectorAll('[data-modal-close]').forEach(function (el) {
+            el.addEventListener('click', function () {
+              startModal.classList.remove('is-open');
+              startModal.setAttribute('aria-hidden', 'true');
+            });
+          });
+        }
+
+        // Progress-Bars (Legacy)
+        document.querySelectorAll('.progress-bar[data-progress], .rl-progress-fill[data-progress]').forEach(function (el) {
+          var p = el.getAttribute('data-progress');
+          if (p) { el.style.width = p + '%'; }
+        });
+
+        // Datum: max heute
+        var today = new Date().toISOString().split('T')[0];
+        document.querySelectorAll('input[data-max-today="true"]').forEach(function (el) {
+          el.setAttribute('max', today);
+        });
+
+        // Datei-Upload-Pruefung
+        document.querySelectorAll('input[type="file"][data-max-size]').forEach(function (el) {
+          el.addEventListener('change', function () {
+            var maxMB = parseInt(el.dataset.maxSize || '5', 10);
+            var maxBytes = maxMB * 1024 * 1024;
+            var allowed = (el.getAttribute('accept') || '').split(',').filter(Boolean);
+            for (var i = 0; i < el.files.length; i++) {
+              var file = el.files[i];
+              if (file.size > maxBytes) {
+                alert('Datei ' + file.name + ' ist zu groß. Maximal ' + maxMB + ' MB.');
+                el.value = ''; return;
+              }
+              if (allowed.length && allowed.indexOf(file.type) === -1) {
+                alert('Datei ' + file.name + ' hat einen ungültigen Typ (' + file.type + ').');
+                el.value = ''; return;
+              }
+            }
+          });
+        });
+      });
+    </script>
+    <script>
+      // Google Analytics nur mit Zustimmung
+      (function () {
+        var consent = localStorage.getItem('rl_cookie_consent');
+        var gaId = document.body.getAttribute('data-ga-id');
+        if (consent === 'accepted' && gaId) {
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){ dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', gaId);
+        }
+      })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
