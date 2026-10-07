@@ -1,11 +1,15 @@
 from django.urls import path
+from django.contrib.sitemaps.views import sitemap
 from . import views
+from .sitemaps import StaticViewSitemap
 from .views import (
     home, dienstleistungen, ueber_uns,
     ClaimWizard, schaden_success,
     mietfahrzeuge, transporter_list, transporter_availability, book_transporter,
     available_transporters,
 )
+
+sitemaps = {"static": StaticViewSitemap}
 
 urlpatterns = [
     path("", home, name="home"),
@@ -14,6 +18,14 @@ urlpatterns = [
     path("impressum/", views.impressum, name="impressum"),
     path("datenschutz/", views.datenschutz, name="datenschutz"),
     path("healthz/", views.healthz, name="healthz"),
+
+    # SEO: Sitemap + robots.txt
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
+    path("robots.txt", views.robots_txt, name="robots_txt"),
+
+    # Lokale SEO-Landingpages (Olten & Zofingen)
+    path("carrosserie-lackiererei-olten-zofingen/", views.lp_carrosserie, name="lp_carrosserie"),
+    path("transporter-mieten-olten-zofingen/", views.lp_transporter, name="lp_transporter"),
 
     # Schaden melden (Wizard)
     path("schaden/", ClaimWizard.as_view(), name="schaden"),

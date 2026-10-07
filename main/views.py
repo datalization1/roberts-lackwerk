@@ -101,6 +101,28 @@ def impressum(request):
 def datenschutz(request):
     return render(request, "datenschutz.html")
 
+
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /intern/",
+        "Disallow: /admin/",
+        "Disallow: /api/",
+        "",
+        "Sitemap: https://roberts-lackwerk.ch/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines) + "\n", content_type="text/plain")
+
+
+# ---------- Lokale SEO-Landingpages (Olten & Zofingen) ----------
+def lp_carrosserie(request):
+    return render(request, "landing/carrosserie_olten_zofingen.html")
+
+
+def lp_transporter(request):
+    return render(request, "landing/transporter_olten_zofingen.html")
+
 # ---------- Schaden melden: Wizard ----------
 
 FORMS = [

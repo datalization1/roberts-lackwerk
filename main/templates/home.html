@@ -11,8 +11,9 @@
 <section class="lw-hero">
   <div class="lw-wrap lw-hero__grid">
     <div>
-      <span class="lw-eyebrow">Carrosserie &amp; Lackiererei · Wangen b. Olten</span>
+      <span class="lw-eyebrow">Carrosserie &amp; Lackiererei · Region Olten &amp; Zofingen</span>
       <h1>Ihr Fahrzeug. Wieder wie neu.</h1>
+      <p class="lw-hero__slogan">Leidenschaft · Präzision · Qualität</p>
       <p class="lw-hero__lead">Professionelle Unfallreparatur und Lackierung – und zuverlässige Transporter für Ihren Umzug. Alles aus einer Hand.</p>
       <div class="lw-hero__actions">
         <a class="lw-btn lw-btn--primary lw-btn--lg" href="{% url 'schaden_melden' %}">Schaden melden</a>
@@ -112,22 +113,34 @@
 {
   "@context": "https://schema.org",
   "@type": "AutoBodyShop",
-  "name": "Robert's Lackwerk",
-  "description": "Carrosserie, Autolackierung und Transporter-Vermietung in Wangen bei Olten.",
+  "name": "Robert's Lackwerk GmbH",
+  "legalName": "Robert's Lackwerk GmbH",
+  "description": "Carrosserie, Autolackierung und Transporter-Vermietung für Olten, Zofingen und die Region.",
   "url": "https://roberts-lackwerk.ch",
+  "image": "https://roberts-lackwerk.ch{% static 'img/hero-lackierung.jpg' %}",
+  "logo": "https://roberts-lackwerk.ch{% static 'img/logo-wordmark-hd.png' %}",
   "telephone": "+41763290205",
   "email": "info@roberts-lackwerk.ch",
+  "priceRange": "$$",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Neumattstrasse 54",
     "postalCode": "4612",
     "addressLocality": "Wangen bei Olten",
+    "addressRegion": "SO",
     "addressCountry": "CH"
   },
-  "areaServed": "CH",
+  "geo": { "@type": "GeoCoordinates", "latitude": 47.2567, "longitude": 7.8706 },
+  "areaServed": [
+    {"@type":"City","name":"Olten"},{"@type":"City","name":"Zofingen"},
+    {"@type":"City","name":"Aarburg"},{"@type":"City","name":"Oftringen"},
+    {"@type":"City","name":"Hägendorf"},{"@type":"City","name":"Brittnau"},
+    {"@type":"City","name":"Egerkingen"},{"@type":"City","name":"Härkingen"},
+    {"@type":"City","name":"Strengelbach"},{"@type":"City","name":"Wangen bei Olten"}
+  ],
   "openingHoursSpecification": [
-    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "07:30", "closes": "18:00" },
-    { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "08:00", "closes": "12:00" }
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "08:00", "closes": "18:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "08:00", "closes": "14:00" }
   ]
 }
 </script>

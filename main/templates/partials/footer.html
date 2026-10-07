@@ -6,7 +6,8 @@
         <a class="lw-brand" href="{% url 'home' %}" aria-label="Robert's Lackwerk – Startseite">
           <img src="{% static 'img/logo-wordmark-hd.png' %}" alt="Robert's Lackwerk" class="lw-brand__logo lw-footer__logo" width="753" height="485">
         </a>
-        <p>Ihr Partner für Carrosserie-, Lackierarbeiten und Fahrzeugvermietung in der Schweiz.</p>
+        <p>Ihr Partner für Carrosserie-, Lackierarbeiten und Fahrzeugvermietung in der Region Olten &amp; Zofingen.</p>
+        <p class="lw-footer__slogan">Leidenschaft · Präzision · Qualität</p>
       </div>
 
       <div>
@@ -15,6 +16,8 @@
           <li><a href="{% url 'home' %}">Startseite</a></li>
           <li><a href="{% url 'schaden_melden' %}">Schadenmeldung</a></li>
           <li><a href="{% url 'mietfahrzeuge' %}">Transporter mieten</a></li>
+          <li><a href="{% url 'lp_carrosserie' %}">Carrosserie Olten &amp; Zofingen</a></li>
+          <li><a href="{% url 'lp_transporter' %}">Transporter Olten &amp; Zofingen</a></li>
           <li><a href="{% url 'ueber_uns' %}">Über uns</a></li>
         </ul>
       </div>
@@ -31,15 +34,15 @@
       <div>
         <h4>Öffnungszeiten</h4>
         <ul>
-          <li>Mo – Fr: 07:30 – 18:00</li>
-          <li>Samstag: 08:00 – 12:00</li>
+          <li>Mo – Fr: 08:00 – 18:00</li>
+          <li>Samstag: 08:00 – 14:00</li>
           <li>Sonntag: Geschlossen</li>
         </ul>
       </div>
     </div>
 
     <div class="lw-footer__bottom">
-      <span>© {% now "Y" %} Robert's Lackwerk. Alle Rechte vorbehalten.</span>
+      <span>© {% now "Y" %} Robert's Lackwerk GmbH. Alle Rechte vorbehalten.</span>
       <nav>
         <a href="https://datalization.ch" target="_blank" rel="noopener">Website by Datalization</a>
         &nbsp;·&nbsp;

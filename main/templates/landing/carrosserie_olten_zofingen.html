@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta_title %}Carrosserie & Autolackiererei Olten & Zofingen | Robert's Lackwerk GmbH{% endblock %}
+{% block meta_description %}Carrosserie, Autoreparatur & Autolackiererei für Olten, Zofingen & Umgebung. Unfallschaden, Dellen, Spot-Repair und Lackierung – mit Direktabrechnung über die Versicherung. Jetzt online Schaden melden.{% endblock %}
+{% block canonical %}https://roberts-lackwerk.ch/carrosserie-lackiererei-olten-zofingen/{% endblock %}
+{% block og_title %}Carrosserie & Autolackiererei Olten & Zofingen{% endblock %}
+
+{% block content %}
+<section class="lw-pagehead">
+  <div class="lw-wrap">
+    <span class="lw-pagehead__eyebrow">Carrosserie · Lackiererei · Region Olten &amp; Zofingen</span>
+    <h1>Carrosserie &amp; Autolackiererei in Olten &amp; Zofingen</h1>
+    <p class="lw-pagehead__lead">Unfallschaden, Delle oder Lackschaden? Robert’s Lackwerk ist Ihre Carrosserie und Autolackiererei für Olten, Zofingen und die ganze Region – fachgerechte Autoreparatur mit Direktabrechnung über Ihre Versicherung.</p>
+    <div class="lw-hero__actions" style="margin-top:28px;">
+      <a class="lw-btn lw-btn--primary lw-btn--lg" href="{% url 'schaden_melden' %}">Schaden melden</a>
+      <a class="lw-btn lw-btn--ghost lw-btn--lg" href="{% url 'ueber_uns' %}">Über die Werkstatt</a>
+    </div>
+  </div>
+</section>
+
+<section class="lw-section">
+  <div class="lw-wrap">
+    <div class="lw-section__head">
+      <h2>Unsere Leistungen für Ihr Fahrzeug</h2>
+      <p>Von der Unfallreparatur bis zur Komplettlackierung – alles aus einer Hand in der Region Olten/Zofingen.</p>
+    </div>
+    <div class="lw-grid lw-grid--3">
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="car"></i></div>
+        <h3>Unfallreparatur &amp; Carrosserie</h3>
+        <p>Fachgerechte Instandsetzung von Unfallschäden, verzogenen Rahmen und beschädigten Karosserieteilen.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="paintbrush"></i></div>
+        <h3>Autolackierung</h3>
+        <p>Komplett- und Teillackierungen in Herstellerqualität mit exakter Farbtonbestimmung.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="sparkles"></i></div>
+        <h3>Spot- &amp; Smart-Repair</h3>
+        <p>Kleine Kratzer und Lackschäden schnell und günstig beheben – ohne das ganze Bauteil zu lackieren.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="cloud-hail"></i></div>
+        <h3>Dellen &amp; Hagelschaden</h3>
+        <p>Professionelle Dellenentfernung nach Parkremplern, Hagel und Beulen.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="droplets"></i></div>
+        <h3>Aufbereitung &amp; Politur</h3>
+        <p>Innen- und Aussenaufbereitung, Politur und Schutzbeschichtungen für ein neuwertiges Finish.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="shield-check"></i></div>
+        <h3>Versicherungsabwicklung</h3>
+        <p>Direktabrechnung mit allen grossen Versicherungen, inkl. Schadengutachten und Dokumentation.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="lw-section lw-section--alt">
+  <div class="lw-wrap">
+    <div class="lw-section__head">
+      <h2>Ihr Carrosserie-Partner in der Region</h2>
+      <p>Wir sind in Wangen bei Olten zuhause und für diese Gemeinden da:</p>
+    </div>
+    <div class="lw-areas">
+      <span class="lw-area-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Olten</span>
+      <span class="lw-area-chip">Zofingen</span>
+      <span class="lw-area-chip">Aarburg</span>
+      <span class="lw-area-chip">Oftringen</span>
+      <span class="lw-area-chip">Hägendorf</span>
+      <span class="lw-area-chip">Brittnau</span>
+      <span class="lw-area-chip">Egerkingen</span>
+      <span class="lw-area-chip">Härkingen</span>
+      <span class="lw-area-chip">Strengelbach</span>
+      <span class="lw-area-chip">Wangen bei Olten</span>
+    </div>
+  </div>
+</section>
+
+<section class="lw-section">
+  <div class="lw-wrap">
+    <div class="lw-section__head"><h2>Häufige Fragen</h2></div>
+    <div class="lw-faq">
+      <details>
+        <summary>Übernehmen Sie die Abwicklung mit der Versicherung?</summary>
+        <div class="lw-faq__a">Ja. Wir rechnen Unfallschäden direkt mit allen grossen Schweizer Versicherungen ab, erstellen das Schadengutachten und übernehmen die Dokumentation für Sie. Sie können Ihren Schaden bequem <a href="{% url 'schaden_melden' %}">online melden</a>.</div>
+      </details>
+      <details>
+        <summary>Wie lange dauert eine Reparatur?</summary>
+        <div class="lw-faq__a">Die meisten Reparaturen sind in 3–5 Arbeitstagen erledigt. Nach der Begutachtung nennen wir Ihnen einen verbindlichen Termin.</div>
+      </details>
+      <details>
+        <summary>Welche Gebiete rund um Olten und Zofingen decken Sie ab?</summary>
+        <div class="lw-faq__a">Wir sind für Kundinnen und Kunden aus Olten, Zofingen, Aarburg, Oftringen, Hägendorf, Brittnau, Egerkingen, Härkingen, Strengelbach und Wangen bei Olten da – gerne auch darüber hinaus.</div>
+      </details>
+      <details>
+        <summary>Brauche ich während der Reparatur ein Ersatzfahrzeug?</summary>
+        <div class="lw-faq__a">Auf Wunsch organisieren wir eine Mobilitätslösung. Zusätzlich vermieten wir <a href="{% url 'lp_transporter' %}">Transporter und Umzugswagen</a> in der Region.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="lw-band">
+  <div class="lw-wrap">
+    <div class="lw-band__in">
+      <h2>Schaden in Olten oder Zofingen?</h2>
+      <p>Melden Sie Ihren Schaden online – wir kümmern uns um Reparatur und Versicherung.</p>
+      <div class="lw-band__actions">
+        <a class="lw-btn lw-btn--primary lw-btn--lg" href="{% url 'schaden_melden' %}">Jetzt Schaden melden</a>
+        <a class="lw-btn lw-btn--ghost lw-btn--lg" href="tel:+41763290205">076 329 02 05</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AutoBodyShop",
+  "name": "Robert's Lackwerk GmbH",
+  "image": "https://roberts-lackwerk.ch{% static 'img/hero-lackierung.jpg' %}",
+  "url": "https://roberts-lackwerk.ch/carrosserie-lackiererei-olten-zofingen/",
+  "telephone": "+41763290205",
+  "email": "info@roberts-lackwerk.ch",
+  "priceRange": "$$",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Neumattstrasse 54",
+    "postalCode": "4612",
+    "addressLocality": "Wangen bei Olten",
+    "addressRegion": "SO",
+    "addressCountry": "CH"
+  },
+  "geo": { "@type": "GeoCoordinates", "latitude": 47.2567, "longitude": 7.8706 },
+  "areaServed": [
+    {"@type":"City","name":"Olten"},{"@type":"City","name":"Zofingen"},
+    {"@type":"City","name":"Aarburg"},{"@type":"City","name":"Oftringen"},
+    {"@type":"City","name":"Hägendorf"},{"@type":"City","name":"Brittnau"},
+    {"@type":"City","name":"Egerkingen"},{"@type":"City","name":"Härkingen"},
+    {"@type":"City","name":"Strengelbach"},{"@type":"City","name":"Wangen bei Olten"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Startseite","item":"https://roberts-lackwerk.ch/"},
+    {"@type":"ListItem","position":2,"name":"Carrosserie & Lackiererei Olten & Zofingen","item":"https://roberts-lackwerk.ch/carrosserie-lackiererei-olten-zofingen/"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"Übernehmen Sie die Abwicklung mit der Versicherung?","acceptedAnswer":{"@type":"Answer","text":"Ja. Wir rechnen Unfallschäden direkt mit allen grossen Schweizer Versicherungen ab, erstellen das Schadengutachten und übernehmen die Dokumentation."}},
+    {"@type":"Question","name":"Wie lange dauert eine Reparatur?","acceptedAnswer":{"@type":"Answer","text":"Die meisten Reparaturen sind in 3–5 Arbeitstagen erledigt. Nach der Begutachtung nennen wir einen verbindlichen Termin."}},
+    {"@type":"Question","name":"Welche Gebiete rund um Olten und Zofingen decken Sie ab?","acceptedAnswer":{"@type":"Answer","text":"Olten, Zofingen, Aarburg, Oftringen, Hägendorf, Brittnau, Egerkingen, Härkingen, Strengelbach und Wangen bei Olten."}},
+    {"@type":"Question","name":"Brauche ich während der Reparatur ein Ersatzfahrzeug?","acceptedAnswer":{"@type":"Answer","text":"Auf Wunsch organisieren wir eine Mobilitätslösung. Zusätzlich vermieten wir Transporter und Umzugswagen in der Region."}}
+  ]
+}
+</script>
+{% endblock %}

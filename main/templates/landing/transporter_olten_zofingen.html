@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta_title %}Transporter mieten Olten & Zofingen | Robert's Lackwerk GmbH{% endblock %}
+{% block meta_description %}Transporter & Umzugswagen mieten in Olten, Zofingen & Umgebung. Flexible Mietdauer (halbtags oder ganztags), moderne Fahrzeuge, faire Preise – online buchbar mit Verfügbarkeit in Echtzeit.{% endblock %}
+{% block canonical %}https://roberts-lackwerk.ch/transporter-mieten-olten-zofingen/{% endblock %}
+{% block og_title %}Transporter mieten Olten & Zofingen{% endblock %}
+
+{% block content %}
+<section class="lw-pagehead">
+  <div class="lw-wrap">
+    <span class="lw-pagehead__eyebrow">Transporter-Vermietung · Region Olten &amp; Zofingen</span>
+    <h1>Transporter &amp; Umzugswagen mieten in Olten &amp; Zofingen</h1>
+    <p class="lw-pagehead__lead">Günstig einen Transporter mieten für Umzug, Transport oder Möbellieferung – in Olten, Zofingen und der ganzen Region. Moderne Fahrzeuge, flexible Mietdauer und transparente Preise, online buchbar.</p>
+    <div class="lw-hero__actions" style="margin-top:28px;">
+      <a class="lw-btn lw-btn--primary lw-btn--lg" href="{% url 'mietfahrzeuge' %}">Verfügbarkeit prüfen</a>
+      <a class="lw-btn lw-btn--ghost lw-btn--lg" href="tel:+41763290205">076 329 02 05</a>
+    </div>
+  </div>
+</section>
+
+<section class="lw-section">
+  <div class="lw-wrap">
+    <div class="lw-section__head">
+      <h2>Warum bei Robert’s Lackwerk mieten?</h2>
+      <p>Unkompliziert, fair und lokal – für Ihren Umzug in der Region Olten/Zofingen.</p>
+    </div>
+    <div class="lw-grid lw-grid--3">
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="calendar-clock"></i></div>
+        <h3>Flexible Mietdauer</h3>
+        <p>Halbtags (Vormittag/Nachmittag) oder ganztags – passend zu Ihrem Umzug.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="truck"></i></div>
+        <h3>Moderne Transporter</h3>
+        <p>Gepflegte, zuverlässige Fahrzeuge mit viel Laderaum für Möbel und Umzugsgut.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="badge-check"></i></div>
+        <h3>Faire Preise &amp; Versicherung</h3>
+        <p>Transparente Konditionen mit Kilometerpaketen – Versicherung inklusive.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="calendar-check"></i></div>
+        <h3>Online buchbar</h3>
+        <p>Verfügbarkeit in Echtzeit prüfen und in wenigen Minuten reservieren.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="map-pin"></i></div>
+        <h3>Lokal &amp; persönlich</h3>
+        <p>Abholung in Wangen bei Olten – kurze Wege für Olten und Zofingen.</p>
+      </article>
+      <article class="lw-card">
+        <div class="lw-card__ic"><i data-lucide="box"></i></div>
+        <h3>Ideal für Umzüge</h3>
+        <p>Der passende Umzugswagen für Wohnungswechsel, Möbeltransport und mehr.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="lw-section lw-section--alt">
+  <div class="lw-wrap">
+    <div class="lw-section__head">
+      <h2>Transporter-Vermietung für die Region</h2>
+      <p>Abholung in Wangen bei Olten – ideal gelegen für:</p>
+    </div>
+    <div class="lw-areas">
+      <span class="lw-area-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Olten</span>
+      <span class="lw-area-chip">Zofingen</span>
+      <span class="lw-area-chip">Aarburg</span>
+      <span class="lw-area-chip">Oftringen</span>
+      <span class="lw-area-chip">Hägendorf</span>
+      <span class="lw-area-chip">Brittnau</span>
+      <span class="lw-area-chip">Egerkingen</span>
+      <span class="lw-area-chip">Härkingen</span>
+      <span class="lw-area-chip">Strengelbach</span>
+      <span class="lw-area-chip">Wangen bei Olten</span>
+    </div>
+  </div>
+</section>
+
+<section class="lw-section">
+  <div class="lw-wrap">
+    <div class="lw-section__head"><h2>Häufige Fragen</h2></div>
+    <div class="lw-faq">
+      <details>
+        <summary>Wie buche ich einen Transporter?</summary>
+        <div class="lw-faq__a">Wählen Sie online Ihren Zeitraum, prüfen Sie die <a href="{% url 'mietfahrzeuge' %}">Verfügbarkeit in Echtzeit</a> und reservieren Sie in wenigen Schritten. Die Abholung erfolgt in Wangen bei Olten.</div>
+      </details>
+      <details>
+        <summary>Kann ich halbtags mieten?</summary>
+        <div class="lw-faq__a">Ja. Sie können einen Transporter vormittags, nachmittags oder ganztags mieten – ganz nach Bedarf.</div>
+      </details>
+      <details>
+        <summary>Ist die Versicherung inbegriffen?</summary>
+        <div class="lw-faq__a">Ja, unsere Transporter sind versichert. Die genauen Konditionen und Kilometerpakete sehen Sie bei der Buchung.</div>
+      </details>
+      <details>
+        <summary>Für welche Orte lohnt sich die Miete?</summary>
+        <div class="lw-faq__a">Durch die zentrale Lage in Wangen bei Olten ideal für Olten, Zofingen, Aarburg, Oftringen, Hägendorf, Brittnau, Egerkingen, Härkingen und Strengelbach.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="lw-band">
+  <div class="lw-wrap">
+    <div class="lw-band__in">
+      <h2>Transporter mieten in Olten &amp; Zofingen</h2>
+      <p>Prüfen Sie jetzt die Verfügbarkeit und buchen Sie online.</p>
+      <div class="lw-band__actions">
+        <a class="lw-btn lw-btn--primary lw-btn--lg" href="{% url 'mietfahrzeuge' %}">Verfügbarkeit prüfen</a>
+        <a class="lw-btn lw-btn--ghost lw-btn--lg" href="tel:+41763290205">076 329 02 05</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "Transporter- und Umzugswagen-Vermietung",
+  "provider": {
+    "@type": "AutoBodyShop",
+    "name": "Robert's Lackwerk GmbH",
+    "telephone": "+41763290205",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Neumattstrasse 54",
+      "postalCode": "4612",
+      "addressLocality": "Wangen bei Olten",
+      "addressRegion": "SO",
+      "addressCountry": "CH"
+    }
+  },
+  "areaServed": [
+    {"@type":"City","name":"Olten"},{"@type":"City","name":"Zofingen"},
+    {"@type":"City","name":"Aarburg"},{"@type":"City","name":"Oftringen"},
+    {"@type":"City","name":"Hägendorf"},{"@type":"City","name":"Brittnau"},
+    {"@type":"City","name":"Egerkingen"},{"@type":"City","name":"Härkingen"},
+    {"@type":"City","name":"Strengelbach"},{"@type":"City","name":"Wangen bei Olten"}
+  ],
+  "url": "https://roberts-lackwerk.ch/transporter-mieten-olten-zofingen/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Startseite","item":"https://roberts-lackwerk.ch/"},
+    {"@type":"ListItem","position":2,"name":"Transporter mieten Olten & Zofingen","item":"https://roberts-lackwerk.ch/transporter-mieten-olten-zofingen/"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"Wie buche ich einen Transporter?","acceptedAnswer":{"@type":"Answer","text":"Online Zeitraum wählen, Verfügbarkeit in Echtzeit prüfen und in wenigen Schritten reservieren. Abholung in Wangen bei Olten."}},
+    {"@type":"Question","name":"Kann ich halbtags mieten?","acceptedAnswer":{"@type":"Answer","text":"Ja, vormittags, nachmittags oder ganztags – nach Bedarf."}},
+    {"@type":"Question","name":"Ist die Versicherung inbegriffen?","acceptedAnswer":{"@type":"Answer","text":"Ja, unsere Transporter sind versichert. Konditionen und Kilometerpakete sehen Sie bei der Buchung."}},
+    {"@type":"Question","name":"Für welche Orte lohnt sich die Miete?","acceptedAnswer":{"@type":"Answer","text":"Ideal für Olten, Zofingen, Aarburg, Oftringen, Hägendorf, Brittnau, Egerkingen, Härkingen und Strengelbach."}}
+  ]
+}
+</script>
+{% endblock %}
