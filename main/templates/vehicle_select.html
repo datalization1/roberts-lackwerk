@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}page-gold{% endblock %}
+
+{% block meta_title %}Transporter mieten – Fahrzeug wählen | Robert's Lackwerk{% endblock %}
+
+{% block content %}
+<section class="rl-wizard-page">
+
+  <header class="rl-wizard-header">
+    <h1 class="rl-wizard-title">Fahrzeug wählen</h1>
+    <p class="rl-wizard-subtitle">Verfügbare Transporter für Ihren gewählten Zeitraum.</p>
+  </header>
+
+  <div class="rl-progress-single">
+    <div class="rl-progress-single__top">
+      <span class="rl-progress-single__label">Fahrzeugwahl</span>
+      <span class="rl-progress-single__step">Schritt 2 von 6</span>
+    </div>
+    <div class="rl-progress-track">
+      <span class="rl-progress-fill" style="width: 33%;"></span>
+    </div>
+  </div>
+
+  <section class="rl-wizard-card">
+    <header class="rl-wizard-card__header">
+      <h2 class="rl-wizard-card__title">Modell auswählen</h2>
+      <p class="rl-wizard-card__subtitle">Wählen Sie Ihr bevorzugtes Fahrzeug.</p>
+    </header>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="rl-wizard-fields">
+        <div class="rl-rental-status {% if all_available %}rl-rental-status--ok{% elif any_unavailable %}rl-rental-status--warn{% endif %}">
+          <div class="rl-rental-status__text">
+            {% if all_available %}
+              <strong>Alle Fahrzeuge verfügbar!</strong>
+              <span>Wählen Sie Ihr bevorzugtes Modell.</span>
+            {% else %}
+              <strong>{{ available_count }} von {{ total_count }} Fahrzeugen verfügbar</strong>
+              <span>für den gewählten Zeitraum.</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if available_count > 0 and transporters %}
+          <div class="rl-rental-grid">
+            {% for t in transporters %}
+              {% if not t.is_unavailable %}
+                <label class="rl-rental-card">
+                  <input type="radio" name="transporter_id" value="{{ t.id }}" class="rl-rental-card__input"
+                    {% if step1.transporter_id %}{% if step1.transporter_id == t.id %}checked{% endif %}{% elif forloop.first %}checked{% endif %}>
+                  <div class="rl-rental-card__inner">
+                    <span class="rl-rental-card__badge rl-rental-card__badge--available">Verfügbar</span>
+                    {% if t.image %}
+                      <div class="rl-rental-card__image" style="background-image:url('{{ t.image.url }}');"></div>
+                    {% else %}
+                      <div class="rl-rental-card__image rl-rental-card__image--placeholder"></div>
+                    {% endif %}
+                    <div class="rl-rental-card__body">
+                      <h3 class="rl-rental-card__title">{{ t.name }}</h3>
+                      {% if t.farbe %}<p class="rl-rental-card__meta">Farbe: {{ t.farbe }}</p>{% endif %}
+                      {% if t.preis_chf %}<p class="rl-rental-card__price">CHF {{ t.preis_chf|floatformat:0 }}</p>{% endif %}
+                    </div>
+                  </div>
+                </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="rl-text-muted">Leider ist für diesen Zeitraum kein Fahrzeug verfügbar. Bitte wählen Sie einen anderen Zeitraum.</p>
+        {% endif %}
+      </div>
+
+      <footer class="rl-wizard-footer">
+        <a href="{% url 'mietfahrzeuge' %}" class="btn rl-btn-secondary">← Zurück</a>
+        <div class="rl-wizard-actions-right">
+          {% if available_count > 0 %}
+            <button type="submit" class="btn rl-btn-primary">Weiter →</button>
+          {% else %}
+            <a href="{% url 'mietfahrzeuge' %}" class="btn rl-btn-primary">Zeitraum ändern</a>
+          {% endif %}
+        </div>
+      </footer>
+    </form>
+  </section>
+</section>
+{% endblock %}

@@ -279,13 +279,10 @@ def schaden_success(request, pk):
 
 # ---------- Transporter / Mietfahrzeuge ----------
 def mietfahrzeuge(request):
-    _sync_transporters_from_vehicles()
-    transporters = Transporter.objects.all()
-
-    # Step-1-Daten aus Session
+    """Schritt 1 von 6: Zeitraum wählen (Abholdatum + Zeitblock)."""
     step1_data = request.session.get("rental_step1", {}).copy()
 
-    # Falls leer, aber bereits Booking vorhanden → aus Booking befüllen (wie vorher besprochen)
+    # Falls leer, aber bereits Booking vorhanden → aus Booking befüllen
     if not step1_data:
         current_booking_id = request.session.get("current_booking_id")
         if current_booking_id:
@@ -295,98 +292,84 @@ def mietfahrzeuge(request):
                     "transporter_id": booking.transporter_id,
                     "date": booking.date.isoformat() if booking.date else "",
                     "time_slot": booking.time_slot,
-                    "timeblock": None,  # kannst du bei Bedarf aus time_slot zurückmappen
+                    "timeblock": None,
                 }
                 request.session["rental_step1"] = step1_data
             except Booking.DoesNotExist:
                 pass
 
     if request.method == "POST":
-        transporter_id = request.POST.get("transporter_id")
         pickup_date = request.POST.get("pickup_date")
         timeblock = request.POST.get("time_block") or request.POST.get("timeblock")
         return_date = request.POST.get("return_date")
 
         if pickup_date and timeblock:
-            slot_map = {
-                "morning": "MORNING",
-                "afternoon": "AFTERNOON",
-                "fullday": "FULLDAY",
-            }
+            slot_map = {"morning": "MORNING", "afternoon": "AFTERNOON", "fullday": "FULLDAY"}
             time_slot_code = slot_map.get(timeblock, "MORNING")
-
             step1_data = {
-                "transporter_id": int(transporter_id) if transporter_id else None,
+                "transporter_id": step1_data.get("transporter_id"),
                 "date": pickup_date,
                 "time_slot": time_slot_code,
                 "timeblock": timeblock,
                 "return_date": return_date,
             }
             request.session["rental_step1"] = step1_data
+            return redirect("vehicle_select")
 
-            if transporter_id:
-                return redirect("booking_create", transporter_id=transporter_id)
+        return render(request, "mietfahrzeuge.html", {
+            "step1": step1_data,
+            "form_error": "Bitte Abholdatum und Zeitblock auswählen.",
+        })
 
-        if not pickup_date or not timeblock:
-            context = {
-                "transporters": transporters,
-                "step1": step1_data,
-                "has_filter": False,
-                "all_available": False,
-                "any_unavailable": False,
-                "available_count": transporters.count(),
-                "total_count": transporters.count(),
-                "form_error": "Bitte Abholdatum und Zeitblock auswählen.",
-            }
-            return render(request, "mietfahrzeuge.html", context)
+    return render(request, "mietfahrzeuge.html", {"step1": step1_data})
 
-    # 🔹 Verfügbarkeit pro Transporter prüfen (nur wenn Datum + Slot gewählt)
+
+def vehicle_select(request):
+    """Schritt 2 von 6: Fahrzeugwahl – verfügbare Transporter für den Zeitraum."""
+    _sync_transporters_from_vehicles()
+    step1_data = request.session.get("rental_step1", {})
     selected_date_str = step1_data.get("date")
-    selected_slot_code = step1_data.get("time_slot")  # MORNING/AFTERNOON/FULLDAY
-    selected_date = parse_date(selected_date_str) if selected_date_str else None
+    selected_slot_code = step1_data.get("time_slot")
 
+    # Ohne gewählten Zeitraum zurück zu Schritt 1
+    if not selected_date_str or not selected_slot_code:
+        return redirect("mietfahrzeuge")
+
+    if request.method == "POST":
+        transporter_id = request.POST.get("transporter_id")
+        if transporter_id:
+            step1_data = dict(step1_data)
+            step1_data["transporter_id"] = int(transporter_id)
+            request.session["rental_step1"] = step1_data
+            return redirect("booking_create", transporter_id=transporter_id)
+
+    transporters = Transporter.objects.all()
+    selected_date = parse_date(selected_date_str)
     total_count = transporters.count()
     available_count = 0
     vehicle_by_plate = {v.license_plate: v for v in Vehicle.objects.all()}
 
-    if selected_date and selected_slot_code:
-        for t in transporters:
-            booked = Booking.objects.filter(
-                transporter=t,
-                date=selected_date,
-                time_slot=selected_slot_code,
-            ).exists()
-            vehicle = vehicle_by_plate.get(t.kennzeichen)
-            is_inactive = vehicle and vehicle.status != "available"
-            t.is_unavailable = booked or bool(is_inactive)
-
-            # Sehr einfache "nächste Verfügbarkeit": nächster Tag
-            t.next_available_date = selected_date + timedelta(days=1) if booked else None
-
-            if not t.is_unavailable:
-                available_count += 1
-    else:
-        for t in transporters:
-            vehicle = vehicle_by_plate.get(t.kennzeichen)
-            t.is_unavailable = bool(vehicle and vehicle.status != "available")
-            t.next_available_date = None
-            if not t.is_unavailable:
-                available_count += 1
-
-    has_filter = bool(selected_date and selected_slot_code)
-    all_available = has_filter and available_count == total_count
-    any_unavailable = has_filter and available_count < total_count
+    for t in transporters:
+        booked = Booking.objects.filter(
+            transporter=t, date=selected_date, time_slot=selected_slot_code,
+        ).exists()
+        vehicle = vehicle_by_plate.get(t.kennzeichen)
+        is_inactive = vehicle and vehicle.status != "available"
+        t.is_unavailable = booked or bool(is_inactive)
+        t.next_available_date = selected_date + timedelta(days=1) if booked else None
+        if not t.is_unavailable:
+            available_count += 1
 
     context = {
         "transporters": transporters,
         "step1": step1_data,
-        "has_filter": has_filter,
-        "all_available": all_available,
-        "any_unavailable": any_unavailable,
+        "has_filter": True,
+        "all_available": available_count == total_count,
+        "any_unavailable": available_count < total_count,
         "available_count": available_count,
         "total_count": total_count,
     }
-    return render(request, "mietfahrzeuge.html", context)
+    return render(request, "vehicle_select.html", context)
 
 def _sync_transporters_from_vehicles():
     for vehicle in Vehicle.objects.all():

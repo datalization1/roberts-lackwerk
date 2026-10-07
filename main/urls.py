@@ -22,6 +22,7 @@ urlpatterns = [
 
     # Mietfahrzeuge
     path("mietfahrzeuge/", mietfahrzeuge, name="mietfahrzeuge"),
+    path("mietfahrzeuge/fahrzeuge/", views.vehicle_select, name="vehicle_select"),
     path("mietfahrzeuge/liste/", transporter_list, name="transporter_list"),
     path("mietfahrzeuge/<int:transporter_id>/", transporter_availability, name="transporter_availability"),
     path("mietfahrzeuge/<int:transporter_id>/buchen/", book_transporter, name="booking_create"),
