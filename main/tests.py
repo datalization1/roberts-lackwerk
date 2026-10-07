@@ -29,24 +29,27 @@ class MietfahrzeugeViewTests(TestCase):
 
     def test_valid_post_sets_session_and_redirects(self):
         today = timezone.localdate().isoformat()
+        # Schritt 1: Zeitraum -> Fahrzeugwahl
         resp = self.client.post(
             reverse("mietfahrzeuge"),
-            {
-                "transporter_id": self.transporter.id,
-                "pickup_date": today,
-                "time_block": "morning",
-            },
+            {"pickup_date": today, "time_block": "morning"},
         )
-        # Erfolgreiches Redirect zum nächsten Schritt
         self.assertEqual(resp.status_code, 302)
-        self.assertIn(reverse("booking_create", args=[self.transporter.id]), resp.url)
-        # Session enthält Step-1-Daten
-        session = self.client.session
-        step1 = session.get("rental_step1")
+        self.assertIn(reverse("vehicle_select"), resp.url)
+        step1 = self.client.session.get("rental_step1")
         self.assertIsNotNone(step1)
-        self.assertEqual(step1["transporter_id"], self.transporter.id)
         self.assertEqual(step1["date"], today)
         self.assertEqual(step1["time_slot"], "MORNING")
+
+        # Schritt 2: Fahrzeugwahl -> Buchung
+        resp2 = self.client.post(
+            reverse("vehicle_select"),
+            {"transporter_id": self.transporter.id},
+        )
+        self.assertEqual(resp2.status_code, 302)
+        self.assertIn(reverse("booking_create", args=[self.transporter.id]), resp2.url)
+        step1b = self.client.session.get("rental_step1")
+        self.assertEqual(step1b["transporter_id"], self.transporter.id)
 
 
 class BookingConflictTests(TestCase):
