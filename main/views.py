@@ -24,7 +24,8 @@ from .forms import (
     CarDetailsForm,
     PersonalDetailsForm,
     InsuranceDetailsForm,
-    AccidentDetailsForm,
+    DamageDetailsForm,
+    DamagePartsForm,
     ReviewForm,
 )
 from adminportal.utils.audit import log_audit
@@ -106,7 +107,8 @@ FORMS = [
     ("car",       CarDetailsForm),
     ("personal",  PersonalDetailsForm),
     ("insurance", InsuranceDetailsForm),
-    ("accident",  AccidentDetailsForm),
+    ("damage",    DamageDetailsForm),
+    ("parts",     DamagePartsForm),
     ("review",    ReviewForm),
 ]
 
@@ -137,7 +139,8 @@ class ClaimWizard(SessionWizardView):
             "car": "Car Details",
             "personal": "Personal Details",
             "insurance": "Insurance Details",
-            "accident": "Accident Details",
+            "damage": "Schadenhergang",
+            "parts": "Beschädigte Teile & Fotos",
             "review": "Review & Submit",
         }
         ctx["step_titles"] = titles
@@ -150,9 +153,11 @@ class ClaimWizard(SessionWizardView):
             car = car_data
             personal = self.get_cleaned_data_for_step("personal") or {}
             insurance = self.get_cleaned_data_for_step("insurance") or {}
-            accident = self.get_cleaned_data_for_step("accident") or {}
+            damage = self.get_cleaned_data_for_step("damage") or {}
+            parts = self.get_cleaned_data_for_step("parts") or {}
+            accident = {**damage, **parts}
             parts_map = dict(DAMAGE_PART_CODES)
-            parts_codes = accident.get("damaged_parts") or []
+            parts_codes = parts.get("damaged_parts") or []
             parts_labels = [parts_map.get(code, code) for code in parts_codes]
             ctx["summary"] = {
                 "car": car,
@@ -162,7 +167,7 @@ class ClaimWizard(SessionWizardView):
             }
             ctx["damaged_parts_labels"] = parts_labels
             ctx["data"] = {**car, **personal, **insurance, **{k: v for k, v in accident.items() if k != "photos"}}
-            ctx["photos"] = accident.get("photos", [])
+            ctx["photos"] = parts.get("photos", [])
         return ctx
 
     def process_step(self, form):
@@ -177,7 +182,9 @@ class ClaimWizard(SessionWizardView):
         car       = self.get_cleaned_data_for_step("car") or {}
         personal  = self.get_cleaned_data_for_step("personal") or {}
         ins       = self.get_cleaned_data_for_step("insurance") or {}
-        accident  = self.get_cleaned_data_for_step("accident") or {}
+        damage    = self.get_cleaned_data_for_step("damage") or {}
+        parts     = self.get_cleaned_data_for_step("parts") or {}
+        accident  = {**damage, **parts}
 
         # Full name splitten
         first_name = personal.get("first_name", "")

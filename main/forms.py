@@ -248,7 +248,23 @@ class InsuranceDetailsForm(forms.Form):
 # ---------- Schaden melden: Step 4 ----------
 DAMAGE_MULTI_CHOICES = [(k, v) for k, v in CAR_PART_CHOICES if k != "OTHER"] + [("OTHER", "Sonstiges")]
 
-class AccidentDetailsForm(forms.Form):
+def _active_items(items):
+    """Aktive Einträge aus PortalSettings-Listen extrahieren (dict oder str)."""
+    active = []
+    for item in items or []:
+        if isinstance(item, dict):
+            name = item.get("name") or item.get("label") or item.get("title")
+            if not name:
+                continue
+            if item.get("active", True):
+                active.append(name)
+        elif isinstance(item, str):
+            active.append(item)
+    return active
+
+
+# ---------- Schaden melden: Step 4 – Schadenhergang ----------
+class DamageDetailsForm(forms.Form):
     DAMAGE_TYPE_CHOICES = [
         ("Unfallschaden", "Unfallschaden"),
         ("Hagelschaden", "Hagelschaden"),
@@ -258,50 +274,23 @@ class AccidentDetailsForm(forms.Form):
         ("Sonstiges", "Sonstiges"),
     ]
 
-    damaged_parts = forms.MultipleChoiceField(
-        label="Beschädigte Teile *",
-        choices=DAMAGE_PART_CODES,              # kommt aus models.py
-        widget=forms.CheckboxSelectMultiple,
-        required=True,
-    )
-    damaged_parts_other = forms.CharField(
-        label="Sonstiges (bitte angeben)",
-        max_length=120,
-        required=False,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Kurz beschreiben"}),
-    )
-
-    @property
-    def sorted_damaged_parts(self):
-        items = list(self["damaged_parts"])
-        return sorted(
-            items,
-            key=lambda widget: (
-                widget.choice_label.lower() == "sonstiges",
-                widget.choice_label.lower(),
-            ),
-        )
-
     accident_date = forms.DateField(
         label="Unfalldatum",
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control", "data-max-today": "true"}),
         required=True,
     )
-
     accident_location = forms.CharField(
         label="Unfallort",
         max_length=200,
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ort des Unfalls"}),
         required=True,
     )
-
     damage_type = forms.ChoiceField(
         label="Schadensart",
         choices=DAMAGE_TYPE_CHOICES,
         widget=forms.Select(attrs={"class": "form-select"}),
         required=True,
     )
-
     message = forms.CharField(
         label="Schadenbeschreibung (optional)",
         required=False,
@@ -314,6 +303,41 @@ class AccidentDetailsForm(forms.Form):
         ),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        settings = None
+        try:
+            from adminportal.models import PortalSettings
+            settings = PortalSettings.objects.first()
+        except Exception:
+            settings = None
+        damage_types_raw = list(settings.damage_types or []) if settings and settings.damage_types else []
+        damage_types = _active_items(damage_types_raw)
+        if not damage_types:
+            damage_types = [label for label, _ in self.DAMAGE_TYPE_CHOICES]
+        self.fields["damage_type"].choices = [(name, name) for name in damage_types]
+
+    def clean_accident_date(self):
+        accident_date = self.cleaned_data.get("accident_date")
+        if accident_date and accident_date > date.today():
+            raise forms.ValidationError("Unfalldatum darf nicht in der Zukunft liegen.")
+        return accident_date
+
+
+# ---------- Schaden melden: Step 5 – Beschädigte Teile & Fotos ----------
+class DamagePartsForm(forms.Form):
+    damaged_parts = forms.MultipleChoiceField(
+        label="Beschädigte Teile *",
+        choices=DAMAGE_PART_CODES,              # kommt aus models.py
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+    )
+    damaged_parts_other = forms.CharField(
+        label="Sonstiges (bitte angeben)",
+        max_length=120,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Kurz beschreiben"}),
+    )
     photos = MultipleFileField(
         label="Schadenfotos",
         required=False,
@@ -329,18 +353,16 @@ class AccidentDetailsForm(forms.Form):
         max_size_mb=5,
     )
 
-    def _active_items(self, items):
-        active = []
-        for item in items or []:
-            if isinstance(item, dict):
-                name = item.get("name") or item.get("label") or item.get("title")
-                if not name:
-                    continue
-                if item.get("active", True):
-                    active.append(name)
-            elif isinstance(item, str):
-                active.append(item)
-        return active
+    @property
+    def sorted_damaged_parts(self):
+        items = list(self["damaged_parts"])
+        return sorted(
+            items,
+            key=lambda widget: (
+                widget.choice_label.lower() == "sonstiges",
+                widget.choice_label.lower(),
+            ),
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -351,7 +373,7 @@ class AccidentDetailsForm(forms.Form):
         except Exception:
             settings = None
         parts_raw = list(settings.damage_parts or []) if settings and settings.damage_parts else []
-        parts = self._active_items(parts_raw)
+        parts = _active_items(parts_raw)
         if not parts:
             parts = [label for _, label in DAMAGE_PART_CODES]
         parts_sorted = sorted(
@@ -364,18 +386,6 @@ class AccidentDetailsForm(forms.Form):
             ("OTHER" if label.lower() == "sonstiges" else label, label)
             for label in parts_sorted
         ]
-        damage_types_raw = list(settings.damage_types or []) if settings and settings.damage_types else []
-        damage_types = self._active_items(damage_types_raw)
-        if not damage_types:
-            damage_types = [label for label, _ in self.DAMAGE_TYPE_CHOICES]
-        self.fields["damage_type"].choices = [(name, name) for name in damage_types]
-
-
-    def clean_accident_date(self):
-        accident_date = self.cleaned_data.get("accident_date")
-        if accident_date and accident_date > date.today():
-            raise forms.ValidationError("Unfalldatum darf nicht in der Zukunft liegen.")
-        return accident_date
 
     def clean_damaged_parts_other(self):
         return (self.cleaned_data.get("damaged_parts_other") or "").strip()

@@ -18,8 +18,10 @@
         <p class="rl-wizard-subtitle">Tragen Sie Ihre Kontaktdaten ein, damit wir Sie bei Rückfragen erreichen können.</p>
       {% elif wizard.steps.current == "insurance" %}
         <p class="rl-wizard-subtitle">Ergänzen Sie die Angaben zu Ihrer Versicherung und allfälligen Dokumenten.</p>
-      {% elif wizard.steps.current == "accident" %}
-        <p class="rl-wizard-subtitle">Beschreiben Sie den Schaden und laden Sie bei Bedarf Fotos hoch.</p>
+      {% elif wizard.steps.current == "damage" %}
+        <p class="rl-wizard-subtitle">Beschreiben Sie, wann und wie der Schaden entstanden ist.</p>
+      {% elif wizard.steps.current == "parts" %}
+        <p class="rl-wizard-subtitle">Wählen Sie die beschädigten Teile und laden Sie Fotos hoch.</p>
       {% elif wizard.steps.current == "review" %}
         <p class="rl-wizard-subtitle">Bitte prüfen Sie alle Angaben und bestätigen Sie die Schadenmeldung.</p>
       {% endif %}
@@ -27,7 +29,7 @@
       <div class="rl-progress-single">
         <div class="rl-progress-single__top">
           <span class="rl-progress-single__label">
-            {% if wizard.steps.current == "car" %}Fahrzeugdetails{% elif wizard.steps.current == "personal" %}Persönliche Daten{% elif wizard.steps.current == "insurance" %}Versicherungsdetails{% elif wizard.steps.current == "accident" %}Unfalldetails{% else %}Zusammenfassung{% endif %}
+            {% if wizard.steps.current == "car" %}Fahrzeugdetails{% elif wizard.steps.current == "personal" %}Persönliche Daten{% elif wizard.steps.current == "insurance" %}Versicherungsdetails{% elif wizard.steps.current == "damage" %}Schadenhergang{% elif wizard.steps.current == "parts" %}Beschädigte Teile & Fotos{% else %}Zusammenfassung{% endif %}
           </span>
           <span class="rl-progress-single__step">Schritt {{ wizard.steps.step1 }} von {{ wizard.steps.count }}</span>
         </div>
@@ -48,8 +50,10 @@
           Personendaten
         {% elif wizard.steps.current == "insurance" %}
           Versicherungsdaten
-        {% elif wizard.steps.current == "accident" %}
-          Schadendetails &amp; Fotos
+        {% elif wizard.steps.current == "damage" %}
+          Schadenhergang
+        {% elif wizard.steps.current == "parts" %}
+          Beschädigte Teile &amp; Fotos
         {% elif wizard.steps.current == "review" %}
           Zusammenfassung
         {% endif %}
@@ -192,20 +196,30 @@
   </div>
 {% endif %}
 
-        {# ---------- STEP 4: Schaden (accident) ---------- #}
-        {% if wizard.steps.current == "accident" %}
-          <div class="rl-wizard-field-group">
-            <label class="rl-wizard-label" for="{{ form.accident_date.id_for_label }}">Unfalldatum *</label>
-            <div style="max-width:260px;">{{ form.accident_date }} {{ form.accident_date.errors }}</div>
+        {# ---------- STEP 4: Schadenhergang (damage) ---------- #}
+        {% if wizard.steps.current == "damage" %}
+          <div class="rl-wizard-field-group rl-wizard-field-inline">
+            <div>
+              <label class="rl-wizard-label" for="{{ form.accident_date.id_for_label }}">Unfalldatum *</label>
+              {{ form.accident_date }} {{ form.accident_date.errors }}
+            </div>
+            <div>
+              <label class="rl-wizard-label" for="{{ form.damage_type.id_for_label }}">Schadensart *</label>
+              {{ form.damage_type }} {{ form.damage_type.errors }}
+            </div>
           </div>
           <div class="rl-wizard-field-group">
             <label class="rl-wizard-label" for="{{ form.accident_location.id_for_label }}">Unfallort *</label>
             {{ form.accident_location }} {{ form.accident_location.errors }}
           </div>
           <div class="rl-wizard-field-group">
-            <label class="rl-wizard-label" for="{{ form.damage_type.id_for_label }}">Schadensart *</label>
-            {{ form.damage_type }} {{ form.damage_type.errors }}
+            <label class="rl-wizard-label" for="{{ form.message.id_for_label }}">Schadenbeschreibung (optional)</label>
+            {{ form.message }} {{ form.message.errors }}
           </div>
+        {% endif %}
+
+        {# ---------- STEP 5: Beschädigte Teile & Fotos (parts) ---------- #}
+        {% if wizard.steps.current == "parts" %}
           <div class="rl-wizard-field-group">
             <label class="rl-wizard-label">Beschädigte Teile *</label>
             <ul class="rl-checkbox-grid">
@@ -236,11 +250,7 @@
             </div>
           </div>
           <div class="rl-wizard-field-group">
-            <label class="rl-wizard-label" for="{{ form.message.id_for_label }}">Schadenbeschreibung (optional)</label>
-            {{ form.message }} {{ form.message.errors }}
-          </div>
-          <div class="rl-wizard-field-group">
-            <label class="rl-wizard-label" for="{{ form.photos.id_for_label }}">Schadenfotos *</label>
+            <label class="rl-wizard-label" for="{{ form.photos.id_for_label }}">Schadenfotos</label>
             <p class="rl-wizard-help">Laden Sie klare Fotos der beschädigten Bereiche hoch (bis zu 5 Bilder, je max. 5 MB).</p>
 
             <div class="rl-upload-dropzone">
