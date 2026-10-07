@@ -621,3 +621,33 @@ body.lw-body {
 .lw-faq details[open] summary::after { content: "\2013"; }
 .lw-faq__a { padding: 0 0 18px; color: var(--lw-muted); font-size: 15.5px; }
 .lw-faq__a a { color: var(--lw-accent-ink); font-weight: 600; }
+
+/* ==========================================================================
+   DUNKLE NAVBAR & FOOTER – damit das goldene Logo besser zur Geltung kommt
+   ========================================================================== */
+.lw-nav {
+  background: rgba(24, 20, 14, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lw-nav__links a { color: rgba(255, 255, 255, 0.72); }
+.lw-nav__links a:hover, .lw-nav__links a.is-active { color: #fff; }
+.lw-nav__toggle { color: #fff; }
+
+@media (max-width: 860px) {
+  .lw-nav__menu { background: #18140e; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .lw-nav__links a { border-bottom: 1px solid rgba(255,255,255,.08); }
+}
+
+.lw-footer {
+  background: #18140e;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lw-footer h4 { color: rgba(255, 255, 255, 0.5); }
+.lw-footer li { color: rgba(255, 255, 255, 0.72); }
+.lw-footer a { color: rgba(255, 255, 255, 0.72); }
+.lw-footer a:hover { color: var(--lw-accent); }
+.lw-footer__brand p { color: rgba(255, 255, 255, 0.62); }
+.lw-footer .lw-footer__slogan { color: var(--lw-accent) !important; }
+.lw-footer__bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
+.lw-footer__bottom a { color: rgba(255, 255, 255, 0.58); }
+.lw-footer__bottom a:hover { color: var(--lw-accent); }
