@@ -10,15 +10,7 @@
     <p class="rl-wizard-subtitle">Wählen Sie Ihre Zahlungsmethode.</p>
   </header>
 
-  <div class="rl-progress-single">
-    <div class="rl-progress-single__top">
-      <span class="rl-progress-single__label">Zahlung</span>
-      <span class="rl-progress-single__step">Schritt 6 von 6</span>
-    </div>
-    <div class="rl-progress-track">
-      <span class="rl-progress-fill" style="width: 100%;"></span>
-    </div>
-  </div>
+  {% include "partials/wizard_progress.html" with labels="Zeitraum,Fahrzeug,Kontakt,Optionen,Übersicht,Zahlung" current=6 %}
 
   <!-- Payment Card -->
   <section class="rl-wizard-card">

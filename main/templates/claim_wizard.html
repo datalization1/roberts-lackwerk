@@ -26,17 +26,7 @@
         <p class="rl-wizard-subtitle">Bitte prüfen Sie alle Angaben und bestätigen Sie die Schadenmeldung.</p>
       {% endif %}
 
-      <div class="rl-progress-single">
-        <div class="rl-progress-single__top">
-          <span class="rl-progress-single__label">
-            {% if wizard.steps.current == "car" %}Fahrzeugdetails{% elif wizard.steps.current == "personal" %}Persönliche Daten{% elif wizard.steps.current == "insurance" %}Versicherungsdetails{% elif wizard.steps.current == "damage" %}Schadenhergang{% elif wizard.steps.current == "parts" %}Beschädigte Teile & Fotos{% else %}Zusammenfassung{% endif %}
-          </span>
-          <span class="rl-progress-single__step">Schritt {{ wizard.steps.step1 }} von {{ wizard.steps.count }}</span>
-        </div>
-        <div class="rl-progress-track">
-          <span class="rl-progress-fill" style="width: {{ progress }}%;"></span>
-        </div>
-      </div>
+      {% include "partials/wizard_progress.html" with labels="Fahrzeug,Kontakt,Versicherung,Schaden,Teile,Prüfen" current=wizard.steps.step1 %}
     </header>
   {% endwith %}
 

@@ -14,15 +14,7 @@
     <p class="rl-wizard-subtitle">Wählen Sie zuerst Ihren gewünschten Mietzeitraum.</p>
   </header>
 
-  <div class="rl-progress-single">
-    <div class="rl-progress-single__top">
-      <span class="rl-progress-single__label">Zeitraum</span>
-      <span class="rl-progress-single__step">Schritt 1 von 6</span>
-    </div>
-    <div class="rl-progress-track">
-      <span class="rl-progress-fill" style="width: 17%;"></span>
-    </div>
-  </div>
+  {% include "partials/wizard_progress.html" with labels="Zeitraum,Fahrzeug,Kontakt,Optionen,Übersicht,Zahlung" current=1 %}
 
   <section class="rl-wizard-card">
     <header class="rl-wizard-card__header">

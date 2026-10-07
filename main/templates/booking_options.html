@@ -11,15 +11,7 @@
     <p class="rl-wizard-subtitle">Buchen Sie einen Transporter für Ihre Umzugsbedürfnisse</p>
   </header>
 
-  <div class="rl-progress-single">
-    <div class="rl-progress-single__top">
-      <span class="rl-progress-single__label">Zusatzoptionen</span>
-      <span class="rl-progress-single__step">Schritt 4 von 6</span>
-    </div>
-    <div class="rl-progress-track">
-      <span class="rl-progress-fill" style="width: 67%;"></span>
-    </div>
-  </div>
+  {% include "partials/wizard_progress.html" with labels="Zeitraum,Fahrzeug,Kontakt,Optionen,Übersicht,Zahlung" current=4 %}
 
   <!-- Karte: Zusätzliche Optionen -->
   <section class="rl-wizard-card">

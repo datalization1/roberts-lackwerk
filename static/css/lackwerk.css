@@ -503,3 +503,97 @@ body.lw-body {
 .lw-body .rl-alert--error { background: rgba(192,57,43,.08); border: 1px solid rgba(192,57,43,.4); color: #8a2b22; }
 .lw-body .rl-text-muted, .lw-body .rl-help-text, .lw-body .form-help, .lw-body .rl-field-help, .lw-body .rl-wizard-help, .lw-body .rl-wizard-card__subtitle, .lw-body .rl-wizard-subtitle { color: var(--lw-muted); }
 .lw-body .rl-wizard-title, .lw-body .rl-wizard-card__title { color: var(--lw-ink); }
+
+/* ==========================================================================
+   MODERNER WIZARD (Schaden + Vermietung)
+   Stepper + großzügigere Karten/Felder/Buttons – greift auf die bestehenden
+   rl-wizard-* Komponenten zu (unter .lw-body), ohne Formularlogik zu ändern.
+   ========================================================================== */
+
+/* Wizard-Bühne: zentriert, luftig */
+.lw-body .rl-wizard-page,
+.lw-body .rl-wizard { max-width: 780px; margin: 0 auto; padding: 24px 0 64px; }
+.lw-body .rl-wizard-header { margin-bottom: 20px; text-align: center; }
+.lw-body .rl-wizard-title { font-size: clamp(26px, 4vw, 34px); font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px; }
+.lw-body .rl-wizard-subtitle { font-size: 16px; color: var(--lw-muted); }
+
+/* --- Stepper --------------------------------------------------------------- */
+.lw-stepper { margin: 4px 0 30px; }
+.lw-stepper__list { list-style: none; display: grid; grid-template-columns: repeat(var(--lw-steps), 1fr); padding: 0; margin: 0; }
+.lw-stepper__item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 9px; text-align: center; }
+.lw-stepper__item::before {
+  content: ""; position: absolute; top: 18px; right: 50%; width: 100%; height: 2px;
+  background: var(--lw-border); z-index: 0;
+}
+.lw-stepper__item:first-child::before { display: none; }
+.lw-stepper__item.is-done::before { background: var(--lw-accent); }
+.lw-stepper__item.is-current::before { background: linear-gradient(90deg, var(--lw-accent), var(--lw-border)); }
+.lw-stepper__dot {
+  position: relative; z-index: 1; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 700; font-size: 14px;
+  background: var(--lw-surface); border: 2px solid var(--lw-border); color: var(--lw-muted);
+  transition: background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.lw-stepper__item.is-done .lw-stepper__dot { background: var(--lw-accent); border-color: var(--lw-accent); color: var(--lw-on-accent); }
+.lw-stepper__item.is-current .lw-stepper__dot { border-color: var(--lw-accent); color: var(--lw-accent-ink); box-shadow: 0 0 0 5px color-mix(in srgb, var(--lw-accent) 16%, transparent); }
+.lw-stepper__label { font-size: 12.5px; line-height: 1.25; font-weight: 600; color: var(--lw-muted); max-width: 13ch; }
+.lw-stepper__item.is-current .lw-stepper__label { color: var(--lw-ink); }
+.lw-stepper__item.is-done .lw-stepper__label { color: var(--lw-ink); }
+.lw-stepper__mobile { display: none; }
+.lw-stepper__mobile-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.lw-stepper__mobile-top span:first-child { font-weight: 700; color: var(--lw-ink); font-size: 15px; }
+.lw-stepper__mobile-top span:last-child { font-size: 13px; color: var(--lw-muted); }
+.lw-stepper__track { height: 6px; border-radius: 999px; background: var(--lw-surface-2); overflow: hidden; border: 1px solid var(--lw-border); }
+.lw-stepper__track-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--lw-accent), #c88a06); transition: width .3s ease; }
+@media (max-width: 720px) {
+  .lw-stepper__list { display: none; }
+  .lw-stepper__mobile { display: block; }
+}
+
+/* --- Karte moderner -------------------------------------------------------- */
+.lw-body .rl-wizard-card {
+  background: var(--lw-surface); border: 1px solid var(--lw-border);
+  border-radius: 20px; padding: clamp(24px, 4vw, 40px);
+  box-shadow: var(--lw-shadow-lg);
+}
+.lw-body .rl-wizard-card__header { margin-bottom: 22px; }
+.lw-body .rl-wizard-card__title, .lw-body .rl-card__title { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.lw-body .rl-wizard-card__subtitle, .lw-body .rl-card__subtitle { font-size: 14.5px; color: var(--lw-muted); margin-top: 2px; }
+.lw-body .rl-wizard-field-group { margin-bottom: 20px; }
+
+/* --- Felder moderner ------------------------------------------------------- */
+.lw-body .form-input, .lw-body .form-select, .lw-body .form-textarea,
+.lw-body .rl-input,
+.lw-body .rl-wizard-card input[type="text"],
+.lw-body .rl-wizard-card input[type="email"],
+.lw-body .rl-wizard-card input[type="tel"],
+.lw-body .rl-wizard-card input[type="number"],
+.lw-body .rl-wizard-card input[type="date"],
+.lw-body .rl-wizard-card select,
+.lw-body .rl-wizard-card textarea {
+  padding: 13px 15px; border-radius: 12px; border-width: 1.5px; font-size: 15.5px;
+}
+.lw-body .rl-field-label, .lw-body .rl-wizard-label, .lw-body .form-label {
+  font-size: 13.5px; font-weight: 600; margin-bottom: 7px; display: block; color: var(--lw-ink);
+}
+.lw-body .rl-field-required { color: var(--lw-accent-ink); }
+
+/* --- Buttons moderner (weniger Pille, dezenter Schatten) ------------------ */
+.lw-body .rl-btn-primary, .lw-body .rl-wizard-btn--primary, .lw-body .btn-primary {
+  border-radius: 12px; padding: 13px 24px; font-size: 15px; font-weight: 600;
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--lw-accent) 55%, transparent);
+}
+.lw-body .rl-btn-primary:hover, .lw-body .rl-wizard-btn--primary:hover, .lw-body .btn-primary:hover {
+  transform: translateY(-1px); box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--lw-accent) 65%, transparent);
+}
+.lw-body .rl-btn-secondary, .lw-body .rl-wizard-btn--ghost {
+  border-radius: 12px; padding: 13px 22px; font-size: 15px; font-weight: 600; border-width: 1.5px;
+}
+.lw-body .rl-wizard-footer, .lw-body .rl-wizard-actions {
+  margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--lw-border);
+}
+.lw-body .rl-wizard-btn-icon { display: none; }
+
+/* Auswahl-Karten (Zeitblock/Fahrzeug/Option) etwas moderner */
+.lw-body .rl-timeblock-card, .lw-body .rl-rental-card__inner, .lw-body .rl-option-card__inner, .lw-body .rl-payment-card__inner { border-radius: 16px; }
+.lw-body .rl-timeblock-card { border-width: 1.5px; }

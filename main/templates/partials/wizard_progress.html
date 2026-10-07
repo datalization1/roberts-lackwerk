@@ -1,0 +1,29 @@
+{% load form_tags %}
+{# Moderner Wizard-Stepper. Parameter: labels="A,B,C" (Komma-getrennt), current=1-basiert #}
+{% with items=labels|split:"," %}
+{% widthratio current items|length 100 as pct %}
+<nav class="lw-stepper" aria-label="Fortschritt" style="--lw-steps: {{ items|length }};">
+  <ol class="lw-stepper__list">
+    {% for label in items %}
+      <li class="lw-stepper__item{% if forloop.counter < current %} is-done{% elif forloop.counter == current %} is-current{% endif %}"
+          {% if forloop.counter == current %}aria-current="step"{% endif %}>
+        <span class="lw-stepper__dot">
+          {% if forloop.counter < current %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          {% else %}
+            {{ forloop.counter }}
+          {% endif %}
+        </span>
+        <span class="lw-stepper__label">{{ label }}</span>
+      </li>
+    {% endfor %}
+  </ol>
+  <div class="lw-stepper__mobile">
+    <div class="lw-stepper__mobile-top">
+      <span>{% for label in items %}{% if forloop.counter == current %}{{ label }}{% endif %}{% endfor %}</span>
+      <span>Schritt {{ current }} von {{ items|length }}</span>
+    </div>
+    <div class="lw-stepper__track"><span class="lw-stepper__track-fill" style="width: {{ pct }}%;"></span></div>
+  </div>
+</nav>
+{% endwith %}
