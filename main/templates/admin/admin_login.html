@@ -1,61 +1,103 @@
-{% extends "base.html" %}
 {% load static %}
-
-{% block body_class %}page-admin-login{% endblock %}
-{% block nav %}{% endblock %}
-
-{% block content %}
-<section class="admin-login">
-  <div class="admin-login__shell">
-    <header class="admin-login__header">
-      <div class="admin-login__logo">
-        <img src="{% static 'img/RL_logo2.png' %}" alt="Robert's Lackwerk">
-      </div>
-      <div class="admin-login__intro">
-        <p class="admin-login__eyebrow">Interner Bereich</p>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Login · Robert's Lackwerk</title>
+  <link rel="icon" type="image/png" href="{% static 'img/RLicon.png' %}">
+  <link rel="stylesheet" href="{% static 'css/lackwerk.css' %}">
+  <style>
+    .al-page { min-height: 100vh; display: grid; place-items: center; padding: 32px 20px;
+      background:
+        radial-gradient(120% 80% at 50% -10%, rgba(242,183,5,.10), transparent 60%),
+        var(--lw-ground); }
+    .al-stack { width: 100%; max-width: 440px; display: grid; gap: 18px; justify-items: center; }
+    .al-card { width: 100%; background: var(--lw-surface); border: 1px solid var(--lw-border);
+      border-radius: 20px; box-shadow: var(--lw-shadow-lg); padding: 36px 34px; }
+    .al-logo { display: grid; place-items: center; width: 100%; background: #18140e;
+      border-radius: 14px; padding: 18px; margin-bottom: 24px; }
+    .al-logo img { height: 66px; width: auto; }
+    .al-eyebrow { text-align: center; font-size: 12.5px; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--lw-accent-ink); margin: 0 0 6px; }
+    .al-card h1 { text-align: center; font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; color: var(--lw-ink); }
+    .al-sub { text-align: center; color: var(--lw-muted); font-size: 15px; margin: 0 0 24px; }
+    .al-field { margin-bottom: 16px; }
+    .al-field label { display: block; font-size: 13.5px; font-weight: 600; color: var(--lw-ink); margin-bottom: 7px; }
+    .al-card input[type="text"], .al-card input[type="password"] {
+      width: 100%; box-sizing: border-box; padding: 13px 15px; border-radius: 12px;
+      border: 1.5px solid var(--lw-border); background: #fff; color: var(--lw-ink);
+      font-size: 15.5px; font-family: inherit; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .al-card input:focus { border-color: var(--lw-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lw-accent) 30%, transparent); }
+    .al-pass { position: relative; display: flex; }
+    .al-pass input { padding-right: 92px; }
+    .al-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      border: 0; background: transparent; color: var(--lw-accent-ink); font-weight: 600;
+      font-size: 13.5px; cursor: pointer; padding: 8px 10px; border-radius: 8px; }
+    .al-toggle:hover { background: var(--lw-surface-2); }
+    .al-alert { background: rgba(192,57,43,.08); border: 1px solid rgba(192,57,43,.4); color: #8a2b22;
+      border-radius: 12px; padding: 12px 15px; font-size: 14.5px; margin-bottom: 20px; }
+    .al-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 24px; }
+    .al-submit { background: var(--lw-accent); color: var(--lw-on-accent); border: 0; font-family: inherit;
+      font-weight: 700; font-size: 15px; padding: 13px 28px; border-radius: 12px; cursor: pointer;
+      box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--lw-accent) 55%, transparent); transition: filter .15s, transform .15s; }
+    .al-submit:hover { filter: brightness(.95); transform: translateY(-1px); }
+    .al-back { color: var(--lw-muted); font-size: 14px; text-decoration: none; }
+    .al-back:hover { color: var(--lw-accent-ink); }
+    .al-home { color: var(--lw-muted); font-size: 13.5px; text-decoration: none; }
+    .al-home:hover { color: var(--lw-accent-ink); }
+  </style>
+</head>
+<body class="lw-body">
+  <main class="al-page">
+    <div class="al-stack">
+      <div class="al-card">
+        <div class="al-logo">
+          <img src="{% static 'img/logo-wordmark-hd.png' %}" alt="Robert's Lackwerk">
+        </div>
+        <p class="al-eyebrow">Interner Bereich</p>
         <h1>Admin Login</h1>
-        <p>Bitte melden Sie sich an, um fortzufahren.</p>
-      </div>
-    </header>
+        <p class="al-sub">Bitte melden Sie sich an, um fortzufahren.</p>
 
-    <div class="admin-login__card">
-      {% if error_message %}
-        <div class="admin-login__alert" role="alert">
-          {{ error_message }}
-        </div>
-      {% endif %}
+        {% if error_message %}
+          <div class="al-alert" role="alert">{{ error_message }}</div>
+        {% endif %}
 
-      <form method="post" class="admin-login__form">
-        {% csrf_token %}
-        <div class="admin-login__field">
-          <label for="{{ form.username.id_for_label }}">Benutzername</label>
-          {{ form.username }}
-        </div>
-        <div class="admin-login__field">
-          <label for="{{ form.password.id_for_label }}">Passwort</label>
-          <div class="admin-login__password">
-            {{ form.password }}
-            <button type="button" class="admin-login__toggle" id="toggle-password">Anzeigen</button>
+        <form method="post">
+          {% csrf_token %}
+          <div class="al-field">
+            <label for="{{ form.username.id_for_label }}">Benutzername</label>
+            {{ form.username }}
           </div>
-        </div>
-        <div class="admin-login__actions">
-          <a class="admin-login__back" href="{% url 'home' %}">Zurück zur Startseite</a>
-          <button type="submit" class="admin-login__submit">Anmelden</button>
-        </div>
-      </form>
+          <div class="al-field">
+            <label for="{{ form.password.id_for_label }}">Passwort</label>
+            <div class="al-pass">
+              {{ form.password }}
+              <button type="button" class="al-toggle" id="toggle-password">Anzeigen</button>
+            </div>
+          </div>
+          <div class="al-actions">
+            <a class="al-back" href="{% url 'home' %}">Zurück zur Startseite</a>
+            <button type="submit" class="al-submit">Anmelden</button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-</section>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('toggle-password');
-    const input = document.getElementById('{{ form.password.id_for_label }}');
-    if (!toggle || !input) return;
-    toggle.addEventListener('click', () => {
-      const next = input.type === 'password' ? 'text' : 'password';
-      input.type = next;
-      toggle.textContent = next === 'password' ? 'Anzeigen' : 'Verbergen';
+  </main>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var input = document.getElementById('{{ form.username.id_for_label }}');
+      if (input) input.focus();
+      var toggle = document.getElementById('toggle-password');
+      var pw = document.getElementById('{{ form.password.id_for_label }}');
+      if (toggle && pw) {
+        toggle.addEventListener('click', function () {
+          var show = pw.type === 'password';
+          pw.type = show ? 'text' : 'password';
+          toggle.textContent = show ? 'Verbergen' : 'Anzeigen';
+        });
+      }
     });
-  });
-</script>
-{% endblock %}
+  </script>
+</body>
+</html>
