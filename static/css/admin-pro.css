@@ -86,3 +86,47 @@ body.admin-pro { background: #f4f2ec; min-height: 100vh; }
 /* Avatare/Icons etwas eckiger */
 .admin-pro .fig-customer-card__avatar, .admin-pro .fig-detail-card__avatar { border-radius: 9px; }
 .admin-pro .fig-admin__card-icon { border-radius: 8px; }
+
+/* ==========================================================================
+   APX-TABLE – saubere, einzeilige Tabelle (professionell, übersichtlich)
+   ========================================================================== */
+.apx-table { width: 100%; border: 1px solid var(--a-border); border-radius: 10px; overflow: hidden; background: #fff; }
+.apx-table__head, .apx-table__row { display: grid; gap: 16px; align-items: center; padding: 11px 16px; }
+.apx-table__head { background: var(--a-soft); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--a-muted); }
+.apx-table__row { border-top: 1px solid var(--a-border); font-size: 14px; color: var(--a-ink); }
+.apx-table__row:hover { background: #fcfaf5; }
+.apx-cell { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.apx-cell > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.apx-cell__sub { color: var(--a-muted); font-size: 12.5px; }
+.apx-id { color: var(--a-gold-ink); font-weight: 700; text-decoration: none; }
+.apx-id:hover { text-decoration: underline; }
+.apx-table__empty { padding: 20px 16px; color: var(--a-muted); border-top: 1px solid var(--a-border); }
+
+/* Icon-Aktionen rechtsbündig */
+.apx-actions { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+.apx-actions form { display: inline-flex; margin: 0; }
+.apx-iconbtn { width: 32px; height: 32px; border: 1px solid var(--a-border); border-radius: 8px; background: #fff;
+  display: inline-grid; place-items: center; color: var(--a-ink); cursor: pointer; text-decoration: none; transition: all .15s ease; padding: 0; }
+.apx-iconbtn:hover { border-color: var(--a-gold); color: var(--a-gold-ink); background: var(--a-gold-soft); }
+.apx-iconbtn i { width: 16px; height: 16px; }
+.apx-iconbtn--danger:hover { border-color: rgba(192,57,43,.5); color: #c0392b; background: rgba(192,57,43,.08); }
+
+/* Spalten pro Seite */
+.apx-table--damage .apx-table__head, .apx-table--damage .apx-table__row {
+  grid-template-columns: 92px minmax(0,1.6fr) minmax(0,1.3fr) minmax(0,1fr) 100px minmax(0,1.1fr) 120px 118px;
+}
+.apx-table--bookings .apx-table__head, .apx-table--bookings .apx-table__row {
+  grid-template-columns: 80px minmax(0,1.5fr) minmax(0,1.2fr) 110px minmax(0,1fr) 100px 120px 118px;
+}
+.apx-table--customers .apx-table__head, .apx-table--customers .apx-table__row {
+  grid-template-columns: minmax(0,1.4fr) 110px minmax(0,1.5fr) 130px 100px 100px 96px;
+}
+.apx-table--invoices .apx-table__head, .apx-table--invoices .apx-table__row {
+  grid-template-columns: 140px minmax(0,1.3fr) 100px 110px 110px 110px 156px;
+}
+.apx-table--vehicles .apx-table__head, .apx-table--vehicles .apx-table__row {
+  grid-template-columns: minmax(0,1.6fr) minmax(0,1fr) 130px 120px 110px 100px 96px;
+}
+.apx-cell--media { flex-direction: row; align-items: center; gap: 10px; }
+.apx-thumb { width: 48px; height: 34px; border-radius: 6px; object-fit: cover; border: 1px solid var(--a-border); flex: none; background: var(--a-soft); }
+.apx-thumb--ph { display: inline-block; }

@@ -56,60 +56,45 @@
       </a>
     </div>
   </form>
-  <div class="fig-table">
-    <div class="fig-table__row fig-table__row--head">
-      <div class="fig-table__cell fig-table__cell--id">ID</div>
-      <div class="fig-table__cell">Transporter</div>
-      <div class="fig-table__cell">Kunde</div>
-      <div class="fig-table__cell">Datum</div>
-      <div class="fig-table__cell">Zeitslot</div>
-      <div class="fig-table__cell">Total</div>
-      <div class="fig-table__cell">Aktionen</div>
+  <div class="apx-table apx-table--bookings">
+    <div class="apx-table__head">
+      <div>ID</div>
+      <div>Transporter</div>
+      <div>Kunde</div>
+      <div>Datum</div>
+      <div>Zeitslot</div>
+      <div>Status</div>
+      <div>Total</div>
+      <div style="text-align:right;">Aktionen</div>
     </div>
     {% for booking in bookings %}
-      <div class="fig-table__row">
-        <div class="fig-table__cell fig-table__cell--id">
-          <a href="{% url 'portal_booking_detail' booking.pk %}">BU-{{ booking.pk }}</a>
+      <div class="apx-table__row">
+        <div class="apx-cell"><a class="apx-id" href="{% url 'portal_booking_detail' booking.pk %}">BU-{{ booking.pk }}</a></div>
+        <div class="apx-cell">
+          <span>{{ booking.transporter.name }}</span>
+          <div class="apx-cell__sub">{{ booking.transporter.kennzeichen }}</div>
         </div>
-        <div class="fig-table__cell">
-          {{ booking.transporter.name }}
-          <div class="fig-table__meta">{{ booking.transporter.kennzeichen }}</div>
+        <div class="apx-cell">
+          <span>{{ booking.customer_name }}</span>
+          <div class="apx-cell__sub">{{ booking.customer_email|default:"–" }}</div>
         </div>
-        <div class="fig-table__cell">
-          {{ booking.customer_name }}
-          <div class="fig-table__meta">{{ booking.customer_email }}</div>
+        <div class="apx-cell"><span>{{ booking.date|date:"d.m.Y" }}</span></div>
+        <div class="apx-cell"><span>{{ booking.get_time_slot_display }}</span></div>
+        <div class="apx-cell">
+          {% if booking.status == "pending" %}<span class="fig-badge fig-badge--warning">Ausstehend</span>
+          {% elif booking.status == "confirmed" %}<span class="fig-badge fig-badge--success">Bestätigt</span>
+          {% elif booking.status == "active" %}<span class="fig-badge fig-badge--info">Aktiv</span>
+          {% elif booking.status == "completed" %}<span class="fig-badge fig-badge--info">Abgeschlossen</span>
+          {% elif booking.status == "cancelled" %}<span class="fig-badge">Storniert</span>{% endif %}
         </div>
-        <div class="fig-table__cell">{{ booking.date|date:"d.m.Y" }}</div>
-        <div class="fig-table__cell">
-          {{ booking.get_time_slot_display }}
-          <div class="fig-table__meta">
-            {% if booking.status == "pending" %}
-              <span class="fig-badge fig-badge--warning">Ausstehend</span>
-            {% elif booking.status == "confirmed" %}
-              <span class="fig-badge fig-badge--success">Bestätigt</span>
-            {% elif booking.status == "active" %}
-              <span class="fig-badge fig-badge--info">Aktiv</span>
-            {% elif booking.status == "completed" %}
-              <span class="fig-badge fig-badge--info">Abgeschlossen</span>
-            {% elif booking.status == "cancelled" %}
-              <span class="fig-badge">Storniert</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="fig-table__cell">CHF {{ booking.total_price|default:"0" }}</div>
-        <div class="fig-table__cell">
-          <a class="fig-btn fig-btn--ghost fig-btn--icon" href="{% url 'portal_booking_detail' booking.pk %}">
-            <i data-lucide="check-circle"></i>
-            Bearbeiten
-          </a>
-          <button class="fig-btn fig-btn--ghost fig-btn--icon js-open-modal" data-target="booking-{{ booking.pk }}">
-            <i data-lucide="eye"></i>
-            Details
-          </button>
+        <div class="apx-cell"><span>CHF {{ booking.total_price|default:"0" }}</span></div>
+        <div class="apx-actions">
+          <a class="apx-iconbtn" href="{% url 'portal_booking_detail' booking.pk %}" title="Bearbeiten"><i data-lucide="pencil"></i></a>
+          <button class="apx-iconbtn js-open-modal" type="button" data-target="booking-{{ booking.pk }}" title="Details"><i data-lucide="eye"></i></button>
         </div>
       </div>
     {% empty %}
-      <p class="fig-empty fig-table__empty">Keine Buchungen erfasst.</p>
+      <div class="apx-table__empty">Keine Buchungen erfasst.</div>
     {% endfor %}
   </div>
 

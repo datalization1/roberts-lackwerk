@@ -61,78 +61,54 @@
     <button class="fig-btn fig-btn--ghost fig-btn--compact" type="submit">Filtern</button>
   </form>
 
-  <div class="fig-invoice-list">
+  <div class="apx-table apx-table--invoices">
+    <div class="apx-table__head">
+      <div>Nr.</div>
+      <div>Kunde</div>
+      <div>Datum</div>
+      <div>Betrag</div>
+      <div>Typ</div>
+      <div>Status</div>
+      <div style="text-align:right;">Aktionen</div>
+    </div>
     {% for invoice in invoices %}
-      <article class="fig-invoice-card">
-        <div class="fig-invoice-card__icon">
-          <i data-lucide="file-text"></i>
+      <div class="apx-table__row">
+        <div class="apx-cell">
+          <a class="apx-id" href="{% url 'portal_invoice_preview' invoice.pk %}">{{ invoice.invoice_number }}</a>
+          <div class="apx-cell__sub">{% if invoice.related_report %}Bezug: SM-{{ invoice.related_report.pk }}{% elif invoice.related_booking %}Bezug: BU-{{ invoice.related_booking.pk }}{% else %}–{% endif %}</div>
         </div>
-        <div class="fig-invoice-card__content">
-          <div class="fig-invoice-card__header">
-            <span class="fig-invoice-card__number">{{ invoice.invoice_number }}</span>
-            {% if invoice.status == "paid" %}
-              <span class="fig-invoice-badge fig-invoice-badge--success">Bezahlt</span>
-            {% elif invoice.status == "overdue" or invoice.is_overdue %}
-              <span class="fig-invoice-badge fig-invoice-badge--danger">Überfällig</span>
-            {% elif invoice.status == "pending" %}
-              <span class="fig-invoice-badge fig-invoice-badge--info">Versendet</span>
-            {% elif invoice.status == "draft" %}
-              <span class="fig-invoice-badge fig-invoice-badge--muted">Entwurf</span>
-            {% else %}
-              <span class="fig-invoice-badge fig-invoice-badge--muted">{{ invoice.get_status_display }}</span>
-            {% endif %}
-
-            {% if invoice.related_report %}
-              <span class="fig-invoice-badge fig-invoice-badge--info">Reparatur</span>
-            {% elif invoice.related_booking %}
-              <span class="fig-invoice-badge fig-invoice-badge--purple">Vermietung</span>
-            {% else %}
-              <span class="fig-invoice-badge fig-invoice-badge--muted">Manuell</span>
-            {% endif %}
-          </div>
-          <div class="fig-invoice-card__meta">
-            <span><i data-lucide="user"></i>{{ invoice.customer }}</span>
-            <span><i data-lucide="calendar"></i>{{ invoice.issue_date|date:"Y-m-d" }}</span>
-            <span class="fig-invoice-card__amount"><i data-lucide="banknote"></i>CHF {{ invoice.amount_chf|floatformat:0 }}</span>
-          </div>
-          <div class="fig-invoice-card__ref">
-            {% if invoice.related_report %}
-              Bezug: SM-{{ invoice.related_report.pk }}
-            {% elif invoice.related_booking %}
-              Bezug: BU-{{ invoice.related_booking.pk }}
-            {% elif invoice.description %}
-              Bezug: {{ invoice.description }}
-            {% else %}
-              Bezug: -
-            {% endif %}
-          </div>
+        <div class="apx-cell"><span>{{ invoice.customer }}</span></div>
+        <div class="apx-cell"><span>{{ invoice.issue_date|date:"d.m.Y" }}</span></div>
+        <div class="apx-cell"><span>CHF {{ invoice.amount_chf|floatformat:0 }}</span></div>
+        <div class="apx-cell">
+          {% if invoice.related_report %}<span class="fig-invoice-badge fig-invoice-badge--info">Reparatur</span>
+          {% elif invoice.related_booking %}<span class="fig-invoice-badge fig-invoice-badge--purple">Vermietung</span>
+          {% else %}<span class="fig-invoice-badge fig-invoice-badge--muted">Manuell</span>{% endif %}
         </div>
-        <div class="fig-invoice-card__actions">
-          <a class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" href="{% url 'portal_invoice_preview' invoice.pk %}">
-            <i data-lucide="eye"></i>
-            Ansehen
-          </a>
-          <a class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" href="{% url 'portal_invoice_pdf' invoice.pk %}">
-            <i data-lucide="download"></i>
-            PDF
-          </a>
-          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" type="button">
-            <i data-lucide="send"></i>
-            Senden
-          </button>
+        <div class="apx-cell">
+          {% if invoice.status == "paid" %}<span class="fig-invoice-badge fig-invoice-badge--success">Bezahlt</span>
+          {% elif invoice.status == "overdue" or invoice.is_overdue %}<span class="fig-invoice-badge fig-invoice-badge--danger">Überfällig</span>
+          {% elif invoice.status == "pending" %}<span class="fig-invoice-badge fig-invoice-badge--info">Versendet</span>
+          {% elif invoice.status == "draft" %}<span class="fig-invoice-badge fig-invoice-badge--muted">Entwurf</span>
+          {% else %}<span class="fig-invoice-badge fig-invoice-badge--muted">{{ invoice.get_status_display }}</span>{% endif %}
+        </div>
+        <div class="apx-actions">
+          <a class="apx-iconbtn" href="{% url 'portal_invoice_preview' invoice.pk %}" title="Ansehen"><i data-lucide="eye"></i></a>
+          <a class="apx-iconbtn" href="{% url 'portal_invoice_pdf' invoice.pk %}" title="PDF"><i data-lucide="download"></i></a>
+          <form method="post" action="{% url 'portal_invoice_send_email' invoice.pk %}" onsubmit="return confirm('Rechnung {{ invoice.invoice_number }} per E-Mail senden?');">
+            {% csrf_token %}
+            <button class="apx-iconbtn" type="submit" title="Senden"><i data-lucide="send"></i></button>
+          </form>
           {% if invoice.status == "pending" or invoice.status == "overdue" %}
-            <form method="post" action="{% url 'portal_invoice_cancel' invoice.pk %}">
+            <form method="post" action="{% url 'portal_invoice_cancel' invoice.pk %}" onsubmit="return confirm('Rechnung {{ invoice.invoice_number }} stornieren?');">
               {% csrf_token %}
-              <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact fig-btn--danger" type="submit">
-                <i data-lucide="trash-2"></i>
-                Stornieren
-              </button>
+              <button class="apx-iconbtn apx-iconbtn--danger" type="submit" title="Stornieren"><i data-lucide="x-circle"></i></button>
             </form>
           {% endif %}
         </div>
-      </article>
+      </div>
     {% empty %}
-      <p class="fig-empty">Noch keine Rechnungen erfasst.</p>
+      <div class="apx-table__empty">Noch keine Rechnungen erfasst.</div>
     {% endfor %}
   </div>
 </section>

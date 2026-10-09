@@ -37,51 +37,36 @@
     </div>
   </div>
 
-  <div class="fig-customer-list" id="customer-list">
+  <div class="apx-table apx-table--customers" id="customer-list">
+    <div class="apx-table__head">
+      <div>Kunde</div>
+      <div>Typ</div>
+      <div>E-Mail</div>
+      <div>Telefon</div>
+      <div>Seit</div>
+      <div>Umsatz</div>
+      <div style="text-align:right;">Aktionen</div>
+    </div>
     {% for customer in customers %}
-      <article class="fig-customer-card">
-        <div class="fig-customer-card__avatar">
-          <i data-lucide="user"></i>
+      <div class="apx-table__row">
+        <div class="apx-cell"><span style="font-weight:600;">{% if customer.company %}{{ customer.company }}{% else %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}</span></div>
+        <div class="apx-cell">
+          {% if customer.source == "damage-report" %}<span class="fig-customer-badge fig-customer-badge--info">Schaden</span>
+          {% elif customer.source == "rental" %}<span class="fig-customer-badge fig-customer-badge--purple">Vermietung</span>
+          {% elif customer.source == "both" %}<span class="fig-customer-badge fig-customer-badge--danger">Beide</span>
+          {% else %}<span class="fig-customer-badge fig-customer-badge--muted">Manuell</span>{% endif %}
         </div>
-        <div class="fig-customer-card__content">
-          <div class="fig-customer-card__title">
-            <span class="fig-customer-card__name">
-              {% if customer.company %}
-                {{ customer.company }}
-              {% else %}
-                {{ customer.first_name }} {{ customer.last_name }}
-              {% endif %}
-            </span>
-            {% if customer.source == "damage-report" %}
-              <span class="fig-customer-badge fig-customer-badge--info">Schadenmeldung</span>
-            {% elif customer.source == "rental" %}
-              <span class="fig-customer-badge fig-customer-badge--purple">Vermietung</span>
-            {% elif customer.source == "both" %}
-              <span class="fig-customer-badge fig-customer-badge--danger">Beide</span>
-            {% else %}
-              <span class="fig-customer-badge fig-customer-badge--muted">Manuell</span>
-            {% endif %}
-          </div>
-          <div class="fig-customer-card__meta">
-            <span><i data-lucide="mail"></i>{{ customer.email|default:"-" }}</span>
-            <span><i data-lucide="phone"></i>{{ customer.phone|default:"-" }}</span>
-            <span><i data-lucide="calendar"></i>Seit {{ customer.created_at|date:"d.m.Y" }}</span>
-            <span><i data-lucide="banknote"></i>CHF {{ customer.total_revenue|default_if_none:"0"|floatformat:0 }}</span>
-          </div>
+        <div class="apx-cell"><span>{{ customer.email|default:"–" }}</span></div>
+        <div class="apx-cell"><span>{{ customer.phone|default:"–" }}</span></div>
+        <div class="apx-cell"><span>{{ customer.created_at|date:"d.m.Y" }}</span></div>
+        <div class="apx-cell"><span>CHF {{ customer.total_revenue|default_if_none:"0"|floatformat:0 }}</span></div>
+        <div class="apx-actions">
+          <a class="apx-iconbtn" href="{% url 'portal_customer_detail' customer.pk %}" title="Details"><i data-lucide="eye"></i></a>
+          <a class="apx-iconbtn" href="{% url 'portal_invoice_new_details' customer.pk %}" title="Rechnung erstellen"><i data-lucide="receipt"></i></a>
         </div>
-        <div class="fig-customer-card__actions">
-          <a class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact" href="{% url 'portal_customer_detail' customer.pk %}">
-            <i data-lucide="eye"></i>
-            Details
-          </a>
-          <button class="fig-btn fig-btn--primary fig-btn--icon fig-btn--compact" type="button">
-            <i data-lucide="receipt"></i>
-            Rechnung
-          </button>
-        </div>
-      </article>
+      </div>
     {% empty %}
-      <p class="fig-empty fig-table__empty">Keine Kunden gefunden.</p>
+      <div class="apx-table__empty">Keine Kunden gefunden.</div>
     {% endfor %}
   </div>
 </section>

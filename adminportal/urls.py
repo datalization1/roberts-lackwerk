@@ -7,6 +7,7 @@ urlpatterns = [
     path("buchungen/", views.bookings, name="portal_bookings"),
     path("buchungen/<int:pk>/", views.booking_detail, name="portal_booking_detail"),
     path("fahrzeuge/", views.vehicles, name="portal_vehicles"),
+    path("fahrzeuge/<int:pk>/delete/", views.vehicle_delete, name="portal_vehicle_delete"),
     path("kunden/", views.customers, name="portal_customers"),
     path("kunden/<int:pk>/", views.customer_detail, name="portal_customer_detail"),
     path("kunden/<int:pk>/export/", views.customer_export, name="portal_customer_export"),
@@ -28,4 +29,5 @@ urlpatterns = [
     path("verfuegbarkeit/", views.availability, name="portal_availability"),
     path("einstellungen/", views.settings_view, name="portal_settings"),
     path("schadenmeldungen/<int:pk>/", views.damage_report_detail, name="portal_damage_report_detail"),
+    path("schadenmeldungen/<int:pk>/delete/", views.damage_report_delete, name="portal_damage_report_delete"),
 ]

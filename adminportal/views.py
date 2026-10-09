@@ -284,6 +284,26 @@ def vehicles(request):
 
 @login_required
 @user_passes_test(_is_staff)
+def vehicle_delete(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    if request.method == "POST":
+        vehicle.delete()
+        return redirect(f"{reverse('portal_vehicles')}?deleted=1")
+    return redirect("portal_vehicles")
+
+
+@login_required
+@user_passes_test(_is_staff)
+def damage_report_delete(request, pk):
+    report = get_object_or_404(DamageReport, pk=pk)
+    if request.method == "POST":
+        report.delete()
+        return redirect(f"{reverse('portal_damage_reports')}?deleted=1")
+    return redirect("portal_damage_reports")
+
+
+@login_required
+@user_passes_test(_is_staff)
 def customers(request):
     ctx = _base_context("customers")
     q = request.GET.get("q")

@@ -18,40 +18,40 @@
     <p class="fig-badge fig-badge--success">Fahrzeug hinzugefügt.</p>
   {% endif %}
 
-  <div class="fig-vehicle-list">
+  <div class="apx-table apx-table--vehicles">
+    <div class="apx-table__head">
+      <div>Fahrzeug</div>
+      <div>Typ</div>
+      <div>Kennzeichen</div>
+      <div>Tagespreis</div>
+      <div>Halbtag</div>
+      <div>Status</div>
+      <div style="text-align:right;">Aktionen</div>
+    </div>
     {% for vehicle in vehicles %}
-      <article class="fig-vehicle-card{% if vehicle.status != 'available' %} is-inactive{% endif %}">
-        <div class="fig-vehicle-card__media">
-          {% if vehicle.photo %}
-            <img src="{{ vehicle.photo.url }}" alt="{{ vehicle.brand }} {{ vehicle.model }}" loading="lazy">
-          {% else %}
-            <div class="fig-vehicle-card__placeholder">
-              <span>{{ vehicle.brand }} {{ vehicle.model }}</span>
-            </div>
-          {% endif %}
+      <div class="apx-table__row">
+        <div class="apx-cell apx-cell--media">
+          {% if vehicle.photo %}<img class="apx-thumb" src="{{ vehicle.photo.url }}" alt="{{ vehicle.brand }} {{ vehicle.model }}" loading="lazy">{% else %}<span class="apx-thumb apx-thumb--ph"></span>{% endif %}
+          <span style="font-weight:600;">{{ vehicle.brand }} {{ vehicle.model }}</span>
         </div>
-        <div class="fig-vehicle-card__body">
-          <div class="fig-vehicle-card__title">
-            <span>{{ vehicle.brand }} {{ vehicle.model }}</span>
-            {% if vehicle.status == "available" %}
-              <span class="fig-vehicle-badge fig-vehicle-badge--active">Aktiv</span>
-            {% else %}
-              <span class="fig-vehicle-badge fig-vehicle-badge--inactive">{{ vehicle.get_status_display }}</span>
-            {% endif %}
-          </div>
-          <div class="fig-vehicle-card__meta">
-            <span>Modell: {{ vehicle.get_type_display }}</span>
-            <span>Tagespreis: <strong>CHF {{ vehicle.daily_rate|floatformat:0 }}</strong></span>
-            <span>Halbtag: <strong>CHF {{ vehicle.half_day_rate|floatformat:0 }}</strong></span>
-          </div>
+        <div class="apx-cell"><span>{{ vehicle.get_type_display }}</span></div>
+        <div class="apx-cell"><span>{{ vehicle.license_plate|default:"–" }}</span></div>
+        <div class="apx-cell"><span>CHF {{ vehicle.daily_rate|floatformat:0 }}</span></div>
+        <div class="apx-cell"><span>CHF {{ vehicle.half_day_rate|floatformat:0 }}</span></div>
+        <div class="apx-cell">
+          {% if vehicle.status == "available" %}<span class="fig-badge fig-badge--success">Aktiv</span>
+          {% else %}<span class="fig-badge fig-badge--muted">{{ vehicle.get_status_display }}</span>{% endif %}
         </div>
-        <div class="fig-vehicle-card__actions">
-          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact js-open-modal" data-target="vehicle-edit-{{ vehicle.id }}"><i data-lucide="pencil"></i>Bearbeiten</button>
-          <button class="fig-btn fig-btn--ghost fig-btn--icon fig-btn--compact fig-btn--danger" type="button"><i data-lucide="trash-2"></i>Löschen</button>
+        <div class="apx-actions">
+          <button class="apx-iconbtn js-open-modal" type="button" data-target="vehicle-edit-{{ vehicle.id }}" title="Bearbeiten"><i data-lucide="pencil"></i></button>
+          <form method="post" action="{% url 'portal_vehicle_delete' vehicle.id %}" onsubmit="return confirm('Fahrzeug „{{ vehicle.brand }} {{ vehicle.model }}“ wirklich löschen?');">
+            {% csrf_token %}
+            <button class="apx-iconbtn apx-iconbtn--danger" type="submit" title="Löschen"><i data-lucide="trash-2"></i></button>
+          </form>
         </div>
-      </article>
+      </div>
     {% empty %}
-      <p class="fig-empty">Keine Fahrzeuge angelegt.</p>
+      <div class="apx-table__empty">Keine Fahrzeuge angelegt.</div>
     {% endfor %}
   </div>
 
