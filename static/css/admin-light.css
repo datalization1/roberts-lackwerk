@@ -210,3 +210,10 @@ body.admin-light {
 .admin-light .fig-customer-badge--info { background: rgba(37,99,235,.1); color: #1d4ed8; border-color: rgba(37,99,235,.3); }
 .admin-light .fig-customer-badge--purple { background: rgba(124,58,237,.1); color: #6d28d9; border-color: rgba(124,58,237,.3); }
 .admin-light .fig-customer-badge--muted { background: var(--a-soft); color: var(--a-muted); border-color: var(--a-border); }
+
+/* ---------- Volle Seitenbreite fürs Admin ------------------------------- */
+.admin-light .page-main { padding-top: 24px; padding-bottom: 32px; min-height: 100vh; }
+.admin-light .page-container { max-width: none; margin: 0; padding: 0 32px; }
+.admin-light .figma-home--admin { padding-top: 0; }
+/* Sidebar etwas schmaler, Content bekommt mehr Platz */
+.admin-light .fig-admin__layout { grid-template-columns: 210px 1fr; gap: 20px; }
