@@ -1,0 +1,212 @@
+/* ==========================================================================
+   Robert's Lackwerk – ADMIN LIGHT SKIN
+   Helles Design fürs interne Portal (Desktop-fokussiert).
+   Skinnt die bestehenden fig-admin__* / fig-* / rl-admin-* / form-* Komponenten
+   auf hell um – ohne die Portal-Templates neu zu schreiben.
+   Scope: body.admin-light  (nach figma.css geladen -> gewinnt).
+   ========================================================================== */
+
+body.admin-light {
+  /* Legacy-Tokens (variables.css) hell */
+  --bg: #f4f2ec; --bg-elevated: #ffffff; --bg-card: #ffffff; --bg-card-soft: #f6f1e7;
+  --border: #e7e1d6; --border-strong: #d8cdb8;
+  --text: #1c1915; --text-soft: #46413a; --text-muted: #6f6859;
+  --primary: #e3a008; --primary-soft: #c88a06; --primary-dark: #9a6b06;
+  --shadow-soft: 0 1px 2px rgba(28,25,21,.04), 0 12px 32px -12px rgba(28,25,21,.16);
+  --shadow-strong: 0 2px 4px rgba(28,25,21,.05), 0 28px 56px -20px rgba(28,25,21,.24);
+  /* figma-Tokens hell */
+  --fig-bg: #f4f2ec; --fig-surface: #ffffff; --fig-surface-strong: #ffffff;
+  --fig-border: #e7e1d6; --fig-text: #1c1915; --fig-muted: #6f6859;
+  --fig-accent: #e3a008; --fig-accent-soft: #fbf1d8;
+  background: #f4f2ec; color: #1c1915;
+  color-scheme: light;
+}
+
+/* lokale Shortcuts */
+body.admin-light {
+  --a-surface:#ffffff; --a-soft:#f6f1e7; --a-border:#e7e1d6; --a-ink:#1c1915;
+  --a-muted:#6f6859; --a-gold:#e3a008; --a-gold-ink:#9a6b06; --a-gold-soft:#fbf1d8;
+}
+
+.admin-light .figma-home,
+.admin-light .figma-home--admin { background: var(--fig-bg); color: var(--a-ink); }
+.admin-light h1, .admin-light h2, .admin-light h3, .admin-light h4, .admin-light h5 { color: var(--a-ink); }
+
+/* ---------- Hero / Kopf --------------------------------------------------- */
+.admin-light .fig-admin__hero {
+  background: linear-gradient(180deg,#ffffff,#faf8f3);
+  border-color: var(--a-border);
+  box-shadow: var(--shadow-soft);
+}
+.admin-light .fig-admin__hero h1 { color: var(--a-ink); }
+.admin-light .fig-admin__back { color: var(--a-muted); }
+.admin-light .fig-admin__back:hover { color: var(--a-gold-ink); }
+.admin-light .fig-admin__badge { background: var(--a-gold-soft); border-color: #ead9ad; color: var(--a-gold-ink); }
+
+/* Abmelden-Button (war rot) -> neutral */
+.admin-light .fig-btn--outline { background: #fff; color: var(--a-ink); border-color: var(--a-border); }
+.admin-light .fig-btn--outline:hover { background: var(--a-soft); color: var(--a-gold-ink); border-color: var(--a-border); }
+
+/* ---------- Sidebar / Tabs ------------------------------------------------ */
+.admin-light .fig-admin__sidebar { background: var(--a-surface); border-color: var(--a-border); box-shadow: var(--shadow-soft); }
+.admin-light .fig-admin__tab { border-color: transparent; color: var(--a-muted); }
+.admin-light .fig-admin__tab:hover { background: var(--a-soft); color: var(--a-ink); }
+.admin-light .fig-admin__tab.is-active { background: var(--a-gold-soft); border-color: var(--a-gold); box-shadow: none; color: var(--a-gold-ink); }
+.admin-light .fig-admin__tabs { background: var(--a-surface); border-color: var(--a-border); }
+
+/* ---------- KPI-Cards / Panels ------------------------------------------- */
+.admin-light .fig-admin__card,
+.admin-light .fig-admin__panel { background: var(--a-surface); border-color: var(--a-border); box-shadow: var(--shadow-soft); }
+.admin-light .fig-admin__card-icon { background: var(--a-soft); border-color: var(--a-border); color: var(--a-gold-ink); }
+.admin-light .fig-admin__card-label,
+.admin-light .fig-admin__card-meta,
+.admin-light .fig-admin__panel-subtitle,
+.admin-light .fig-admin__panel .subtitle { color: var(--a-muted); }
+
+/* ---------- Listen -------------------------------------------------------- */
+.admin-light .fig-list__item { background: var(--a-soft); border-color: var(--a-border); }
+.admin-light .fig-list__meta { color: var(--a-muted); }
+.admin-light .fig-list__action { background: #fff; border-color: var(--a-border); color: var(--a-muted); }
+.admin-light .fig-list__action:hover { border-color: var(--a-gold); color: var(--a-gold-ink); }
+.admin-light .fig-empty { color: var(--a-muted); }
+
+/* ---------- Badges (Status) ---------------------------------------------- */
+.admin-light .fig-badge--success { background: rgba(46,125,50,.12); color: #1f6a28; border-color: rgba(46,125,50,.30); }
+.admin-light .fig-badge--warning { background: rgba(227,160,8,.16);  color: #8a5e05; border-color: rgba(227,160,8,.35); }
+.admin-light .fig-badge--info    { background: rgba(37,99,235,.10);  color: #1d4ed8; border-color: rgba(37,99,235,.30); }
+.admin-light .fig-badge--danger  { background: rgba(192,57,43,.10);  color: #a2321f; border-color: rgba(192,57,43,.30); }
+
+/* ---------- Buttons ------------------------------------------------------- */
+.admin-light .fig-btn--primary { background: var(--a-gold); border-color: var(--a-gold); color: #231d10; }
+.admin-light .fig-btn--primary:hover { filter: brightness(.95); }
+.admin-light .fig-btn--ghost { background: #fff; color: var(--a-ink); border-color: var(--a-border); }
+.admin-light .fig-btn--ghost:hover { background: var(--a-soft); border-color: var(--a-border); color: var(--a-ink); }
+.admin-light .fig-btn--danger { background: #fff; color: #c0392b; border-color: rgba(192,57,43,.45); }
+.admin-light .fig-btn--danger:hover { background: rgba(192,57,43,.08); }
+
+/* ---------- Tabellen ----------------------------------------------------- */
+.admin-light .fig-table__row { background: #fff; border-color: var(--a-border); }
+.admin-light .fig-table__row--head { background: var(--a-soft); color: var(--a-muted); border-color: var(--a-border); }
+.admin-light .fig-table__cell { color: var(--a-ink); }
+.admin-light .fig-table__meta { color: var(--a-muted); }
+.admin-light .fig-table__cell--id { color: var(--a-gold-ink); }
+.admin-light .fig-table__empty { color: var(--a-muted); }
+
+/* ---------- Generische fig-* (im Admin genutzt) -------------------------- */
+.admin-light .fig-card,
+.admin-light .fig-pill,
+.admin-light .fig-detail-card,
+.admin-light .fig-vehicle-stat,
+.admin-light .fig-customer-stat,
+.admin-light .fig-invoice-stat,
+.admin-light .fig-settings-banner,
+.admin-light .fig-settings-card,
+.admin-light .fig-settings-list,
+.admin-light .fig-modal { background: var(--a-surface); border-color: var(--a-border); color: var(--a-ink); }
+.admin-light .fig-icon,
+.admin-light .fig-pill__icon,
+.admin-light .fig-settings-banner__icon { background: var(--a-gold-soft); border-color: #ead9ad; color: var(--a-gold-ink); }
+.admin-light .fig-section--alt { background: var(--a-surface); }
+
+/* Detail-Card Innenleben */
+.admin-light .fig-detail-card__item,
+.admin-light .fig-detail-card__notes-body { background: var(--a-soft); border-color: var(--a-border); }
+.admin-light .fig-detail-card__avatar { background: var(--a-gold-soft); border-color: #ead9ad; color: var(--a-gold-ink); }
+.admin-light .fig-detail-card__label,
+.admin-light .fig-detail-card__id { color: var(--a-muted); }
+.admin-light .fig-detail-card__value--accent { color: var(--a-gold-ink); }
+
+/* Settings */
+.admin-light .fig-settings-list__item { background: var(--a-soft); border-color: var(--a-border); }
+.admin-light .fig-settings-nav { background: var(--a-soft); border-color: var(--a-border); }
+.admin-light .fig-settings-toolbar { background: var(--a-surface); border-color: var(--a-border); }
+.admin-light .fig-settings-tab { color: var(--a-muted); border-color: var(--a-border); background: #fff; }
+.admin-light .fig-settings-tab.is-active { background: var(--a-gold-soft); color: var(--a-gold-ink); border-color: var(--a-gold); }
+.admin-light .fig-settings-count { color: var(--a-muted); }
+.admin-light .fig-settings-banner__text { color: var(--a-muted); }
+
+/* ---------- Formularfelder ---------------------------------------------- */
+.admin-light input[type="text"], .admin-light input[type="email"], .admin-light input[type="tel"],
+.admin-light input[type="number"], .admin-light input[type="date"], .admin-light input[type="search"],
+.admin-light input[type="password"], .admin-light select, .admin-light textarea,
+.admin-light .fig-input, .admin-light .fig-select, .admin-light .fig-textarea,
+.admin-light .form-input, .admin-light .form-select, .admin-light .form-textarea,
+.admin-light .fig-settings-card__input, .admin-light .fig-settings-list__add input {
+  background: #ffffff !important; color: var(--a-ink) !important; border: 1.5px solid var(--a-border) !important;
+  border-radius: 10px;
+}
+.admin-light input:focus, .admin-light select:focus, .admin-light textarea:focus {
+  border-color: var(--a-gold) !important; box-shadow: 0 0 0 3px rgba(227,160,8,.22) !important; outline: none;
+}
+.admin-light input::placeholder, .admin-light textarea::placeholder { color: var(--a-muted); }
+.admin-light label, .admin-light .form-label, .admin-light .fig-form__row label { color: var(--a-ink); }
+
+/* Modal-Innereien */
+.admin-light .fig-modal__close { background: #fff; border-color: var(--a-border); color: var(--a-ink); }
+.admin-light .fig-modal__header { border-color: var(--a-border); }
+
+/* Diverses */
+.admin-light .fig-subtitle { color: var(--a-muted); }
+.admin-light .fig-customer-badge { background: var(--a-gold-soft); color: var(--a-gold-ink); border: 1px solid #ead9ad; }
+.admin-light .fig-invoice-badge { border: 1px solid var(--a-border); }
+
+@media (max-width: 1024px) {
+  .admin-light .fig-admin__layout { grid-template-columns: 1fr; }
+  .admin-light .fig-admin__sidebar { position: static; flex-direction: row; flex-wrap: wrap; }
+}
+
+/* ---------- Seiten-spezifische Karten-Familien (hell) -------------------- */
+.admin-light .fig-vehicle-card,
+.admin-light .fig-vehicle-modal,
+.admin-light .fig-customer-card,
+.admin-light .fig-customer-modal,
+.admin-light .fig-invoice-card,
+.admin-light .fig-invoice-flow__item {
+  background: var(--a-surface) !important; border-color: var(--a-border) !important; color: var(--a-ink);
+}
+.admin-light .fig-vehicle-card__media { background: var(--a-soft); }
+
+/* Such-Boxen (dunkle Container) -> hell */
+.admin-light .fig-customer-search,
+.admin-light .fig-invoice-search {
+  background: #fff; border: 1.5px solid var(--a-border); border-radius: 12px; color: var(--a-ink);
+}
+.admin-light .fig-customer-search i,
+.admin-light .fig-invoice-search i { color: var(--a-muted); }
+.admin-light .fig-customer-search input,
+.admin-light .fig-invoice-search input,
+.admin-light .fig-customer-input {
+  background: transparent !important; border: 0 !important; box-shadow: none !important; color: var(--a-ink) !important;
+}
+
+/* Karten-Titel/Namen klar lesbar */
+.admin-light .fig-customer-card__name,
+.admin-light .fig-customer-card__title,
+.admin-light .fig-vehicle-card__title,
+.admin-light .fig-invoice-card__title { color: var(--a-ink); }
+.admin-light .fig-customer-card__meta,
+.admin-light .fig-customer-card__content { color: var(--a-muted); }
+.admin-light .fig-customer-card__avatar { background: var(--a-gold-soft); color: var(--a-gold-ink); border-color: #ead9ad; }
+
+/* Detail-Tabs */
+.admin-light .fig-detail-tabs { background: var(--a-soft); border-color: var(--a-border); }
+.admin-light .fig-detail-tab { color: var(--a-muted); }
+.admin-light .fig-detail-tab.is-active { background: var(--a-gold-soft); color: var(--a-gold-ink); border-color: var(--a-gold); box-shadow: none; }
+
+/* Invoice-Filter-Selects */
+.admin-light .fig-invoice-filters select { background: #fff !important; color: var(--a-ink) !important; border-color: var(--a-border) !important; }
+
+/* Stat-Werte: auf Hell lesbar machen */
+.admin-light .fig-customer-stat__value--danger,
+.admin-light .fig-invoice-stat__value--danger { color: #c0392b; }
+.admin-light .fig-customer-stat__value--info,
+.admin-light .fig-invoice-stat__value--info { color: #1d4ed8; }
+.admin-light .fig-customer-stat__value--purple { color: #7c3aed; }
+.admin-light .fig-customer-stat__value--muted { color: var(--a-muted); }
+.admin-light .fig-invoice-stat__value--success { color: #1f6a28; }
+
+/* Customer-Badge-Varianten */
+.admin-light .fig-customer-badge--danger { background: rgba(192,57,43,.1); color: #a2321f; border-color: rgba(192,57,43,.3); }
+.admin-light .fig-customer-badge--info { background: rgba(37,99,235,.1); color: #1d4ed8; border-color: rgba(37,99,235,.3); }
+.admin-light .fig-customer-badge--purple { background: rgba(124,58,237,.1); color: #6d28d9; border-color: rgba(124,58,237,.3); }
+.admin-light .fig-customer-badge--muted { background: var(--a-soft); color: var(--a-muted); border-color: var(--a-border); }

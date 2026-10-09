@@ -55,6 +55,9 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Interner Bereich: Login-URL fuer @login_required (statt Django-Default /accounts/login/)
+LOGIN_URL = "/intern/login/"
+
 # Login rate limit
 LOGIN_RATE_LIMIT = int(os.getenv("LOGIN_RATE_LIMIT", "5"))
 LOGIN_RATE_WINDOW = int(os.getenv("LOGIN_RATE_WINDOW", "900"))
