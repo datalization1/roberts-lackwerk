@@ -651,3 +651,29 @@ body.lw-body {
 .lw-footer__bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.5); }
 .lw-footer__bottom a { color: rgba(255, 255, 255, 0.58); }
 .lw-footer__bottom a:hover { color: var(--lw-accent); }
+
+/* ---------- Kontakt-Seite / Formular ------------------------------------ */
+.lw-contact { display: grid; grid-template-columns: 1.3fr .9fr; gap: 28px; align-items: start; }
+.lw-contact__card { background: var(--lw-surface); border: 1px solid var(--lw-border); border-radius: var(--lw-radius); padding: clamp(24px, 4vw, 36px); box-shadow: var(--lw-shadow); }
+.lw-form { display: grid; gap: 16px; }
+.lw-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.lw-field { display: flex; flex-direction: column; }
+.lw-field label { font-size: 13.5px; font-weight: 600; color: var(--lw-ink); margin-bottom: 7px; }
+.lw-input, .lw-textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid var(--lw-border); border-radius: 12px; background: #fff; color: var(--lw-ink); font-family: inherit; font-size: 15.5px; transition: border-color .15s, box-shadow .15s; }
+.lw-textarea { resize: vertical; min-height: 130px; }
+.lw-input:focus, .lw-textarea:focus { outline: none; border-color: var(--lw-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lw-accent) 28%, transparent); }
+.lw-field .errorlist { list-style: none; padding: 0; margin: 6px 0 0; color: var(--lw-danger); font-size: 13px; }
+.lw-form__submit { margin-top: 6px; }
+.lw-alert--success { background: rgba(46,125,50,.1); border: 1px solid rgba(46,125,50,.4); color: #1f5e23; border-radius: 12px; padding: 14px 16px; font-size: 15px; margin-bottom: 24px; }
+
+.lw-contact-info { display: grid; gap: 18px; }
+.lw-contact-info__item { display: flex; gap: 14px; align-items: flex-start; }
+.lw-contact-info__ic { width: 42px; height: 42px; border-radius: 11px; background: color-mix(in srgb, var(--lw-accent) 14%, transparent); color: var(--lw-accent-ink); display: grid; place-items: center; flex: none; }
+.lw-contact-info__item h3 { font-size: 15px; margin: 0 0 2px; }
+.lw-contact-info__item p, .lw-contact-info__item a { font-size: 14.5px; color: var(--lw-muted); margin: 0; }
+.lw-contact-info__item a:hover { color: var(--lw-accent-ink); }
+
+@media (max-width: 860px) {
+  .lw-contact { grid-template-columns: 1fr; }
+  .lw-form__row { grid-template-columns: 1fr; }
+}

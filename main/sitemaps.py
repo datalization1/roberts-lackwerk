@@ -15,6 +15,7 @@ class StaticViewSitemap(Sitemap):
         ("schaden_melden", 0.8, "monthly"),
         ("dienstleistungen", 0.8, "monthly"),
         ("ueber_uns", 0.6, "monthly"),
+        ("kontakt", 0.7, "monthly"),
         ("impressum", 0.3, "yearly"),
         ("datenschutz", 0.3, "yearly"),
     ]

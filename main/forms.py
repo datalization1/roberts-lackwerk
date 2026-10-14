@@ -469,6 +469,41 @@ class BookingForm(forms.ModelForm):
             self.add_error("driver_license_number", "Führerscheinnummer scheint zu kurz.")
         return cleaned
 
+# ---------- Kontaktformular ----------
+class ContactForm(forms.Form):
+    name = forms.CharField(
+        label="Name *", max_length=120,
+        widget=forms.TextInput(attrs={"class": "lw-input", "placeholder": "Vor- und Nachname"}),
+    )
+    email = forms.EmailField(
+        label="E-Mail *",
+        widget=forms.EmailInput(attrs={"class": "lw-input", "placeholder": "name@example.ch"}),
+    )
+    phone = forms.CharField(
+        label="Telefon", max_length=50, required=False,
+        widget=forms.TextInput(attrs={"class": "lw-input", "placeholder": "+41 XX XXX XX XX", "inputmode": "tel"}),
+    )
+    subject = forms.CharField(
+        label="Betreff", max_length=150, required=False,
+        widget=forms.TextInput(attrs={"class": "lw-input", "placeholder": "Worum geht es?"}),
+    )
+    message = forms.CharField(
+        label="Nachricht *",
+        widget=forms.Textarea(attrs={"class": "lw-textarea", "rows": 6, "placeholder": "Ihre Nachricht an uns …"}),
+    )
+    # Honeypot (für Bots; Menschen sehen das Feld nicht)
+    website = forms.CharField(required=False, widget=forms.TextInput(attrs={
+        "tabindex": "-1", "autocomplete": "off", "aria-hidden": "true",
+        "style": "position:absolute;left:-9999px;width:1px;height:1px;opacity:0;",
+    }))
+
+    def clean_message(self):
+        msg = (self.cleaned_data.get("message") or "").strip()
+        if len(msg) < 10:
+            raise forms.ValidationError("Bitte geben Sie eine etwas ausführlichere Nachricht ein.")
+        return msg
+
+
 # --- Verfügbarkeits-Suche (Datum + Slot) ---
 class AvailabilitySearchForm(forms.Form):
     date = forms.DateField(

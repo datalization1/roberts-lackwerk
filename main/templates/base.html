@@ -79,6 +79,7 @@
             <li><a href="{% url 'schaden_melden' %}" class="{% if request.resolver_match.url_name == 'schaden_melden' %}is-active{% endif %}">Schadenmeldung</a></li>
             <li><a href="{% url 'mietfahrzeuge' %}" class="{% if request.resolver_match.url_name == 'mietfahrzeuge' %}is-active{% endif %}">Vermietung</a></li>
             <li><a href="{% url 'ueber_uns' %}" class="{% if request.resolver_match.url_name == 'ueber_uns' %}is-active{% endif %}">Über uns</a></li>
+            <li><a href="{% url 'kontakt' %}" class="{% if request.resolver_match.url_name == 'kontakt' %}is-active{% endif %}">Kontakt</a></li>
           </ul>
           <a href="{% url 'schaden_melden' %}" class="lw-btn lw-btn--primary lw-btn--sm lw-nav__cta lw-nav__cta--desktop js-start-modal">Jetzt starten</a>
         </nav>

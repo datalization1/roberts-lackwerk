@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta_title %}Kontakt – Robert's Lackwerk GmbH, Wangen bei Olten{% endblock %}
+{% block meta_description %}Kontaktieren Sie Robert's Lackwerk GmbH in Wangen bei Olten – per Formular, Telefon oder E-Mail. Carrosserie, Lackiererei & Transporter-Vermietung für Olten & Zofingen.{% endblock %}
+
+{% block content %}
+<section class="lw-pagehead">
+  <div class="lw-wrap">
+    <span class="lw-pagehead__eyebrow">Kontakt</span>
+    <h1>Wie können wir Ihnen helfen?</h1>
+    <p class="lw-pagehead__lead">Schreiben Sie uns eine Nachricht – wir melden uns so rasch wie möglich. Oder erreichen Sie uns direkt telefonisch bzw. per E-Mail.</p>
+  </div>
+</section>
+
+<section class="lw-section" style="padding-top:8px;">
+  <div class="lw-wrap lw-contact">
+    <div class="lw-contact__card">
+      {% if sent %}
+        <div class="lw-alert--success" role="status">
+          Vielen Dank! Ihre Nachricht wurde gesendet – wir melden uns in Kürze bei Ihnen.
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="lw-form">
+          {% if form.non_field_errors %}<div class="lw-alert--success" style="background:rgba(192,57,43,.08);border-color:rgba(192,57,43,.4);color:#8a2b22;">{{ form.non_field_errors }}</div>{% endif %}
+
+          <div class="lw-form__row">
+            <div class="lw-field">
+              <label for="{{ form.name.id_for_label }}">Name *</label>
+              {{ form.name }}{{ form.name.errors }}
+            </div>
+            <div class="lw-field">
+              <label for="{{ form.email.id_for_label }}">E-Mail *</label>
+              {{ form.email }}{{ form.email.errors }}
+            </div>
+          </div>
+
+          <div class="lw-form__row">
+            <div class="lw-field">
+              <label for="{{ form.phone.id_for_label }}">Telefon</label>
+              {{ form.phone }}{{ form.phone.errors }}
+            </div>
+            <div class="lw-field">
+              <label for="{{ form.subject.id_for_label }}">Betreff</label>
+              {{ form.subject }}{{ form.subject.errors }}
+            </div>
+          </div>
+
+          <div class="lw-field">
+            <label for="{{ form.message.id_for_label }}">Nachricht *</label>
+            {{ form.message }}{{ form.message.errors }}
+          </div>
+
+          {{ form.website }}
+
+          <div class="lw-form__submit">
+            <button type="submit" class="lw-btn lw-btn--primary lw-btn--lg">Nachricht senden</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <aside class="lw-contact-info">
+      <div class="lw-contact-info__item">
+        <span class="lw-contact-info__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <div>
+          <h3>Adresse</h3>
+          <p>Neumattstrasse 54<br>4612 Wangen bei Olten</p>
+          <p><a href="https://www.google.com/maps/search/?api=1&query=Robert%27s+Lackwerk+Neumattstrasse+54+4612+Wangen+bei+Olten" target="_blank" rel="noopener">Auf Google Maps öffnen →</a></p>
+        </div>
+      </div>
+      <div class="lw-contact-info__item">
+        <span class="lw-contact-info__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></span>
+        <div>
+          <h3>Telefon</h3>
+          <p><a href="tel:+41763290205">+41 76 329 02 05</a></p>
+        </div>
+      </div>
+      <div class="lw-contact-info__item">
+        <span class="lw-contact-info__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+        <div>
+          <h3>E-Mail</h3>
+          <p><a href="mailto:info@roberts-lackwerk.ch">info@roberts-lackwerk.ch</a></p>
+        </div>
+      </div>
+      <div class="lw-contact-info__item">
+        <span class="lw-contact-info__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div>
+          <h3>Öffnungszeiten</h3>
+          <p>Mo – Fr: 08:00 – 18:00<br>Samstag: 08:00 – 14:00<br>Sonntag: Geschlossen</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

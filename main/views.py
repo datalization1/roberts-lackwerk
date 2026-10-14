@@ -27,6 +27,7 @@ from .forms import (
     DamageDetailsForm,
     DamagePartsForm,
     ReviewForm,
+    ContactForm,
 )
 from adminportal.utils.audit import log_audit
 from main.utils.rental_extras import normalize_rental_extras
@@ -122,6 +123,40 @@ def lp_carrosserie(request):
 
 def lp_transporter(request):
     return render(request, "landing/transporter_olten_zofingen.html")
+
+
+def kontakt(request):
+    sent = False
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            # Honeypot leer -> echte Anfrage versenden
+            if not cd.get("website"):
+                from django.core.mail import EmailMessage
+                subject = cd.get("subject") or "Neue Kontaktanfrage"
+                body = (
+                    f"Name: {cd['name']}\n"
+                    f"E-Mail: {cd['email']}\n"
+                    f"Telefon: {cd.get('phone') or '-'}\n"
+                    f"Betreff: {cd.get('subject') or '-'}\n\n"
+                    f"Nachricht:\n{cd['message']}\n"
+                )
+                try:
+                    EmailMessage(
+                        subject=f"Kontaktanfrage: {subject}",
+                        body=body,
+                        from_email=settings.CONTACT_EMAIL,
+                        to=[settings.CONTACT_EMAIL],
+                        reply_to=[cd["email"]],
+                    ).send(fail_silently=True)
+                except Exception:
+                    logger.exception("Kontaktformular: E-Mail-Versand fehlgeschlagen")
+            sent = True
+            form = ContactForm()
+    else:
+        form = ContactForm()
+    return render(request, "kontakt.html", {"form": form, "sent": sent})
 
 # ---------- Schaden melden: Wizard ----------
 
