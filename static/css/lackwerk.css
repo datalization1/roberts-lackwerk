@@ -244,8 +244,8 @@ body.lw-body {
 /* ---------- CTA-Band ----------------------------------------------------- */
 .lw-band { padding: 80px 0; }
 .lw-band__in { background: linear-gradient(135deg, #2a2418, #131009); border-radius: 24px; padding: 56px; text-align: center; color: #fff; position: relative; overflow: hidden; }
-.lw-band__in::before { content: ""; position: absolute; inset: 0; background: radial-gradient(90% 120% at 15% 0%, rgba(242,183,5,.16), transparent 55%); }
-.lw-band__in::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 2px, transparent 2px 24px); }
+.lw-band__in::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(90% 120% at 15% 0%, rgba(242,183,5,.16), transparent 55%); }
+.lw-band__in::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 2px, transparent 2px 24px); }
 .lw-band h2 { font-size: clamp(28px, 4vw, 38px); margin: 0 0 12px; position: relative; color: #fff; }
 .lw-band p { color: rgba(255,255,255,.8); font-size: 17px; margin: 0 0 28px; position: relative; }
 .lw-band__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
