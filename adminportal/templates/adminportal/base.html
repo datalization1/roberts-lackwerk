@@ -45,6 +45,44 @@
     {% block portal_content %}{% endblock %}
   </main>
 
+  <!-- Globaler Lade-Overlay -->
+  <div class="lw-loader" id="lwLoader" role="status" aria-live="polite" aria-hidden="true">
+    <img class="lw-loader__img" src="{% static 'img/loader.svg' %}" alt="">
+    <span class="lw-loader__text">Einen Moment …</span>
+  </div>
+  <script>
+    (function () {
+      var o = document.getElementById('lwLoader');
+      if (!o) return;
+      var shown = false;
+      function show() { if (shown) return; shown = true; o.classList.add('is-active'); o.setAttribute('aria-hidden', 'false'); }
+      function hide() { shown = false; o.classList.remove('is-active'); o.setAttribute('aria-hidden', 'true'); }
+      document.addEventListener('submit', function (e) {
+        if (e.defaultPrevented) return;
+        var f = e.target;
+        if (f && f.hasAttribute && f.hasAttribute('data-no-loader')) return;
+        show();
+      });
+      document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target.closest ? e.target.closest('a') : null;
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href || href.charAt(0) === '#') return;
+        if (a.target && a.target !== '_self') return;
+        if (a.hasAttribute('download')) return;
+        if (a.classList.contains('js-open-modal') || a.classList.contains('js-no-loader')) return;
+        if (/^(mailto:|tel:|javascript:)/i.test(href)) return;
+        var u; try { u = new URL(href, window.location.href); } catch (_) { return; }
+        if (u.origin !== window.location.origin) return;
+        if (u.href === window.location.href) return;
+        show();
+      });
+      window.addEventListener('pageshow', hide);
+      window.addEventListener('pagehide', hide);
+    })();
+  </script>
+
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {

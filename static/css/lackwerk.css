@@ -677,3 +677,9 @@ body.lw-body {
   .lw-contact { grid-template-columns: 1fr; }
   .lw-form__row { grid-template-columns: 1fr; }
 }
+
+/* ---------- Globaler Lade-Overlay (Spritzpistolen-Loader) ---------------- */
+.lw-loader { position: fixed; inset: 0; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(250,248,243,.92); backdrop-filter: blur(3px); }
+.lw-loader.is-active { display: flex; }
+.lw-loader__img { width: 230px; max-width: 72vw; height: auto; }
+.lw-loader__text { font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--lw-accent-ink); }
