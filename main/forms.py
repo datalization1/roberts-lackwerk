@@ -491,17 +491,28 @@ class ContactForm(forms.Form):
         label="Nachricht *",
         widget=forms.Textarea(attrs={"class": "lw-textarea", "rows": 6, "placeholder": "Ihre Nachricht an uns …"}),
     )
+    captcha = forms.IntegerField(
+        label="Sicherheitsfrage *",
+        widget=forms.NumberInput(attrs={"class": "lw-input", "inputmode": "numeric", "placeholder": "Ergebnis eingeben", "autocomplete": "off"}),
+    )
     # Honeypot (für Bots; Menschen sehen das Feld nicht)
     website = forms.CharField(required=False, widget=forms.TextInput(attrs={
         "tabindex": "-1", "autocomplete": "off", "aria-hidden": "true",
         "style": "position:absolute;left:-9999px;width:1px;height:1px;opacity:0;",
     }))
 
+    def __init__(self, *args, captcha_expected=None, **kwargs):
+        self.captcha_expected = captcha_expected
+        super().__init__(*args, **kwargs)
+
     def clean_message(self):
-        msg = (self.cleaned_data.get("message") or "").strip()
-        if len(msg) < 10:
-            raise forms.ValidationError("Bitte geben Sie eine etwas ausführlichere Nachricht ein.")
-        return msg
+        return (self.cleaned_data.get("message") or "").strip()
+
+    def clean_captcha(self):
+        val = self.cleaned_data.get("captcha")
+        if self.captcha_expected is None or val != self.captcha_expected:
+            raise forms.ValidationError("Bitte lösen Sie die Rechenaufgabe korrekt.")
+        return val
 
 
 # --- Verfügbarkeits-Suche (Datum + Slot) ---

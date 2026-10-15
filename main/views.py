@@ -126,9 +126,10 @@ def lp_transporter(request):
 
 
 def kontakt(request):
+    import random
     sent = False
     if request.method == "POST":
-        form = ContactForm(request.POST)
+        form = ContactForm(request.POST, captcha_expected=request.session.get("contact_captcha"))
         if form.is_valid():
             cd = form.cleaned_data
             # Honeypot leer -> echte Anfrage versenden
@@ -156,7 +157,11 @@ def kontakt(request):
             form = ContactForm()
     else:
         form = ContactForm()
-    return render(request, "kontakt.html", {"form": form, "sent": sent})
+    # Neue Rechenaufgabe fürs Captcha erzeugen und in der Session hinterlegen
+    n1, n2 = random.randint(1, 9), random.randint(1, 9)
+    request.session["contact_captcha"] = n1 + n2
+    captcha_question = f"{n1} + {n2}"
+    return render(request, "kontakt.html", {"form": form, "sent": sent, "captcha_question": captcha_question})
 
 # ---------- Schaden melden: Wizard ----------
 

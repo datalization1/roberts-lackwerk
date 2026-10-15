@@ -54,6 +54,11 @@
             {{ form.message }}{{ form.message.errors }}
           </div>
 
+          <div class="lw-field" style="max-width:260px;">
+            <label for="{{ form.captcha.id_for_label }}">Sicherheitsfrage: Wie viel ergibt {{ captcha_question }}? *</label>
+            {{ form.captcha }}{{ form.captcha.errors }}
+          </div>
+
           {{ form.website }}
 
           <div class="lw-form__submit">
