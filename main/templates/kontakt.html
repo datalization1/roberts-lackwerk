@@ -3,6 +3,7 @@
 
 {% block meta_title %}Kontakt – Robert's Lackwerk GmbH, Wangen bei Olten{% endblock %}
 {% block meta_description %}Kontaktieren Sie Robert's Lackwerk GmbH in Wangen bei Olten – per Formular, Telefon oder E-Mail. Carrosserie, Lackiererei & Transporter-Vermietung für Olten & Zofingen.{% endblock %}
+{% block extra_head %}{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>{% endif %}{% endblock %}
 
 {% block content %}
 <section class="lw-pagehead">
@@ -29,24 +30,30 @@
 
           <div class="lw-form__row">
             <div class="lw-field">
-              <label for="{{ form.name.id_for_label }}">Name *</label>
-              {{ form.name }}{{ form.name.errors }}
+              <label for="{{ form.first_name.id_for_label }}">Vorname *</label>
+              {{ form.first_name }}{{ form.first_name.errors }}
             </div>
             <div class="lw-field">
-              <label for="{{ form.email.id_for_label }}">E-Mail *</label>
-              {{ form.email }}{{ form.email.errors }}
+              <label for="{{ form.last_name.id_for_label }}">Nachname *</label>
+              {{ form.last_name }}{{ form.last_name.errors }}
             </div>
           </div>
 
           <div class="lw-form__row">
             <div class="lw-field">
+              <label for="{{ form.email.id_for_label }}">E-Mail</label>
+              {{ form.email }}{{ form.email.errors }}
+            </div>
+            <div class="lw-field">
               <label for="{{ form.phone.id_for_label }}">Telefon</label>
               {{ form.phone }}{{ form.phone.errors }}
             </div>
-            <div class="lw-field">
-              <label for="{{ form.subject.id_for_label }}">Betreff</label>
-              {{ form.subject }}{{ form.subject.errors }}
-            </div>
+          </div>
+          <p style="margin:-6px 0 0; font-size:13px; color:var(--lw-muted);">Bitte geben Sie mindestens E-Mail <strong>oder</strong> Telefon an.</p>
+
+          <div class="lw-field">
+            <label for="{{ form.subject.id_for_label }}">Betreff</label>
+            {{ form.subject }}{{ form.subject.errors }}
           </div>
 
           <div class="lw-field">
@@ -54,10 +61,16 @@
             {{ form.message }}{{ form.message.errors }}
           </div>
 
-          <div class="lw-field" style="max-width:260px;">
-            <label for="{{ form.captcha.id_for_label }}">Sicherheitsfrage: Wie viel ergibt {{ captcha_question }}? *</label>
-            {{ form.captcha }}{{ form.captcha.errors }}
-          </div>
+          {% if turnstile_site_key %}
+            <div class="lw-field">
+              <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-language="de"></div>
+            </div>
+          {% else %}
+            <div class="lw-field" style="max-width:260px;">
+              <label for="id_captcha">Sicherheitsfrage: Wie viel ergibt {{ captcha_question }}? *</label>
+              <input type="number" id="id_captcha" name="captcha" class="lw-input" inputmode="numeric" placeholder="Ergebnis eingeben" autocomplete="off">
+            </div>
+          {% endif %}
 
           {{ form.website }}
 

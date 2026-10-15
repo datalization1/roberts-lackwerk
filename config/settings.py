@@ -282,6 +282,10 @@ EMAIL_USE_SSL = os.getenv("SMTP_USE_SSL", "False") == "True"
 # Analytics
 GA_MEASUREMENT_ID = os.getenv("GA_MEASUREMENT_ID", "")
 
+# Cloudflare Turnstile (Captcha fürs Kontaktformular)
+TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+
 # Monitoring (Sentry)
 SENTRY_DSN = os.getenv("SENTRY_DSN", "")
 SENTRY_TRACES_SAMPLE_RATE = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0"))

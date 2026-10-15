@@ -125,20 +125,60 @@ def lp_transporter(request):
     return render(request, "landing/transporter_olten_zofingen.html")
 
 
+def _verify_turnstile(token, remote_ip):
+    """Cloudflare-Turnstile-Token serverseitig prüfen."""
+    if not token:
+        return False
+    import json
+    import urllib.request
+    import urllib.parse
+    data = urllib.parse.urlencode({
+        "secret": settings.TURNSTILE_SECRET_KEY,
+        "response": token,
+        "remoteip": remote_ip or "",
+    }).encode()
+    try:
+        req = urllib.request.Request(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify", data=data
+        )
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            return bool(json.loads(resp.read().decode()).get("success"))
+    except Exception:
+        logger.exception("Turnstile-Verifizierung fehlgeschlagen")
+        return False
+
+
 def kontakt(request):
     import random
+    use_turnstile = bool(settings.TURNSTILE_SITE_KEY and settings.TURNSTILE_SECRET_KEY)
     sent = False
     if request.method == "POST":
-        form = ContactForm(request.POST, captcha_expected=request.session.get("contact_captcha"))
-        if form.is_valid():
+        form = ContactForm(request.POST)
+        form_valid = form.is_valid()
+        # Captcha prüfen: Cloudflare Turnstile oder Rechen-Fallback
+        if use_turnstile:
+            captcha_ok = _verify_turnstile(
+                request.POST.get("cf-turnstile-response", ""), get_client_ip(request)
+            )
+            captcha_err = "Bitte bestätigen Sie, dass Sie kein Roboter sind."
+        else:
+            try:
+                captcha_ok = int(request.POST.get("captcha", "")) == request.session.get("contact_captcha")
+            except (TypeError, ValueError):
+                captcha_ok = False
+            captcha_err = "Bitte lösen Sie die Sicherheitsfrage korrekt."
+        if not captcha_ok:
+            form.add_error(None, captcha_err)
+
+        if form_valid and captcha_ok:
             cd = form.cleaned_data
             # Honeypot leer -> echte Anfrage versenden
             if not cd.get("website"):
                 from django.core.mail import EmailMessage
                 subject = cd.get("subject") or "Neue Kontaktanfrage"
                 body = (
-                    f"Name: {cd['name']}\n"
-                    f"E-Mail: {cd['email']}\n"
+                    f"Name: {cd['first_name']} {cd['last_name']}\n"
+                    f"E-Mail: {cd.get('email') or '-'}\n"
                     f"Telefon: {cd.get('phone') or '-'}\n"
                     f"Betreff: {cd.get('subject') or '-'}\n\n"
                     f"Nachricht:\n{cd['message']}\n"
@@ -149,7 +189,7 @@ def kontakt(request):
                         body=body,
                         from_email=settings.CONTACT_EMAIL,
                         to=[settings.CONTACT_EMAIL],
-                        reply_to=[cd["email"]],
+                        reply_to=[cd["email"]] if cd.get("email") else None,
                     ).send(fail_silently=True)
                 except Exception:
                     logger.exception("Kontaktformular: E-Mail-Versand fehlgeschlagen")
@@ -157,11 +197,15 @@ def kontakt(request):
             form = ContactForm()
     else:
         form = ContactForm()
-    # Neue Rechenaufgabe fürs Captcha erzeugen und in der Session hinterlegen
+    # Neue Rechenaufgabe fürs Fallback-Captcha erzeugen (nur ohne Turnstile relevant)
     n1, n2 = random.randint(1, 9), random.randint(1, 9)
     request.session["contact_captcha"] = n1 + n2
-    captcha_question = f"{n1} + {n2}"
-    return render(request, "kontakt.html", {"form": form, "sent": sent, "captcha_question": captcha_question})
+    return render(request, "kontakt.html", {
+        "form": form,
+        "sent": sent,
+        "captcha_question": f"{n1} + {n2}",
+        "turnstile_site_key": settings.TURNSTILE_SITE_KEY if use_turnstile else "",
+    })
 
 # ---------- Schaden melden: Wizard ----------
 
